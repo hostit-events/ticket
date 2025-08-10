@@ -1,3 +1,6 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/erc2535-diamond-template"]
+	path = lib/erc2535-diamond-template
+	url = https://github.com/dadadave80/erc2535-diamond-template

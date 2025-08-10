@@ -1,0 +1,8 @@
+@diamond-errors/=lib/erc2535-diamond-template/src/libraries/errors/
+@diamond-logs/=lib/erc2535-diamond-template/src/libraries/logs/
+@diamond-script/=lib/erc2535-diamond-template/script/
+@diamond-storage/=lib/erc2535-diamond-template/src/libraries/storage/
+@diamond-test/=lib/erc2535-diamond-template/test/
+@diamond/=lib/erc2535-diamond-template/src/
+erc2535-diamond-template/=lib/erc2535-diamond-template/
+forge-std/=lib/forge-std/src/

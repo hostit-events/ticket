@@ -2,5 +2,13 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+remappings = [
+    '@host-it/=src/',
+    '@host-it-script/=script/',
+    '@host-it-test/=test/',
+    '@host-it-errors/=src/libraries/errors/',
+    '@host-it-logs/=src/libraries/logs/',
+    '@host-it-storage/=src/libraries/storage/'
+]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

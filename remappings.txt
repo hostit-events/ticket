@@ -1,3 +1,9 @@
+@host-it/=src/
+@host-it-script/=script/
+@host-it-test/=test/
+@host-it-errors/=src/libraries/errors/
+@host-it-logs/=src/libraries/logs/
+@host-it-storage/=src/libraries/storage/
 @diamond-errors/=lib/erc2535-diamond-template/src/libraries/errors/
 @diamond-logs/=lib/erc2535-diamond-template/src/libraries/logs/
 @diamond-script/=lib/erc2535-diamond-template/script/

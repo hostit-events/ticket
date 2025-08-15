@@ -92,9 +92,9 @@ contract Ticket is
 
     /// @notice Constructor disables initializers on implementation contracts
     /// @dev Only proxy contracts can initialize this contract
-    constructor() {
-        _disableInitializers();
-    }
+    // constructor() {
+    //     _disableInitializers();
+    // }
 
     /// @notice Initializes the contract
     /// @param _owner The owner of the contract

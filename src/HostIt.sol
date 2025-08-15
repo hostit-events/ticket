@@ -27,6 +27,8 @@ import {DiamondArgs, FacetCut} from "@diamond-storage/DiamondStorage.sol";
         \::/    /                 ~~                      \::/    /                                             \::/    /                             
          \/____/                                           \/____/                                               \/____/                              
 */
+
+/// @title HostIt
 /// @notice Implements EIP-2535 Diamond proxy pattern, allowing dynamic addition, replacement, and removal of facets
 /// @author HostIt Protocol
 contract HostIt is Diamond {

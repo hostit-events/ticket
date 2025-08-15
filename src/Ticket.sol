@@ -41,6 +41,22 @@ contract Ticket is
     UUPSUpgradeable
 {
     //*//////////////////////////////////////////////////////////////////////////
+    //                                   EVENTS
+    //////////////////////////////////////////////////////////////////////////*//
+
+    /// @notice Emitted when the base URI is updated
+    /// @param newBaseUri The new base URI set for the NFT collection
+    event BaseURIUpdated(string indexed newBaseUri);
+
+    /// @notice Emitted when the metadata of the NFT collection is updated
+    /// @param newName The new name of the NFT collection
+    event NameUpdated(string indexed newName);
+
+    /// @notice Emitted when the metadata of the NFT collection is updated
+    /// @param newSymbol The new symbol of the NFT collection
+    event SymbolUpdated(string indexed newSymbol);
+
+    //*//////////////////////////////////////////////////////////////////////////
     //                                  STORAGE
     //////////////////////////////////////////////////////////////////////////*//
 
@@ -275,4 +291,5 @@ MMMMMMMMM:~~~~~~''''....                              ...''''~~::::;::;:
 MMMMMMMMMN~~~~'''''''''....  .               . .    ..'''''~~::::;:::;::
 MMMMMMMMMMX'~::~~~~'~~~~'''''''..........'''''.....'~~~:::;;;;;;;;;:;;;;
 MMMMMMMMMMMN!;::~~~'''~~~~''~~~~~'''''''''''..'''~~::;;;;;:;;;;;:;;;:;;;
+                            THANKS FOR COMING
 */

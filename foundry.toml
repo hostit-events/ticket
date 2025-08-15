@@ -10,5 +10,7 @@ remappings = [
     '@host-it-logs/=src/libs/logs/',
     '@host-it-storage/=src/libs/storage/'
 ]
+ffi = true
+optimizer_runs = 30_000
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

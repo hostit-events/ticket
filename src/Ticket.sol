@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {ITicket} from "@host-it/interfaces/ITicket.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {ERC721EnumerableUpgradeable} from
@@ -39,8 +38,7 @@ contract Ticket is
     ERC721RoyaltyUpgradeable,
     ERC721PausableUpgradeable,
     OwnableUpgradeable,
-    UUPSUpgradeable,
-    ITicket
+    UUPSUpgradeable
 {
     //*//////////////////////////////////////////////////////////////////////////
     //                                  STORAGE
@@ -207,7 +205,7 @@ contract Ticket is
         override(ERC721Upgradeable, ERC721RoyaltyUpgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
-        return super.supportsInterface(_interfaceId) || _interfaceId == type(ITicket).interfaceId;
+        return super.supportsInterface(_interfaceId);
     }
 
     //*//////////////////////////////////////////////////////////////////////////

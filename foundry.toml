@@ -13,4 +13,31 @@ remappings = [
 ffi = true
 optimizer_runs = 30_000
 
+[rpc_endpoints]
+# mainnet
+eth-mainnet = "${ETH_MAINNET_URL}"
+base = "${BASE_MAINNET_URL}"
+lisk = "${LISK_MAINNET_URL}"
+arbitrum-one = "${ARBITRUM_MAINNET_URL}"
+avalanche = "${AVALANCHE_MAINNET_URL}"
+# testnets
+sepolia = "${ETH_SEPOLIA_URL}"
+base-sepolia = "${BASE_SEPOLIA_URL}"
+lisk-sepolia = "${LISK_SEPOLIA_URL}"
+arbitrum-sepolia = "${ARBITRUM_SEPOLIA_URL}"
+avalanche-fuji = "${AVALANCHE_FUJI_URL}"
+
+[etherscan]
+eth-mainnet = { key = "${ETHERSCAN_API_KEY}" }
+base = { key = "${ETHERSCAN_API_KEY}" }
+lisk = { key = "123", url = "${LISK_VERIFIER_URL}" }
+arbitrum-one = { key = "${ETHERSCAN_API_KEY}" }
+avalanche = { key = "verifyContract", url = "${AVALANCHE_VERIFIER_URL}" }
+###################################################
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+base-sepolia = { key = "${ETHERSCAN_API_KEY}" }
+lisk-sepolia = { key = "123", url = "${LISK_SEPOLIA_VERIFIER_URL}" }
+arbitrum-sepolia = { key = "${ETHERSCAN_API_KEY}" }
+avalanche-fuji = { key = "verifyContract", url = "${AVALANCHE_FUJI_VERIFIER_URL}" }
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

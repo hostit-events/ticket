@@ -5,7 +5,7 @@ import {TicketCreated, TicketUpdated} from "@host-it-logs/FactoryLogs.sol";
 import {
     FactoryStorage,
     TicketData,
-    TicketMetadata,
+    ExtraTicketData,
     FullTicketData,
     FACTORY_STORAGE_POSITION
 } from "@host-it-storage/FactoryStorage.sol";
@@ -67,8 +67,8 @@ library LibFactory {
         address ticketAdmin = LibContext._msgSender();
         ticketAdmin._grantTicketAdminRoles(ticketId);
 
-        TicketMetadata memory ticketMetadata = _ticketData._createTicketMetadata(ticketId, ticketAdmin);
-        $.ticketIdToData[ticketId] = ticketMetadata;
+        ExtraTicketData memory extraTicketData = _ticketData._createExtraTicketData(ticketId, ticketAdmin);
+        $.ticketIdToData[ticketId] = extraTicketData;
         $.adminTicketIds[ticketAdmin].add(ticketId);
 
         if (!_ticketData.isFree) {
@@ -85,50 +85,50 @@ library LibFactory {
             }
         }
 
-        emit TicketCreated(ticketId, ticketAdmin, ticketMetadata);
+        emit TicketCreated(ticketId, ticketAdmin, extraTicketData);
     }
 
     function _updateTicket(TicketData calldata _ticketData, uint40 _ticketId) internal {
         _ticketId._ticketExists();
         _generateMainTicketAdminRole(_ticketId)._checkRoles();
 
-        TicketMetadata memory ticketMetadata = _getTicketMetadata(_ticketId);
+        ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 
         uint40 currentTime = uint40(block.timestamp);
-        if (currentTime > ticketMetadata.startTime) revert TicketUseHasCommenced();
+        if (currentTime > extraTicketData.startTime) revert TicketUseHasCommenced();
 
         if (_ticketData.startTime > 0) {
             if (_ticketData.startTime < currentTime) revert StartTimeShouldBeAhead();
-            ticketMetadata.startTime = _ticketData.startTime;
+            extraTicketData.startTime = _ticketData.startTime;
         }
 
         if (_ticketData.endTime > 0) {
             if (_ticketData.endTime < _ticketData.startTime + 1 days) revert EndTimeShouldBeOneDayAfterStartTime();
-            ticketMetadata.endTime = _ticketData.endTime;
+            extraTicketData.endTime = _ticketData.endTime;
         }
 
         if (_ticketData.purchaseStartTime > 0) {
             if (_ticketData.purchaseStartTime > _ticketData.startTime - 1 days) {
                 revert PurchaseStartTimeShouldBeOneDayBeforeStartTime();
             }
-            ticketMetadata.purchaseStartTime = _ticketData.purchaseStartTime;
+            extraTicketData.purchaseStartTime = _ticketData.purchaseStartTime;
         }
 
-        Ticket ticket = Ticket(ticketMetadata.ticketAddress);
+        Ticket ticket = Ticket(extraTicketData.ticketAddress);
         if (_ticketData.maxTickets > 0) {
             if (_ticketData.maxTickets < ticket.totalSupply()) revert MaxTicketsShouldEqualSupply();
-            ticketMetadata.maxTickets = _ticketData.maxTickets;
+            extraTicketData.maxTickets = _ticketData.maxTickets;
         }
 
-        ticketMetadata.isFree = _ticketData.isFree;
-        ticketMetadata.updatedAt = currentTime;
-        _factoryStorage().ticketIdToData[_ticketId] = ticketMetadata;
+        extraTicketData.isFree = _ticketData.isFree;
+        extraTicketData.updatedAt = currentTime;
+        _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 
         if (bytes(_ticketData.name).length > 0) ticket.updateName(_ticketData.name);
         if (bytes(_ticketData.symbol).length > 0) ticket.updateSymbol(_ticketData.symbol);
         if (bytes(_ticketData.uri).length > 0) ticket.updateURI(_ticketData.uri);
 
-        emit TicketUpdated(_ticketId, LibContext._msgSender(), ticketMetadata);
+        emit TicketUpdated(_ticketId, LibContext._msgSender(), extraTicketData);
     }
 
     function _grantTicketAdminRoles(address _ticketAdmin, uint40 _ticketId) internal {
@@ -136,16 +136,16 @@ library LibFactory {
         _ticketAdmin._grantRoles(_ticketId._generateTicketAdminRole());
     }
 
-    function _createTicketMetadata(TicketData calldata _ticketData, uint40 _ticketId, address _ticketAdmin)
+    function _createExtraTicketData(TicketData calldata _ticketData, uint40 _ticketId, address _ticketAdmin)
         internal
-        returns (TicketMetadata memory ticketMetadata_)
+        returns (ExtraTicketData memory extraTicketData_)
     {
         address ticketImplementation = _factoryStorage().ticketImplementation;
         if (ticketImplementation.code.length == 0) revert("");
         address ticketAddress = ticketImplementation.cloneDeterministic(_generateTicketHash(_ticketId));
         Ticket(ticketAddress).initialize(address(this), _ticketData.name, _ticketData.uri);
 
-        ticketMetadata_ = TicketMetadata({
+        extraTicketData_ = ExtraTicketData({
             id: _ticketId,
             createdAt: uint40(block.timestamp),
             updatedAt: 0,
@@ -173,26 +173,26 @@ library LibFactory {
         if (!status_) revert TicketDoesNotExist(_ticketId);
     }
 
-    function _getTicketMetadata(uint40 _ticketId) internal view returns (TicketMetadata memory ticketMetadata_) {
+    function _getExtraTicketData(uint40 _ticketId) internal view returns (ExtraTicketData memory extraTicketData_) {
         _ticketId._ticketExists();
-        ticketMetadata_ = _factoryStorage().ticketIdToData[_ticketId];
+        extraTicketData_ = _factoryStorage().ticketIdToData[_ticketId];
     }
 
     function _getFullTicketData(uint40 _ticketId) internal view returns (FullTicketData memory fullTicketData_) {
-        TicketMetadata memory ticketMetadata = _getTicketMetadata(_ticketId);
-        Ticket ticket = Ticket(ticketMetadata.ticketAddress);
+        ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
+        Ticket ticket = Ticket(extraTicketData.ticketAddress);
         fullTicketData_ = FullTicketData({
-            id: ticketMetadata.id,
-            createdAt: ticketMetadata.createdAt,
-            updatedAt: ticketMetadata.updatedAt,
-            startTime: ticketMetadata.startTime,
-            endTime: ticketMetadata.endTime,
-            purchaseStartTime: ticketMetadata.purchaseStartTime,
-            maxTickets: ticketMetadata.maxTickets,
-            soldTickets: ticketMetadata.soldTickets,
-            isFree: ticketMetadata.isFree,
-            ticketAdmin: ticketMetadata.ticketAdmin,
-            ticketAddress: ticketMetadata.ticketAddress,
+            id: extraTicketData.id,
+            createdAt: extraTicketData.createdAt,
+            updatedAt: extraTicketData.updatedAt,
+            startTime: extraTicketData.startTime,
+            endTime: extraTicketData.endTime,
+            purchaseStartTime: extraTicketData.purchaseStartTime,
+            maxTickets: extraTicketData.maxTickets,
+            soldTickets: extraTicketData.soldTickets,
+            isFree: extraTicketData.isFree,
+            ticketAdmin: extraTicketData.ticketAdmin,
+            ticketAddress: extraTicketData.ticketAddress,
             name: ticket.name(),
             symbol: ticket.symbol(),
             uri: ticket.baseURI()

@@ -9,7 +9,7 @@ bytes32 constant FACTORY_STORAGE_POSITION = 0x610b7ed6689c503e651500bb8179583591
 struct FactoryStorage {
     uint40 ticketId;
     address ticketImplementation;
-    mapping(uint40 => TicketMetadata) ticketIdToData;
+    mapping(uint40 => ExtraTicketData) ticketIdToData;
     mapping(address => EnumerableSet.UintSet) adminTicketIds;
 }
 
@@ -24,7 +24,7 @@ struct TicketData {
     string uri;
 }
 
-struct TicketMetadata {
+struct ExtraTicketData {
     uint40 id;
     uint40 createdAt;
     uint40 updatedAt;

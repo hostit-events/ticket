@@ -16,6 +16,8 @@ interface ITicket is IERC721Enumerable {
     /// @param newSymbol The new symbol of the NFT collection
     event SymbolUpdated(string indexed newSymbol);
 
+    function initialize(address, string calldata, string calldata) external;
+
     /// @notice Updates the name of the NFT collection
     function updateName(string calldata) external;
 

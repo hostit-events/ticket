@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {ITicket} from "@host-it/interfaces/ITicket.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {ERC721EnumerableUpgradeable} from
@@ -30,6 +29,8 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 ⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀      ╠╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╣
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀      ╚╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╝
 */
+
+/// @title Ticket
 /// @notice ERC721 Ticket Implementation
 /// @author HostIt Protocol
 contract Ticket is
@@ -37,9 +38,24 @@ contract Ticket is
     ERC721RoyaltyUpgradeable,
     ERC721PausableUpgradeable,
     OwnableUpgradeable,
-    UUPSUpgradeable,
-    ITicket
+    UUPSUpgradeable
 {
+    //*//////////////////////////////////////////////////////////////////////////
+    //                                   EVENTS
+    //////////////////////////////////////////////////////////////////////////*//
+
+    /// @notice Emitted when the base URI is updated
+    /// @param newBaseUri The new base URI set for the NFT collection
+    event BaseURIUpdated(string indexed newBaseUri);
+
+    /// @notice Emitted when the metadata of the NFT collection is updated
+    /// @param newName The new name of the NFT collection
+    event NameUpdated(string indexed newName);
+
+    /// @notice Emitted when the metadata of the NFT collection is updated
+    /// @param newSymbol The new symbol of the NFT collection
+    event SymbolUpdated(string indexed newSymbol);
+
     //*//////////////////////////////////////////////////////////////////////////
     //                                  STORAGE
     //////////////////////////////////////////////////////////////////////////*//
@@ -76,9 +92,9 @@ contract Ticket is
 
     /// @notice Constructor disables initializers on implementation contracts
     /// @dev Only proxy contracts can initialize this contract
-    constructor() {
-        _disableInitializers();
-    }
+    // constructor() {
+    //     _disableInitializers();
+    // }
 
     /// @notice Initializes the contract
     /// @param _owner The owner of the contract
@@ -205,7 +221,7 @@ contract Ticket is
         override(ERC721Upgradeable, ERC721RoyaltyUpgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
-        return super.supportsInterface(_interfaceId) || _interfaceId == type(ITicket).interfaceId;
+        return super.supportsInterface(_interfaceId);
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -275,4 +291,5 @@ MMMMMMMMM:~~~~~~''''....                              ...''''~~::::;::;:
 MMMMMMMMMN~~~~'''''''''....  .               . .    ..'''''~~::::;:::;::
 MMMMMMMMMMX'~::~~~~'~~~~'''''''..........'''''.....'~~~:::;;;;;;;;;:;;;;
 MMMMMMMMMMMN!;::~~~'''~~~~''~~~~~'''''''''''..'''~~::;;;;;:;;;;;:;;;:;;;
+                            THANKS FOR COMING
 */

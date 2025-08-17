@@ -12,6 +12,7 @@ error MaxTicketsIsZero();
 error ArrayMismatch();
 error FeeAlreadySet(FeeType);
 error ZeroFee(FeeType);
-error TicketDoesNotExist(uint40);
+error TicketDoesNotExist(uint56);
 error TicketUseHasCommenced();
 error MaxTicketsShouldEqualSupply();
+error TicketImplementationNotSet();

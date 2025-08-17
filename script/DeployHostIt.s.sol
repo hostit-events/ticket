@@ -7,7 +7,7 @@ import {DiamondCutFacet} from "@diamond/facets/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "@diamond/facets/DiamondLoupeFacet.sol";
 import {OwnableRolesFacet} from "@diamond/facets/OwnableRolesFacet.sol";
 import {FactoryFacet} from "@host-it/facets/FactoryFacet.sol";
-// import {CheckInFacet} from "@host-it/facets/CheckInFacet.sol";
+import {CheckInFacet} from "@host-it/facets/CheckInFacet.sol";
 // import {MarketplaceFacet} from "@host-it/facets/MarketplaceFacet.sol";
 import {MultiInit} from "@diamond/initializers/MultiInit.sol";
 import {ERC165Init} from "@diamond/initializers/ERC165Init.sol";
@@ -26,7 +26,7 @@ contract DeployHostIt is Script, HelperContract {
         DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
         OwnableRolesFacet ownableRolesFacet = new OwnableRolesFacet();
         FactoryFacet factoryFacet = new FactoryFacet();
-        // CheckInFacet checkInFacet = new CheckInFacet();
+        CheckInFacet checkInFacet = new CheckInFacet();
         // MarketplaceFacet marketplaceFacet = new MarketplaceFacet();
 
         // Deploy initializers
@@ -55,7 +55,7 @@ contract DeployHostIt is Script, HelperContract {
         });
 
         // Create an array of FacetCut entries for standard facets
-        FacetCut[] memory cut = new FacetCut[](4);
+        FacetCut[] memory cut = new FacetCut[](5);
 
         cut[0] = FacetCut({
             facetAddress: address(diamondCutFacet),
@@ -79,6 +79,12 @@ contract DeployHostIt is Script, HelperContract {
             facetAddress: address(factoryFacet),
             action: FacetCutAction.Add,
             functionSelectors: _generateSelectors("FactoryFacet")
+        });
+
+        cut[4] = FacetCut({
+            facetAddress: address(checkInFacet),
+            action: FacetCutAction.Add,
+            functionSelectors: _generateSelectors("CheckInFacet")
         });
 
         // Deploy HostIt diamond

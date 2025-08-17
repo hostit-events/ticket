@@ -90,7 +90,7 @@ library LibFactory {
 
     function _updateTicket(TicketData calldata _ticketData, uint40 _ticketId) internal {
         _ticketId._ticketExists();
-        _generateMainTicketAdminRole(_ticketId)._checkRoles();
+        _ticketId._generateMainTicketAdminRole()._checkRoles();
 
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 

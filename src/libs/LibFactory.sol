@@ -141,7 +141,7 @@ library LibFactory {
         returns (ExtraTicketData memory extraTicketData_)
     {
         address ticketImplementation = _factoryStorage().ticketImplementation;
-        if (ticketImplementation.code.length == 0) revert("");
+        if (ticketImplementation.code.length == 0) revert TicketImplementationNotSet();
         address ticketAddress = ticketImplementation.cloneDeterministic(_generateTicketHash(_ticketId));
         Ticket(ticketAddress).initialize(address(this), _ticketData.name, _ticketData.uri);
 

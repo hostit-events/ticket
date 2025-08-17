@@ -5,8 +5,8 @@ pragma solidity 0.8.30;
 bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f364669f622316549d801837d9eeba9778d00;
 
 struct MarketplaceStorage {
-    mapping(uint40 => mapping(FeeType => bool)) feeEnabled;
-    mapping(uint40 => mapping(FeeType => uint256)) ticketFee;
+    mapping(uint56 => mapping(FeeType => bool)) feeEnabled;
+    mapping(uint56 => mapping(FeeType => uint256)) ticketFee;
 }
 
 enum FeeType {

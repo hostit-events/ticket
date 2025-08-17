@@ -63,7 +63,7 @@ library LibFactory {
         if (_ticketData.maxTickets == 0) revert MaxTicketsIsZero();
 
         FactoryStorage storage $ = _factoryStorage();
-        uint40 ticketId = ++$.ticketId;
+        uint56 ticketId = ++$.ticketId;
         address ticketAdmin = LibContext._msgSender();
         ticketAdmin._grantTicketAdminRoles(ticketId);
 
@@ -88,7 +88,7 @@ library LibFactory {
         emit TicketCreated(ticketId, ticketAdmin, extraTicketData);
     }
 
-    function _updateTicket(TicketData calldata _ticketData, uint40 _ticketId) internal {
+    function _updateTicket(TicketData calldata _ticketData, uint56 _ticketId) internal {
         _ticketId._ticketExists();
         _ticketId._generateMainTicketAdminRole()._checkRoles();
 
@@ -131,12 +131,12 @@ library LibFactory {
         emit TicketUpdated(_ticketId, LibContext._msgSender(), extraTicketData);
     }
 
-    function _grantTicketAdminRoles(address _ticketAdmin, uint40 _ticketId) internal {
+    function _grantTicketAdminRoles(address _ticketAdmin, uint56 _ticketId) internal {
         _ticketAdmin._grantRoles(_ticketId._generateMainTicketAdminRole());
         _ticketAdmin._grantRoles(_ticketId._generateTicketAdminRole());
     }
 
-    function _createExtraTicketData(TicketData calldata _ticketData, uint40 _ticketId, address _ticketAdmin)
+    function _createExtraTicketData(TicketData calldata _ticketData, uint56 _ticketId, address _ticketAdmin)
         internal
         returns (ExtraTicketData memory extraTicketData_)
     {
@@ -164,21 +164,21 @@ library LibFactory {
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _getTicketCount() internal view returns (uint40) {
+    function _getTicketCount() internal view returns (uint56) {
         return LibFactory._factoryStorage().ticketId;
     }
 
-    function _ticketExists(uint40 _ticketId) internal view returns (bool status_) {
+    function _ticketExists(uint56 _ticketId) internal view returns (bool status_) {
         status_ = _ticketId > 0 && _ticketId <= _getTicketCount();
         if (!status_) revert TicketDoesNotExist(_ticketId);
     }
 
-    function _getExtraTicketData(uint40 _ticketId) internal view returns (ExtraTicketData memory extraTicketData_) {
+    function _getExtraTicketData(uint56 _ticketId) internal view returns (ExtraTicketData memory extraTicketData_) {
         _ticketId._ticketExists();
         extraTicketData_ = _factoryStorage().ticketIdToData[_ticketId];
     }
 
-    function _getFullTicketData(uint40 _ticketId) internal view returns (FullTicketData memory fullTicketData_) {
+    function _getFullTicketData(uint56 _ticketId) internal view returns (FullTicketData memory fullTicketData_) {
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
         Ticket ticket = Ticket(extraTicketData.ticketAddress);
         fullTicketData_ = FullTicketData({
@@ -200,15 +200,15 @@ library LibFactory {
     }
 
     function _getAllFullTicketData() internal view returns (FullTicketData[] memory fullTicketData_) {
-        uint40 ticketCount = _getTicketCount();
+        uint56 ticketCount = _getTicketCount();
         fullTicketData_ = new FullTicketData[](ticketCount);
 
-        for (uint40 i; i < ticketCount; ++i) {
+        for (uint56 i; i < ticketCount; ++i) {
             fullTicketData_[i] = _getFullTicketData(i + 1);
         }
     }
 
-    function _getAdminTicketIds(address _ticketAdmin) internal view returns (uint40[] memory adminTicketIds_) {
+    function _getAdminTicketIds(address _ticketAdmin) internal view returns (uint56[] memory adminTicketIds_) {
         uint256[] memory adminTicketIds = _factoryStorage().adminTicketIds[_ticketAdmin].values();
         assembly {
             adminTicketIds_ := adminTicketIds
@@ -220,10 +220,10 @@ library LibFactory {
         view
         returns (FullTicketData[] memory fullTicketData_)
     {
-        uint40[] memory adminTicketIds = _getAdminTicketIds(_ticketAdmin);
-        uint40 ticketCount = uint40(adminTicketIds.length);
+        uint56[] memory adminTicketIds = _getAdminTicketIds(_ticketAdmin);
+        uint56 ticketCount = uint56(adminTicketIds.length);
         fullTicketData_ = new FullTicketData[](ticketCount);
-        for (uint40 i; i < ticketCount; ++i) {
+        for (uint56 i; i < ticketCount; ++i) {
             fullTicketData_[i] = adminTicketIds[i]._getFullTicketData();
         }
     }

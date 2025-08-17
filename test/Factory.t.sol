@@ -6,15 +6,13 @@ import {FeeType} from "@host-it-storage/MarketplaceStorage.sol";
 import {DeployedHostIt} from "@host-it-test/states/DeployedHostIt.sol";
 
 contract FactoryTest is DeployedHostIt {
-    uint40 _currentTime = uint40(block.timestamp);
-
     function setUp() public override {
         super.setUp();
         factoryFacet.createTicket(_getTicketData(), _getZeroFeeTypes(), _getZeroFees());
     }
 
     function test_createTicketNoFee() public view {
-        uint40 ticketId = factoryFacet.ticketCount();
+        uint56 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getTicketData();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         assertTrue(factoryFacet.ticketExists(ticketId));
@@ -36,7 +34,7 @@ contract FactoryTest is DeployedHostIt {
     }
 
     function test_updateTicketNoFee() public {
-        uint40 ticketId = factoryFacet.ticketCount();
+        uint56 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getUpdatedTicketData();
         vm.warp(10000);
         factoryFacet.updateTicket(ticketData, ticketId);
@@ -58,8 +56,10 @@ contract FactoryTest is DeployedHostIt {
         assertEq(factoryFacet.ticketCount(), 3);
     }
 
-    function test_ticketExists() public view {
+    function test_ticketExists() public {
         assertTrue(factoryFacet.ticketExists(1));
+        vm.expectRevert();
+        factoryFacet.ticketExists(10000);
     }
 
     function test_allTicketData() public {
@@ -89,8 +89,8 @@ contract FactoryTest is DeployedHostIt {
         factoryFacet.createTicket(_getUpdatedTicketData(), _getZeroFeeTypes(), _getZeroFees());
         vm.prank(alice);
         factoryFacet.createTicket(_getTicketData(), _getZeroFeeTypes(), _getZeroFees());
-        uint40[] memory ownerTickets = factoryFacet.adminTickets(owner);
-        uint40[] memory aliceTickets = factoryFacet.adminTickets(alice);
+        uint56[] memory ownerTickets = factoryFacet.adminTickets(owner);
+        uint56[] memory aliceTickets = factoryFacet.adminTickets(alice);
         assertEq(ownerTickets.length, 2);
         assertEq(aliceTickets.length, 1);
         assertEq(ownerTickets[0], 1);
@@ -104,70 +104,26 @@ contract FactoryTest is DeployedHostIt {
     }
 
     function test_ticketHash() public view {
-        uint40 ticketId = factoryFacet.ticketCount();
+        uint56 ticketId = factoryFacet.ticketCount();
         bytes32 ticketHash = factoryFacet.ticketHash(ticketId);
-        assertEq(ticketHash, keccak256(abi.encodePacked(keccak256("host.it.ticket"), ticketId)));
+        assertEq(ticketHash, keccak256(abi.encode(keccak256("host.it.ticket"), ticketId)));
     }
 
     function test_mainAdminRole() public view {
-        uint40 ticketId = factoryFacet.ticketCount();
+        uint56 ticketId = factoryFacet.ticketCount();
         uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
         assertEq(
             mainAdminRole,
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        keccak256(abi.encodePacked("host.it.ticket", "host.it.main.ticket.admin")), ticketId
-                    )
-                )
-            )
+            uint256(keccak256(abi.encode(keccak256(abi.encodePacked("host.it.ticket", "main.ticket.admin")), ticketId)))
         );
     }
 
     function test_ticketAdminRole() public view {
-        uint40 ticketId = factoryFacet.ticketCount();
+        uint56 ticketId = factoryFacet.ticketCount();
         uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
         assertEq(
             ticketAdminRole,
-            uint256(
-                keccak256(
-                    abi.encodePacked(keccak256(abi.encodePacked("host.it.ticket", "host.it.ticket.admin")), ticketId)
-                )
-            )
+            uint256(keccak256(abi.encode(keccak256(abi.encodePacked("host.it.ticket", "ticket.admin")), ticketId)))
         );
-    }
-
-    function _getTicketData() internal view returns (TicketData memory ticketData_) {
-        ticketData_ = TicketData({
-            startTime: uint40(block.timestamp + 1 days),
-            endTime: uint40(block.timestamp + 2 days),
-            purchaseStartTime: _currentTime,
-            maxTickets: 100,
-            isFree: true,
-            name: "Test Ticket",
-            symbol: "",
-            uri: "ipfs://"
-        });
-    }
-
-    function _getUpdatedTicketData() internal view returns (TicketData memory ticketData_) {
-        ticketData_ = TicketData({
-            startTime: uint40(block.timestamp + 1 days),
-            endTime: uint40(block.timestamp + 2 days),
-            purchaseStartTime: _currentTime,
-            maxTickets: 100,
-            isFree: true,
-            name: "Test Ticket Update",
-            symbol: "TTU",
-            uri: "ipfs://2"
-        });
-    }
-
-    function _getZeroFeeTypes() internal pure returns (FeeType[] memory feeTypes_) {
-        feeTypes_ = new FeeType[](0);
-    }
-
-    function _getZeroFees() internal pure returns (uint256[] memory fees_) {
-        fees_ = new uint256[](0);
     }
 }

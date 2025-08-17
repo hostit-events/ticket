@@ -33,11 +33,11 @@ library LibFactory {
 
     // keccak256("host.it.ticket")
     bytes32 private constant HOST_IT_TICKET = 0x2d39ca42f70b8fb1aad3b6b712ac8513c31a927ee8719e6858dd209fe8ec8293;
-    // keccak256(abi.encodePacked("host.it.ticket", "host.it.main.ticket.admin"))
+    // keccak256("host.it.ticket.main.admin")
     bytes32 private constant HOST_IT_MAIN_TICKET_ADMIN =
-        0x320d4f892a9fa49419e4feee48f2a920a83fd979077ea864d83915adeab12b63;
-    // keccak256(abi.encodePacked("host.it.ticket", "host.it.ticket.admin"))
-    bytes32 private constant HOST_IT_TICKET_ADMIN = 0x447358aa3307d72e4c4aa71aedd329ffff8d09e5fd1ca46ed8beeba02a9369ef;
+        0x9e43108e5493e42cc4760e9745ac2a20abf7b4bd5a1d7bd2109a5832e6ebfa95;
+    // keccak256("host.it.ticket.admin")
+    bytes32 private constant HOST_IT_TICKET_ADMIN = 0x66d6cfcd439cf68144fc7493914c7b690fcf4a642ab874f3276cb229bd8bcef2;
 
     function _factoryStorage() internal pure returns (FactoryStorage storage fs_) {
         assembly {
@@ -236,18 +236,30 @@ library LibFactory {
         return HOST_IT_TICKET;
     }
 
-    function _generateTicketHash(uint40 _ticketId) internal pure returns (bytes32 ticketHash_) {
-        bytes memory ticket = abi.encodePacked(HOST_IT_TICKET, _ticketId);
+    function _generateTicketHash(uint56 _ticketId) internal pure returns (bytes32 ticketHash_) {
         assembly {
-            ticketHash_ := keccak256(add(ticket, 0x20), mload(ticket))
+            let ptr := mload(0x40)
+            mstore(ptr, HOST_IT_TICKET)
+            mstore(add(ptr, 0x20), _ticketId)
+            ticketHash_ := keccak256(ptr, 0x40)
         }
     }
 
-    function _generateMainTicketAdminRole(uint40 _ticketId) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(HOST_IT_MAIN_TICKET_ADMIN, _ticketId)));
+    function _generateMainTicketAdminRole(uint56 _ticketId) internal pure returns (uint256 mainTicketAdminRole_) {
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, HOST_IT_MAIN_TICKET_ADMIN)
+            mstore(add(ptr, 0x20), _ticketId)
+            mainTicketAdminRole_ := keccak256(ptr, 0x40)
+        }
     }
 
-    function _generateTicketAdminRole(uint40 _ticketId) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(HOST_IT_TICKET_ADMIN, _ticketId)));
+    function _generateTicketAdminRole(uint56 _ticketId) internal pure returns (uint256 ticketAdminRole_) {
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, HOST_IT_TICKET_ADMIN)
+            mstore(add(ptr, 0x20), _ticketId)
+            ticketAdminRole_ := keccak256(ptr, 0x40)
+        }
     }
 }

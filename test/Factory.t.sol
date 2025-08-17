@@ -112,18 +112,12 @@ contract FactoryTest is DeployedHostIt {
     function test_mainAdminRole() public view {
         uint56 ticketId = factoryFacet.ticketCount();
         uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
-        assertEq(
-            mainAdminRole,
-            uint256(keccak256(abi.encode(keccak256(abi.encodePacked("host.it.ticket", "main.ticket.admin")), ticketId)))
-        );
+        assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
     }
 
     function test_ticketAdminRole() public view {
         uint56 ticketId = factoryFacet.ticketCount();
         uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
-        assertEq(
-            ticketAdminRole,
-            uint256(keccak256(abi.encode(keccak256(abi.encodePacked("host.it.ticket", "ticket.admin")), ticketId)))
-        );
+        assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
     }
 }

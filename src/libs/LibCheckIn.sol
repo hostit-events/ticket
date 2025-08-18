@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {CheckInStorage, CHECKIN_STORAGE_POSITION} from "@host-it-storage/CheckInStorage.sol";
+import {CheckInStorage, CHECKIN_STORAGE_LOCATION} from "@host-it-storage/CheckInStorage.sol";
 import {LibFactory} from "@host-it/libs/LibFactory.sol";
 import {ITicket} from "@host-it/interfaces/ITicket.sol";
 import {ExtraTicketData} from "@host-it-storage/FactoryStorage.sol";
@@ -13,7 +13,7 @@ import "@host-it-errors/CheckInErrors.sol";
 import "@host-it-logs/CheckInLogs.sol";
 
 library LibCheckIn {
-    using LibFactory for *;
+    using LibFactory for uint56;
     using LibOwnableRoles for *;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -23,7 +23,7 @@ library LibCheckIn {
 
     function _checkInStorage() internal pure returns (CheckInStorage storage cs_) {
         assembly {
-            cs_.slot := CHECKIN_STORAGE_POSITION
+            cs_.slot := CHECKIN_STORAGE_LOCATION
         }
     }
 
@@ -32,7 +32,7 @@ library LibCheckIn {
     //////////////////////////////////////////////////////////////////////////*//
 
     function _checkin(uint56 _ticketId, address _ticketOwner, uint256 _tokenId) internal onlyTicketAdmin(_ticketId) {
-        if (!_ticketId._ticketExists()) revert TicketDoesNotExist(_ticketId);
+        _ticketId._checkTicketExists();
 
         uint40 time = uint40(block.timestamp);
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
@@ -56,6 +56,8 @@ library LibCheckIn {
     }
 
     function _addTicketAdmins(uint56 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
+        _ticketId._checkTicketExists();
+
         uint256 adminsLength = _admins.length;
         if (adminsLength == 0) revert NoAdmins();
         uint256 ticketAdminRole = _ticketId._generateTicketAdminRole();
@@ -70,6 +72,8 @@ library LibCheckIn {
         internal
         onlyMainTicketAdmin(_ticketId)
     {
+        _ticketId._checkTicketExists();
+
         uint256 adminsLength = _admins.length;
         if (adminsLength == 0) revert NoAdmins();
         uint256 ticketAdminRole = _ticketId._generateTicketAdminRole();
@@ -99,25 +103,17 @@ library LibCheckIn {
         return _checkInStorage().checkedInByDay[_ticketId][_day].values();
     }
 
-    function _checkMainTicketAdminRole(uint56 _ticketId) internal view {
-        _ticketId._generateMainTicketAdminRole()._checkRoles();
-    }
-
-    function _checkTicketAdminRole(uint56 _ticketId) internal view {
-        _ticketId._generateTicketAdminRole()._checkRoles();
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                                 MODIFIERS
     //////////////////////////////////////////////////////////////////////////*//
 
     modifier onlyMainTicketAdmin(uint56 _ticketId) {
-        _checkMainTicketAdminRole(_ticketId);
+        LibFactory._checkMainTicketAdminRole(_ticketId);
         _;
     }
 
     modifier onlyTicketAdmin(uint56 _ticketId) {
-        _checkTicketAdminRole(_ticketId);
+        LibFactory._checkTicketAdminRole(_ticketId);
         _;
     }
 }

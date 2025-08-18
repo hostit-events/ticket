@@ -1,4 +1,10 @@
 {
+  "lib/erc2535-diamond-template": {
+    "rev": "b42aa3076e9f24cda16ae88e198420ef64208708"
+  },
+  "lib/solady": {
+    "rev": "33b4b98e350bbcba6aa85642957c313e98b5f911"
+  },
   "lib/openzeppelin-contracts-upgradeable": {
     "tag": {
       "name": "v5.4.0",
@@ -10,8 +16,5 @@
       "name": "v1.10.0",
       "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
     }
-  },
-  "lib/erc2535-diamond-template": {
-    "rev": "b42aa3076e9f24cda16ae88e198420ef64208708"
   }
 }

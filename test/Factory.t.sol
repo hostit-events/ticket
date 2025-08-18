@@ -56,10 +56,9 @@ contract FactoryTest is DeployedHostIt {
         assertEq(factoryFacet.ticketCount(), 3);
     }
 
-    function test_ticketExists() public {
+    function test_ticketExists() public view {
         assertTrue(factoryFacet.ticketExists(1));
-        vm.expectRevert();
-        factoryFacet.ticketExists(10000);
+        assertFalse(factoryFacet.ticketExists(10000));
     }
 
     function test_allTicketData() public {

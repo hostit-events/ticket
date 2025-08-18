@@ -7,7 +7,7 @@ import {
     TicketData,
     ExtraTicketData,
     FullTicketData,
-    FACTORY_STORAGE_POSITION
+    FACTORY_STORAGE_LOCATION
 } from "@host-it-storage/FactoryStorage.sol";
 import {LibMarketplace} from "@host-it/libs/LibMarketplace.sol";
 import {FeeType, MarketplaceStorage} from "@host-it-storage/MarketplaceStorage.sol";
@@ -41,7 +41,7 @@ library LibFactory {
 
     function _factoryStorage() internal pure returns (FactoryStorage storage fs_) {
         assembly {
-            fs_.slot := FACTORY_STORAGE_POSITION
+            fs_.slot := FACTORY_STORAGE_LOCATION
         }
     }
 

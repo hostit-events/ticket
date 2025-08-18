@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {CheckInStorage, CHECKIN_STORAGE_POSITION} from "@host-it-storage/CheckInStorage.sol";
+import {CheckInStorage, CHECKIN_STORAGE_LOCATION} from "@host-it-storage/CheckInStorage.sol";
 import {LibFactory} from "@host-it/libs/LibFactory.sol";
 import {ITicket} from "@host-it/interfaces/ITicket.sol";
 import {ExtraTicketData} from "@host-it-storage/FactoryStorage.sol";
@@ -23,7 +23,7 @@ library LibCheckIn {
 
     function _checkInStorage() internal pure returns (CheckInStorage storage cs_) {
         assembly {
-            cs_.slot := CHECKIN_STORAGE_POSITION
+            cs_.slot := CHECKIN_STORAGE_LOCATION
         }
     }
 

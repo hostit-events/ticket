@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.factory.storage")) - 1)) & ~bytes32(uint256(0xff))
-bytes32 constant FACTORY_STORAGE_POSITION = 0x610b7ed6689c503e651500bb8179583591f93afc835ec7dbed5872619168c100;
+bytes32 constant FACTORY_STORAGE_LOCATION = 0x610b7ed6689c503e651500bb8179583591f93afc835ec7dbed5872619168c100;
 
 struct FactoryStorage {
     uint56 ticketId;

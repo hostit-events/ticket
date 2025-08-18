@@ -3,16 +3,16 @@ pragma solidity 0.8.30;
 
 import {IDiamondCut} from "@diamond/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "@diamond/interfaces/IDiamondLoupe.sol";
-import {IFactory} from "@host-it/interfaces/IFactory.sol";
-import {ICheckIn} from "@host-it/interfaces/ICheckIn.sol";
-import {FeeType} from "@host-it-storage/MarketplaceStorage.sol";
-import {TicketData} from "@host-it-storage/FactoryStorage.sol";
-import {DeployHostIt} from "@host-it-script/DeployHostIt.s.sol";
+import {IFactory} from "@ticket/interfaces/IFactory.sol";
+import {ICheckIn} from "@ticket/interfaces/ICheckIn.sol";
+import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
+import {TicketData} from "@ticket-storage/FactoryStorage.sol";
+import {DeployHostItTickets} from "@ticket-script/DeployHostItTickets.s.sol";
 import {HelperContract} from "@diamond-test/helpers/HelperContract.sol";
 
-abstract contract DeployedHostIt is HelperContract {
+abstract contract DeployedHostItTickets is HelperContract {
     address public hostIt;
-    DeployHostIt public deployHostIt;
+    DeployHostItTickets public deployHostItTickets;
     IFactory public factoryFacet;
     ICheckIn public checkInFacet;
 
@@ -38,8 +38,8 @@ abstract contract DeployedHostIt is HelperContract {
     /// @notice Deploys the Diamond contract and initializes interface references and facet addresses.
     /// @dev This function is intended to be called in a test setup phase (e.g., `setUp()` in Foundry).
     function setUp() public virtual {
-        deployHostIt = new DeployHostIt();
-        hostIt = deployHostIt.run();
+        deployHostItTickets = new DeployHostItTickets();
+        hostIt = deployHostItTickets.run();
 
         diamondCut = IDiamondCut(hostIt);
         diamondLoupe = IDiamondLoupe(hostIt);

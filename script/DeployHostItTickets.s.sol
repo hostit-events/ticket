@@ -2,22 +2,22 @@
 pragma solidity 0.8.30;
 
 import {Script} from "forge-std/Script.sol";
-import {HostIt} from "@host-it/HostIt.sol";
+import {HostItTickets} from "@ticket/HostItTickets.sol";
 import {DiamondCutFacet} from "@diamond/facets/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "@diamond/facets/DiamondLoupeFacet.sol";
 import {OwnableRolesFacet} from "@diamond/facets/OwnableRolesFacet.sol";
-import {FactoryFacet} from "@host-it/facets/FactoryFacet.sol";
-import {CheckInFacet} from "@host-it/facets/CheckInFacet.sol";
-// import {MarketplaceFacet} from "@host-it/facets/MarketplaceFacet.sol";
+import {FactoryFacet} from "@ticket/facets/FactoryFacet.sol";
+import {CheckInFacet} from "@ticket/facets/CheckInFacet.sol";
+// import {MarketplaceFacet} from "@ticket/facets/MarketplaceFacet.sol";
 import {MultiInit} from "@diamond/initializers/MultiInit.sol";
 import {ERC165Init} from "@diamond/initializers/ERC165Init.sol";
-import {HostItInit} from "@host-it/inits/HostItInit.sol";
-import {Ticket} from "@host-it/Ticket.sol";
+import {HostItInit} from "@ticket/inits/HostItInit.sol";
+import {Ticket} from "@ticket/Ticket.sol";
 import {FacetCut, FacetCutAction, DiamondArgs} from "@diamond-storage/DiamondStorage.sol";
-import {LibContext} from "@host-it/libs/LibContext.sol";
+import {LibContext} from "@ticket/libs/LibContext.sol";
 import {HelperContract} from "@diamond-test/helpers/HelperContract.sol";
 
-contract DeployHostIt is Script, HelperContract {
+contract DeployHostItTickets is Script, HelperContract {
     function run() public returns (address hostIt_) {
         vm.startBroadcast();
 
@@ -87,8 +87,8 @@ contract DeployHostIt is Script, HelperContract {
             functionSelectors: _generateSelectors("CheckInFacet")
         });
 
-        // Deploy HostIt diamond
-        hostIt_ = address(new HostIt(cut, args));
+        // Deploy HostItTickets diamond
+        hostIt_ = address(new HostItTickets(cut, args));
 
         vm.stopBroadcast();
     }

@@ -5,15 +5,15 @@ import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
-import {ITicket} from "@host-it/interfaces/ITicket.sol";
-import {LibContext} from "@host-it/libs/LibContext.sol";
-import {LibFactory} from "@host-it/libs/LibFactory.sol";
-import {ExtraTicketData} from "@host-it-storage/FactoryStorage.sol";
-import {FeeType, MarketplaceStorage, MARKETPLACE_STORAGE_LOCATION} from "@host-it-storage/MarketplaceStorage.sol";
+import {ITicket} from "@ticket/interfaces/ITicket.sol";
+import {LibContext} from "@ticket/libs/LibContext.sol";
+import {LibFactory} from "@ticket/libs/LibFactory.sol";
+import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
+import {FeeType, MarketplaceStorage, MARKETPLACE_STORAGE_LOCATION} from "@ticket-storage/MarketplaceStorage.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@host-it-logs/MarketplaceLogs.sol";
+import "@ticket-logs/MarketplaceLogs.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@host-it-errors/MarketplaceErrors.sol";
+import "@ticket-errors/MarketplaceErrors.sol";
 
 library LibMarketplace {
     using LibFactory for uint56;

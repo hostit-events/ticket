@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {TicketCreated, TicketUpdated} from "@host-it-logs/FactoryLogs.sol";
+import {TicketCreated, TicketUpdated} from "@ticket-logs/FactoryLogs.sol";
 import {
     FactoryStorage,
     TicketData,
     ExtraTicketData,
     FullTicketData,
     FACTORY_STORAGE_LOCATION
-} from "@host-it-storage/FactoryStorage.sol";
-import {LibMarketplace} from "@host-it/libs/LibMarketplace.sol";
-import {FeeType, MarketplaceStorage} from "@host-it-storage/MarketplaceStorage.sol";
+} from "@ticket-storage/FactoryStorage.sol";
+import {LibMarketplace} from "@ticket/libs/LibMarketplace.sol";
+import {FeeType, MarketplaceStorage} from "@ticket-storage/MarketplaceStorage.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {LibContext} from "@host-it/libs/LibContext.sol";
-import {Ticket} from "@host-it/Ticket.sol";
+import {LibContext} from "@ticket/libs/LibContext.sol";
+import {Ticket} from "@ticket/Ticket.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@host-it-errors/FactoryErrors.sol";
+import "@ticket-errors/FactoryErrors.sol";
 
 library LibFactory {
     using Clones for address;

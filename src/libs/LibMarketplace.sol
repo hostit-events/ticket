@@ -78,16 +78,6 @@ library LibMarketplace {
         emit TicketMinted(_ticketId, _feeType, fee, tokenId);
     }
 
-    function _setFeeTokenAddresses(FeeType[] calldata _feeTypes, address[] calldata _tokenAddresses) internal {
-        uint256 feeTypesLength = _feeTypes.length;
-        if (feeTypesLength != _tokenAddresses.length && feeTypesLength > 0) revert InvalidFeeConfig();
-        for (uint256 i; i < feeTypesLength; ++i) {
-            if (_tokenAddresses[i] == address(0)) revert TokenAddressZero();
-            _marketplaceStorage().feeTokenAddress[_feeTypes[i]] = _tokenAddresses[i];
-            emit TicketFeeAddressSet(_feeTypes[i], _tokenAddresses[i]);
-        }
-    }
-
     function _setTicketFees(uint56 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
         onlyMainTicketAdmin(_ticketId)
@@ -108,6 +98,16 @@ library LibMarketplace {
             ms.ticketFee[_ticketId][_feeTypes[i]] = _fees[i];
 
             emit TicketFeeSet(_ticketId, _feeTypes[i], _fees[i]);
+        }
+    }
+
+    function _setFeeTokenAddresses(FeeType[] calldata _feeTypes, address[] calldata _tokenAddresses) internal {
+        uint256 feeTypesLength = _feeTypes.length;
+        if (feeTypesLength != _tokenAddresses.length && feeTypesLength > 0) revert InvalidFeeConfig();
+        for (uint256 i; i < feeTypesLength; ++i) {
+            if (_tokenAddresses[i] == address(0)) revert TokenAddressZero();
+            _marketplaceStorage().feeTokenAddress[_feeTypes[i]] = _tokenAddresses[i];
+            emit TicketFeeAddressSet(_feeTypes[i], _tokenAddresses[i]);
         }
     }
 

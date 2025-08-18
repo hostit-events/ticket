@@ -32,7 +32,7 @@ library LibCheckIn {
     //////////////////////////////////////////////////////////////////////////*//
 
     function _checkin(uint56 _ticketId, address _ticketOwner, uint256 _tokenId) internal onlyTicketAdmin(_ticketId) {
-        if (!_ticketId._ticketExists()) revert TicketDoesNotExist(_ticketId);
+        _ticketId._checkTicketExists();
 
         uint40 time = uint40(block.timestamp);
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
@@ -56,6 +56,8 @@ library LibCheckIn {
     }
 
     function _addTicketAdmins(uint56 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
+        _ticketId._checkTicketExists();
+
         uint256 adminsLength = _admins.length;
         if (adminsLength == 0) revert NoAdmins();
         uint256 ticketAdminRole = _ticketId._generateTicketAdminRole();
@@ -70,6 +72,8 @@ library LibCheckIn {
         internal
         onlyMainTicketAdmin(_ticketId)
     {
+        _ticketId._checkTicketExists();
+
         uint256 adminsLength = _admins.length;
         if (adminsLength == 0) revert NoAdmins();
         uint256 ticketAdminRole = _ticketId._generateTicketAdminRole();

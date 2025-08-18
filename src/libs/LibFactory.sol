@@ -89,8 +89,8 @@ library LibFactory {
     }
 
     function _updateTicket(TicketData calldata _ticketData, uint56 _ticketId) internal {
-        _ticketId._ticketExists();
         _ticketId._generateMainTicketAdminRole()._checkRoles();
+        _checkTicketExists(_ticketId);
 
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 
@@ -171,10 +171,12 @@ library LibFactory {
     function _ticketExists(uint56 _ticketId) internal view returns (bool status_) {
         status_ = _ticketId > 0 && _ticketId <= _getTicketCount();
         if (!status_) revert TicketDoesNotExist(_ticketId);
+    function _ticketExists(uint56 _ticketId) internal view returns (bool) {
+        return _ticketId > 0 && _ticketId <= _getTicketCount();
     }
 
     function _getExtraTicketData(uint56 _ticketId) internal view returns (ExtraTicketData memory extraTicketData_) {
-        _ticketId._ticketExists();
+        _checkTicketExists(_ticketId);
         extraTicketData_ = _factoryStorage().ticketIdToData[_ticketId];
     }
 
@@ -228,6 +230,9 @@ library LibFactory {
         }
     }
 
+    function _checkTicketExists(uint56 _ticketId) internal view {
+        if (!_ticketExists(_ticketId)) revert TicketDoesNotExist(_ticketId);
+    }
     //*//////////////////////////////////////////////////////////////////////////
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//

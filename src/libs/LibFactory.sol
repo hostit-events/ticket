@@ -228,6 +228,19 @@ library LibFactory {
     function _checkTicketExists(uint56 _ticketId) internal view {
         if (!_ticketExists(_ticketId)) revert TicketDoesNotExist(_ticketId);
     }
+
+    function _isTicketFree(uint56 _ticketId) internal view returns (bool) {
+        return _factoryStorage().ticketIdToData[_ticketId].isFree;
+    }
+
+    function _checkMainTicketAdminRole(uint56 _ticketId) internal view {
+        _generateMainTicketAdminRole(_ticketId)._checkRoles();
+    }
+
+    function _checkTicketAdminRole(uint56 _ticketId) internal view {
+        _generateTicketAdminRole(_ticketId)._checkRoles();
+    }
+
     //*//////////////////////////////////////////////////////////////////////////
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//

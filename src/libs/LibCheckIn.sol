@@ -13,7 +13,7 @@ import "@host-it-errors/CheckInErrors.sol";
 import "@host-it-logs/CheckInLogs.sol";
 
 library LibCheckIn {
-    using LibFactory for *;
+    using LibFactory for uint56;
     using LibOwnableRoles for *;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -103,25 +103,17 @@ library LibCheckIn {
         return _checkInStorage().checkedInByDay[_ticketId][_day].values();
     }
 
-    function _checkMainTicketAdminRole(uint56 _ticketId) internal view {
-        _ticketId._generateMainTicketAdminRole()._checkRoles();
-    }
-
-    function _checkTicketAdminRole(uint56 _ticketId) internal view {
-        _ticketId._generateTicketAdminRole()._checkRoles();
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                                 MODIFIERS
     //////////////////////////////////////////////////////////////////////////*//
 
     modifier onlyMainTicketAdmin(uint56 _ticketId) {
-        _checkMainTicketAdminRole(_ticketId);
+        LibFactory._checkMainTicketAdminRole(_ticketId);
         _;
     }
 
     modifier onlyTicketAdmin(uint56 _ticketId) {
-        _checkTicketAdminRole(_ticketId);
+        LibFactory._checkTicketAdminRole(_ticketId);
         _;
     }
 }

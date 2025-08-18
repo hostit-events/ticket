@@ -3,14 +3,14 @@ pragma solidity 0.8.30;
 
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {CheckInStorage, CHECKIN_STORAGE_LOCATION} from "@host-it-storage/CheckInStorage.sol";
-import {LibFactory} from "@host-it/libs/LibFactory.sol";
-import {ITicket} from "@host-it/interfaces/ITicket.sol";
-import {ExtraTicketData} from "@host-it-storage/FactoryStorage.sol";
+import {CheckInStorage, CHECKIN_STORAGE_LOCATION} from "@ticket-storage/CheckInStorage.sol";
+import {LibFactory} from "@ticket/libs/LibFactory.sol";
+import {ITicket} from "@ticket/interfaces/ITicket.sol";
+import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@host-it-errors/CheckInErrors.sol";
+import "@ticket-errors/CheckInErrors.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@host-it-logs/CheckInLogs.sol";
+import "@ticket-logs/CheckInLogs.sol";
 
 library LibCheckIn {
     using LibFactory for uint56;

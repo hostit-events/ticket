@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Ticket} from "@host-it/Ticket.sol";
+import {Ticket} from "@ticket/Ticket.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TicketTest is Test {

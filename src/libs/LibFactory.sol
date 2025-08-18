@@ -23,7 +23,6 @@ library LibFactory {
     using Clones for address;
     using {LibOwnableRoles._grantRoles} for address;
     using {LibOwnableRoles._checkRoles} for uint256;
-    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
     //*//////////////////////////////////////////////////////////////////////////

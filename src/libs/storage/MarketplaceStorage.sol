@@ -7,9 +7,13 @@ bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f36
 struct MarketplaceStorage {
     mapping(uint56 => mapping(FeeType => bool)) feeEnabled;
     mapping(uint56 => mapping(FeeType => uint256)) ticketFee;
+    mapping(FeeType => address) feeTokenAddress;
+    mapping(uint56 => mapping(FeeType => uint256)) ticketBalance;
+    mapping(FeeType => uint256) hostItBalance;
 }
 
 enum FeeType {
+    NONE,
     ETH,
     WETH,
     USDT,

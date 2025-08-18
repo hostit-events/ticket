@@ -20,7 +20,6 @@ import {Ticket} from "@host-it/Ticket.sol";
 import "@host-it-errors/FactoryErrors.sol";
 
 library LibFactory {
-    using LibFactory for *;
     using Clones for address;
     using {LibOwnableRoles._grantRoles} for address;
     using {LibOwnableRoles._checkRoles} for uint256;
@@ -65,9 +64,9 @@ library LibFactory {
         FactoryStorage storage $ = _factoryStorage();
         uint56 ticketId = ++$.ticketId;
         address ticketAdmin = LibContext._msgSender();
-        ticketAdmin._grantTicketAdminRoles(ticketId);
+        _grantTicketAdminRoles(ticketAdmin, ticketId);
 
-        ExtraTicketData memory extraTicketData = _ticketData._createExtraTicketData(ticketId, ticketAdmin);
+        ExtraTicketData memory extraTicketData = _createExtraTicketData(_ticketData, ticketId, ticketAdmin);
         $.ticketIdToData[ticketId] = extraTicketData;
         $.adminTicketIds[ticketAdmin].add(ticketId);
 
@@ -89,8 +88,8 @@ library LibFactory {
     }
 
     function _updateTicket(TicketData calldata _ticketData, uint56 _ticketId) internal {
-        _ticketId._generateMainTicketAdminRole()._checkRoles();
         _checkTicketExists(_ticketId);
+        _generateMainTicketAdminRole(_ticketId)._checkRoles();
 
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 
@@ -132,8 +131,8 @@ library LibFactory {
     }
 
     function _grantTicketAdminRoles(address _ticketAdmin, uint56 _ticketId) internal {
-        _ticketAdmin._grantRoles(_ticketId._generateMainTicketAdminRole());
-        _ticketAdmin._grantRoles(_ticketId._generateTicketAdminRole());
+        _ticketAdmin._grantRoles(_generateMainTicketAdminRole(_ticketId));
+        _ticketAdmin._grantRoles(_generateTicketAdminRole(_ticketId));
     }
 
     function _createExtraTicketData(TicketData calldata _ticketData, uint56 _ticketId, address _ticketAdmin)
@@ -168,9 +167,6 @@ library LibFactory {
         return LibFactory._factoryStorage().ticketId;
     }
 
-    function _ticketExists(uint56 _ticketId) internal view returns (bool status_) {
-        status_ = _ticketId > 0 && _ticketId <= _getTicketCount();
-        if (!status_) revert TicketDoesNotExist(_ticketId);
     function _ticketExists(uint56 _ticketId) internal view returns (bool) {
         return _ticketId > 0 && _ticketId <= _getTicketCount();
     }
@@ -226,7 +222,7 @@ library LibFactory {
         uint56 ticketCount = uint56(adminTicketIds.length);
         fullTicketData_ = new FullTicketData[](ticketCount);
         for (uint56 i; i < ticketCount; ++i) {
-            fullTicketData_[i] = adminTicketIds[i]._getFullTicketData();
+            fullTicketData_[i] = _getFullTicketData(adminTicketIds[i]);
         }
     }
 

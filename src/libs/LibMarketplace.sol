@@ -117,7 +117,7 @@ library LibMarketplace {
     // }
 
     // TODO
-    // function _fulfillRefund(uint56 _ticketId, FeeType _feeType) internal {}
+    // function _fulfillRefund(uint56 _ticketId, FeeType _feeType) internal onlyRoleOrOwner {}
 
     function _withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to)
         internal

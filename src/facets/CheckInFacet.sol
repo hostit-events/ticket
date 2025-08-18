@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {LibCheckIn} from "@host-it/libs/LibCheckin.sol";
+import {LibCheckIn} from "@host-it/libs/LibCheckIn.sol";
 
 contract CheckInFacet {
     using LibCheckIn for uint56;

@@ -16,3 +16,5 @@ error InsufficientBalance(address, FeeType, uint256);
 error InsufficientAllowance(address, FeeType, uint256);
 error WithdrawPeriodNotReached();
 error InsufficientWithdrawBalance();
+error TicketPurchaseFailed(FeeType, uint256);
+error FatalErrorTicketMismatch();

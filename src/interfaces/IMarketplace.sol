@@ -8,31 +8,36 @@ interface IMarketplace {
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function mintTicket(uint56 _ticketId, FeeType _feeType) external;
+    function mintTicket(uint56 ticketId, FeeType feeType, address buyer) external payable returns (uint40);
 
-    function setTicketFees(uint56 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees) external;
+    function setTicketFees(uint56 ticketId, FeeType[] calldata feeTypes, uint256[] calldata fees) external;
 
-    function withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to) external;
+    function withdrawTicketBalance(uint56 ticketId, FeeType feeType, address to) external returns (address);
 
-    function withdrawHostItBalance(FeeType _feeType, address _to) external;
+    function withdrawHostItBalance(FeeType feeType, address to) external returns (address);
 
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function isFeeEnabled(uint56 _ticketId, FeeType _feeType) external view returns (bool);
+    function isFeeEnabled(uint56 ticketId, FeeType feeType) external view returns (bool);
 
-    function getFeeTokenAddress(FeeType _feeType) external view returns (address);
+    function getFeeTokenAddress(FeeType feeType) external view returns (address);
 
-    function getTicketFee(uint56 _ticketId, FeeType _feeType) external view returns (uint256);
+    function getTicketFee(uint56 ticketId, FeeType feeType) external view returns (uint256);
+    function getAllFees(uint56 ticketId, FeeType feeType)
+        external
+        view
+        returns (uint256 ticketFee, uint256 hostItFee, uint256 totalFee);
 
-    function getTicketBalance(uint56 _ticketId, FeeType _feeType) external view returns (uint256);
+    function getTicketBalance(uint56 ticketId, FeeType feeType) external view returns (uint256);
 
-    function getHostItBalance(FeeType _feeType) external view returns (uint256);
+    function getHostItBalance(FeeType feeType) external view returns (uint256);
 
     //*//////////////////////////////////////////////////////////////////////////
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function calculateHostItFee(uint256 _fee) external pure returns (uint256);
+    function calculateHostItFee(uint256 fee) external pure returns (uint256);
+    function getRefundPeriod() external pure returns (uint256);
 }

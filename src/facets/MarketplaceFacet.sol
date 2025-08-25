@@ -12,20 +12,20 @@ contract MarketplaceFacet is IMarketplace {
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function mintTicket(uint56 _ticketId, FeeType _feeType) external {
-        _ticketId._mintTicket(_feeType);
+    function mintTicket(uint56 _ticketId, FeeType _feeType, address _buyer) external payable returns (uint40) {
+        return _ticketId._mintTicket(_feeType, _buyer);
     }
 
     function setTicketFees(uint56 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees) external {
         _ticketId._setTicketFees(_feeTypes, _fees);
     }
 
-    function withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to) external {
-        _ticketId._withdrawTicketBalance(_feeType, _to);
+    function withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to) external returns (address) {
+        return _ticketId._withdrawTicketBalance(_feeType, _to);
     }
 
-    function withdrawHostItBalance(FeeType _feeType, address _to) external {
-        _feeType._withdrawHostItBalance(_to);
+    function withdrawHostItBalance(FeeType _feeType, address _to) external returns (address) {
+        return _feeType._withdrawHostItBalance(_to);
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ contract MarketplaceFacet is IMarketplace {
     //////////////////////////////////////////////////////////////////////////*//
 
     function isFeeEnabled(uint56 _ticketId, FeeType _feeType) external view returns (bool) {
-        return _ticketId._getFeeEnabled(_feeType);
+        return _ticketId._isFeeEnabled(_feeType);
     }
 
     function getFeeTokenAddress(FeeType _feeType) external view returns (address) {
@@ -42,6 +42,14 @@ contract MarketplaceFacet is IMarketplace {
 
     function getTicketFee(uint56 _ticketId, FeeType _feeType) external view returns (uint256) {
         return _ticketId._getTicketFee(_feeType);
+    }
+
+    function getAllFees(uint56 _ticketId, FeeType _feeType)
+        external
+        view
+        returns (uint256 ticketFee_, uint256 hostItFee_, uint256 totalFee_)
+    {
+        return _ticketId._getFees(_feeType);
     }
 
     function getTicketBalance(uint56 _ticketId, FeeType _feeType) external view returns (uint256) {
@@ -58,5 +66,9 @@ contract MarketplaceFacet is IMarketplace {
 
     function calculateHostItFee(uint256 _fee) external pure returns (uint256) {
         return _fee._calculateHostItFee();
+    }
+
+    function getRefundPeriod() external pure returns (uint256) {
+        return LibMarketplace.REFUND_PERIOD;
     }
 }

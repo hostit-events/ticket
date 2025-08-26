@@ -10,6 +10,8 @@ import {LibContext} from "@ticket/libs/LibContext.sol";
 import {LibFactory} from "@ticket/libs/LibFactory.sol";
 import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType, MarketplaceStorage, MARKETPLACE_STORAGE_LOCATION} from "@ticket-storage/MarketplaceStorage.sol";
+import {IERC6551Registry} from "erc6551/src/interfaces/IERC6551Registry.sol";
+import {ACCOUNT_V3_IMPLEMENTATION, ERC6551_REGISTRY} from "@ticket-script/helper/AddressesAndFees.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)

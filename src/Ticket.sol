@@ -11,6 +11,7 @@ import {ERC721RoyaltyUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 
 /*
@@ -39,6 +40,7 @@ contract Ticket is
     ERC721RoyaltyUpgradeable,
     PausableUpgradeable,
     OwnableUpgradeable,
+    UUPSUpgradeable,
     ITicket
 {
     //*//////////////////////////////////////////////////////////////////////////
@@ -90,6 +92,7 @@ contract Ticket is
         __ERC721Enumerable_init();
         __ERC721Royalty_init();
         __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
 
         // Set default royalty to 5%
         _setDefaultRoyalty(_owner, 500);
@@ -256,6 +259,9 @@ contract Ticket is
     {
         ERC721EnumerableUpgradeable._increaseBalance(account, amount);
     }
+
+    /// @dev Internal override for upgrade logic
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
 
 /*

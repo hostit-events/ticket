@@ -7,3 +7,4 @@ error NotTicketOwner(uint256);
 error AlreadyCheckedInForDay(uint8);
 error NoAdmins();
 error AddressZeroAdmin();
+error PauseFailed();

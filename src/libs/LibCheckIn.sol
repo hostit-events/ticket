@@ -43,7 +43,9 @@ library LibCheckIn {
         ITicket ticket = ITicket(ticketData.ticketAddress);
         if (ticket.ownerOf(_tokenId) != _ticketOwner) revert NotTicketOwner(_tokenId);
 
-        if (!ticket.paused()) ticket.pause();
+        if (!ticket.paused()) {
+            if (!ticket.pause()) revert PauseFailed();
+        }
 
         CheckInStorage storage cs = _checkInStorage();
 

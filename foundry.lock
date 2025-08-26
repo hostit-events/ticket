@@ -1,9 +1,12 @@
 {
-  "lib/erc2535-diamond-template": {
-    "rev": "b42aa3076e9f24cda16ae88e198420ef64208708"
-  },
   "lib/solady": {
     "rev": "33b4b98e350bbcba6aa85642957c313e98b5f911"
+  },
+  "lib/forge-std": {
+    "tag": {
+      "name": "v1.10.0",
+      "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
+    }
   },
   "lib/openzeppelin-contracts-upgradeable": {
     "tag": {
@@ -11,10 +14,10 @@
       "rev": "e725abddf1e01cf05ace496e950fc8e243cc7cab"
     }
   },
-  "lib/forge-std": {
+  "lib/erc2535-diamond-template": {
     "tag": {
-      "name": "v1.10.0",
-      "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
+      "name": "v1.0.0-rc.3",
+      "rev": "cbc0de4c7e72210150a56b69a00bf03f2c22a9b2"
     }
   }
 }

@@ -10,6 +10,8 @@ import {LibContext} from "@ticket/libs/LibContext.sol";
 import {LibFactory} from "@ticket/libs/LibFactory.sol";
 import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType, MarketplaceStorage, MARKETPLACE_STORAGE_LOCATION} from "@ticket-storage/MarketplaceStorage.sol";
+import {IERC6551Registry} from "erc6551/src/interfaces/IERC6551Registry.sol";
+import {ACCOUNT_V3_IMPLEMENTATION, ERC6551_REGISTRY} from "@ticket-script/helper/AddressesAndFees.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
@@ -73,6 +75,12 @@ library LibMarketplace {
         if (tokenId_ != LibFactory._factoryStorage().ticketIdToData[_ticketId].soldTickets) {
             revert FatalErrorTicketMismatch();
         }
+
+        // Create ERC6551 Account
+        IERC6551Registry(ERC6551_REGISTRY).createAccount(
+            ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, ticketData.ticketAddress, tokenId_
+        );
+
         emit TicketMinted(_ticketId, _feeType, totalFee, tokenId_);
     }
 

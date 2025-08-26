@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 
-library TokenAddresses {
+library AddressesAndFees {
     //*//////////////////////////////////////////////////////////////////////////
     //                             MAINNET ADDRESSES
     //////////////////////////////////////////////////////////////////////////*//
@@ -240,7 +240,7 @@ address constant BASE_EURC = 0x60a3E35Cc302bFA44Cb288Bc5a4F316Fdb1adb42;
 address constant BASE_SEPOLIA_USDC = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
 address constant BASE_SEPOLIA_USDT = 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06;
 address constant BASE_SEPOLIA_LINK = 0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
-address constant BASE_SEPOLIA_WETH = 0xE4aB69C077896252FAFBD49EFD26B5D171A32410;
+address constant BASE_SEPOLIA_WETH = 0x4200000000000000000000000000000000000006;
 address constant BASE_SEPOLIA_EURC = 0x808456652fdb597867f38412077A9182bf77359F;
 
 //*//////////////////////////////////////////////////////////////////////////
@@ -296,3 +296,14 @@ address constant ARBITRUM_ONE_WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 address constant ARBITRUM_SEPOLIA_USDC = 0x5Df6eD08EEC2fD5e41914d291c0cf48Cd3564421;
 address constant ARBITRUM_SEPOLIA_LINK = 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E;
 address constant ARBITRUM_SEPOLIA_WETH = 0xE591bf0A0CF924A0674d7792db046B23CEbF5f34;
+
+//*//////////////////////////////////////////////////////////////////////////
+//                            TOKENBOUND ADDRESSES
+//////////////////////////////////////////////////////////////////////////*//
+
+address constant CREATE2_FACTORY = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
+address constant ERC6551_REGISTRY = 0x000000006551c19487814612e58FE06813775758;
+address constant ACCOUNT_V3_PROXY = 0x55266d75D1a14E4572138116aF39863Ed6596E7F;
+address constant ACCOUNT_V3_IMPLEMENTATION = 0x41C8f39463A868d3A88af00cd0fe7102F30E44eC;
+address constant ACCOUNT_V3_GUARDIAN = 0x2FE5ccb0d7Ea195FEb87987d3573F9fcCE2b5D57;
+address constant AUTHENTICATED_MULTICALL = 0xcA1167915584462449EE5b4Ea51c37fE81eCDCCD;

@@ -9,14 +9,14 @@ import {ICheckIn} from "@ticket/interfaces/ICheckIn.sol";
 import {IMarketplace} from "@ticket/interfaces/IMarketplace.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {TicketData} from "@ticket-storage/FactoryStorage.sol";
-import {DeployHostItTickets} from "@ticket-script/DeployHostItTickets.s.sol";
+import {DeployHostItTicketsTest} from "@ticket-script/DeployHostItTickets.s.sol";
 import {HelperContract} from "@diamond-test/helpers/HelperContract.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 
 abstract contract DeployedHostItTickets is HelperContract {
     address public hostIt;
-    DeployHostItTickets public deployHostItTickets;
+    DeployHostItTicketsTest public deployHostItTickets;
     IFactory public factoryFacet;
     ICheckIn public checkInFacet;
     IMarketplace public marketplaceFacet;
@@ -51,7 +51,7 @@ abstract contract DeployedHostItTickets is HelperContract {
     /// @notice Deploys the Diamond contract and initializes interface references and facet addresses.
     /// @dev This function is intended to be called in a test setup phase (e.g., `setUp()` in Foundry).
     function setUp() public virtual {
-        deployHostItTickets = new DeployHostItTickets();
+        deployHostItTickets = new DeployHostItTicketsTest();
         hostIt = deployHostItTickets.run();
 
         diamondCut = IDiamondCut(hostIt);

@@ -24,7 +24,7 @@ library LibMarketplace {
     //                                  STORAGE
     //////////////////////////////////////////////////////////////////////////*//
 
-    uint256 private constant ADDITIONAL_TICKETS = 0;
+    uint256 private constant MAX_TICKETS_PER_HOLDER = 0;
     uint256 internal constant REFUND_PERIOD = 3 days;
 
     function _marketplaceStorage() internal pure returns (MarketplaceStorage storage ms_) {
@@ -48,7 +48,7 @@ library LibMarketplace {
         if (ticketData.soldTickets == ticketData.maxTickets) revert TicketSoldOut();
 
         ITicket ticket = ITicket(ticketData.ticketAddress);
-        if (ticket.balanceOf(_buyer) > ADDITIONAL_TICKETS) revert MaxTicketsHeld();
+        if (ticket.balanceOf(_buyer) > MAX_TICKETS_PER_HOLDER) revert MaxTicketsHeld();
 
         (uint256 fee, uint256 hostItFee, uint256 totalFee) = _getFees(_ticketId, _feeType);
         if (!ticketData.isFree) {

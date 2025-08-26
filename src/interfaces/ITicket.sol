@@ -23,14 +23,14 @@ interface ITicket is IERC721Metadata, IERC721Enumerable {
     function baseURI() external view returns (string memory);
 
     /// @notice Updates the name of the NFT collection
-    function updateName(string calldata) external;
+    function updateName(string calldata) external returns (bool);
 
     /// @notice Updates the symbol of the NFT collection
-    function updateSymbol(string calldata) external;
+    function updateSymbol(string calldata) external returns (bool);
 
     /// @notice Updates the base URI of the NFT collection
     /// forge-lint: disable-next-line(mixed-case-function)
-    function updateURI(string calldata) external;
+    function updateURI(string calldata) external returns (bool);
 
     /// @notice Mints a new token to a given address
     function mint(address) external returns (uint256);
@@ -39,8 +39,8 @@ interface ITicket is IERC721Metadata, IERC721Enumerable {
     function paused() external returns (bool);
 
     /// @notice Pauses token transfers
-    function pause() external;
+    function pause() external returns (bool);
 
     /// @notice Unpauses token transfers
-    function unpause() external;
+    function unpause() external returns (bool);
 }

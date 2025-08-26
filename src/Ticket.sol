@@ -103,24 +103,27 @@ contract Ticket is
 
     /// @notice Allows the owner to update the name of the NFT collection
     /// @param _name The name to assign
-    function updateName(string calldata _name) external onlyOwner {
+    function updateName(string calldata _name) external onlyOwner returns (bool) {
         _getErc721Storage()._name = _name;
         emit NameUpdated(_name);
+        return true;
     }
 
     /// @notice Allows the owner to update the symbol of the NFT collection
     /// @param _symbol The symbol to assign
-    function updateSymbol(string calldata _symbol) external onlyOwner {
+    function updateSymbol(string calldata _symbol) external onlyOwner returns (bool) {
         _getErc721Storage()._symbol = _symbol;
         emit SymbolUpdated(_symbol);
+        return true;
     }
 
     /// @notice Allows the owner to set the base URI
     /// @param __baseUri The URI to assign
     /// forge-lint: disable-next-line(mixed-case-function)
-    function updateURI(string calldata __baseUri) external onlyOwner {
+    function updateURI(string calldata __baseUri) external onlyOwner returns (bool) {
         _getErc721UriStorage()._uri = __baseUri;
         emit BaseURIUpdated(__baseUri);
+        return true;
     }
 
     /// @notice Mints a new token to a given address
@@ -134,14 +137,16 @@ contract Ticket is
 
     /// @notice Pauses token transfers
     /// @dev This function is used to pause token transfers apart from minting
-    function pause() external onlyOwner {
+    function pause() external onlyOwner returns (bool) {
         _pause();
+        return true;
     }
 
     /// @notice Unpauses token transfers
     /// @dev This function is used to unpause token transfers apart from minting
-    function unpause() external onlyOwner {
+    function unpause() external onlyOwner returns (bool) {
         _unpause();
+        return true;
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -152,6 +157,7 @@ contract Ticket is
     /// @param from The address to transfer the token from
     /// @param to The address to transfer the token to
     /// @param tokenId The ID of the token to transfer
+    /// forge-lint: disable-next-item(erc20-unchecked-transfer)
     function transferFrom(address from, address to, uint256 tokenId)
         public
         override(IERC721, ERC721Upgradeable)

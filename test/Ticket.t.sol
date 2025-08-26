@@ -83,6 +83,7 @@ contract TicketTest is Test {
         assertFalse(ticketClone.paused());
     }
 
+    /// forge-lint: disable-next-item(erc20-unchecked-transfer)
     function test_transferFrom() public {
         uint256 tokenId = ticketClone.mint(alice);
         vm.prank(alice);
@@ -120,6 +121,7 @@ contract TicketTest is Test {
         assertEq(ticketClone.balanceOf(alice), 1);
     }
 
+    /// forge-lint: disable-next-item(erc20-unchecked-transfer)
     function test_revertTransferFromWhilePaused() public {
         ticketClone.pause();
         uint256 tokenId = ticketClone.mint(alice);

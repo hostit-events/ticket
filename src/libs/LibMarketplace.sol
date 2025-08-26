@@ -125,6 +125,12 @@ library LibMarketplace {
         } else {
             IERC20(_getFeeTokenAddress(_feeType)).safeTransfer(_to, balance);
         }
+
+        ITicket ticket = ITicket(ticketData.ticketAddress);
+        if (ticket.paused()) {
+            if (!ticket.unpause()) revert UnpauseFailed();
+        }
+
         emit TicketBalanceWithdrawn(_ticketId, _feeType, balance, _to);
     }
 

@@ -16,3 +16,6 @@ error TicketDoesNotExist(uint56);
 error TicketUseHasCommenced();
 error MaxTicketsShouldEqualSupply();
 error TicketImplementationNotSet();
+error UpdateNameFailed();
+error UpdateSymbolFailed();
+error UpdateURIFailed();

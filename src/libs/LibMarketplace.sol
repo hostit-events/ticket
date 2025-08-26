@@ -82,11 +82,9 @@ library LibMarketplace {
     {
         _ticketId._checkTicketExists();
 
-        LibFactory._factoryStorage().ticketIdToData[_ticketId].isFree = false;
-        if (_ticketId._isTicketFree()) revert TicketIsFree();
-
         uint256 feeTypesLength = _feeTypes.length;
         if (feeTypesLength != _fees.length && feeTypesLength > 0) revert InvalidFeeConfig();
+        LibFactory._factoryStorage().ticketIdToData[_ticketId].isFree = false;
 
         MarketplaceStorage storage ms = _marketplaceStorage();
         for (uint256 i; i < feeTypesLength; ++i) {

@@ -128,7 +128,10 @@ library LibMarketplace {
 
         ITicket ticket = ITicket(ticketData.ticketAddress);
         if (ticket.paused()) {
-            if (!ticket.unpause()) revert UnpauseFailed();
+            try ticket.unpause() {}
+            catch {
+                revert TicketUnpauseFailed();
+            }
         }
 
         emit TicketBalanceWithdrawn(_ticketId, _feeType, balance, _to);

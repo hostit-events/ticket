@@ -76,7 +76,7 @@ abstract contract DeployedHostItTickets is HelperContract {
     }
 
     function _updatePaidTicket(uint40 _ticketId) internal {
-        factoryFacet.updateTicket(_getFreeUpdatedTicketData(), _ticketId);
+        factoryFacet.updateTicket(_getPaidUpdatedTicketData(), _ticketId);
     }
 
     function _mintTicketFree() internal returns (uint56 ticketId_, uint40 tokenId_) {

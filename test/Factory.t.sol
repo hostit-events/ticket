@@ -72,6 +72,27 @@ contract FactoryTest is DeployedHostItTickets {
         assertEq(fullTicketData.updatedAt, 0);
     }
 
+    function test_updatePaidTicket() public {
+        _createPaidTicket();
+        uint56 ticketId = factoryFacet.ticketCount();
+        TicketData memory ticketData = _getPaidUpdatedTicketData();
+        vm.warp(10000);
+        ExtraTicketData memory extraTicketData;
+        vm.expectEmit(true, true, false, false, hostIt);
+        emit TicketUpdated(ticketId, owner, extraTicketData);
+        factoryFacet.updateTicket(ticketData, ticketId);
+        FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
+        assertEq(fullTicketData.name, ticketData.name);
+        assertEq(fullTicketData.symbol, ticketData.symbol);
+        assertEq(fullTicketData.uri, ticketData.uri);
+        assertEq(fullTicketData.startTime, ticketData.startTime);
+        assertEq(fullTicketData.purchaseStartTime, ticketData.purchaseStartTime);
+        assertEq(fullTicketData.maxTickets, ticketData.maxTickets);
+        assertEq(fullTicketData.isFree, ticketData.isFree);
+        assertEq(fullTicketData.createdAt, _currentTime);
+        assertEq(fullTicketData.updatedAt, 10000);
+    }
+
     function test_ticketCount() public {
         _createFreeTicket();
         _createFreeTicket();

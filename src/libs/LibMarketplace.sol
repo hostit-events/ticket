@@ -200,7 +200,7 @@ library LibMarketplace {
     }
 
     function _checkIfContract(address _address) internal view {
-        if (_address.code.length > 0) revert("Is Contract");
+        if (_address.code.length > 0) revert ContractNotAllowed();
     }
 
     //*//////////////////////////////////////////////////////////////////////////

@@ -12,3 +12,5 @@ event TicketMinted(uint56 indexed ticketId, FeeType indexed feeType, uint256 fee
 event TicketBalanceWithdrawn(uint56 indexed ticketId, FeeType indexed feeType, uint256 fee, address indexed to);
 
 event HostItBalanceWithdrawn(FeeType indexed feeType, uint256 fee, address indexed to);
+
+error ContractNotAllowed();

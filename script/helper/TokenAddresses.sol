@@ -18,7 +18,7 @@ library TokenAddresses {
         feeType_[4] = uint8(FeeType.WETH);
     }
 
-    function _getEtheremAddresses() internal pure returns (address[] memory addresses_) {
+    function _getEthereumAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](5);
         addresses_[0] = ETH_USDC;
         addresses_[1] = ETH_USDT;

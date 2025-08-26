@@ -118,7 +118,6 @@ library LibFactory {
             extraTicketData.maxTickets = _ticketData.maxTickets;
         }
 
-        extraTicketData.isFree = _ticketData.isFree;
         extraTicketData.updatedAt = currentTime;
         _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 

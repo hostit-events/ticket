@@ -20,12 +20,12 @@ contract MarketplaceFacet is IMarketplace {
         _ticketId._setTicketFees(_feeTypes, _fees);
     }
 
-    function withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to) external returns (address) {
-        return _ticketId._withdrawTicketBalance(_feeType, _to);
+    function withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to) external {
+        _ticketId._withdrawTicketBalance(_feeType, _to);
     }
 
-    function withdrawHostItBalance(FeeType _feeType, address _to) external returns (address) {
-        return _feeType._withdrawHostItBalance(_to);
+    function withdrawHostItBalance(FeeType _feeType, address _to) external {
+        _feeType._withdrawHostItBalance(_to);
     }
 
     //*//////////////////////////////////////////////////////////////////////////

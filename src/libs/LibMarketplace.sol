@@ -27,6 +27,9 @@ library LibMarketplace {
     uint256 private constant MAX_TICKETS_PER_HOLDER = 0;
     uint256 internal constant REFUND_PERIOD = 3 days;
 
+    uint256 private constant HOSTIT_FEE_BPS = 3_000; // 3% fee in basis points
+    uint256 private constant FEE_BASIS_POINTS = 100_000; // 100,000 basis points
+
     function _marketplaceStorage() internal pure returns (MarketplaceStorage storage ms_) {
         assembly {
             ms_.slot := MARKETPLACE_STORAGE_LOCATION
@@ -208,7 +211,7 @@ library LibMarketplace {
     //////////////////////////////////////////////////////////////////////////*//
 
     function _calculateHostItFee(uint256 _fee) internal pure returns (uint256) {
-        return (_fee * 3_000 / 100_000); // 3% fee
+        return (_fee * HOSTIT_FEE_BPS / FEE_BASIS_POINTS);
     }
 
     //*//////////////////////////////////////////////////////////////////////////

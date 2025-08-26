@@ -78,6 +78,8 @@ contract MarketplaceTest is DeployedHostItTickets {
         // Check platform balances before withdraw
         assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDT), usdtFee);
         // Withdraw
+        FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
+        vm.warp(fullTicketData.endTime + marketplaceFacet.getRefundPeriod());
         vm.expectEmit(true, true, true, true, hostIt);
         emit TicketBalanceWithdrawn(ticketId, FeeType.USDT, usdtFee, withdrawer);
         marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.USDT, withdrawer);
@@ -90,6 +92,8 @@ contract MarketplaceTest is DeployedHostItTickets {
     function test_withdrawTicketBalanceUSDC() public {
         (uint56 ticketId,, uint256 usdcFee,, ERC20Mock usdc) = _mintTicketUSDC();
         // Check platform balances before withdraw
+        FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
+        vm.warp(fullTicketData.endTime + marketplaceFacet.getRefundPeriod());
         assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDC), usdcFee);
         // Withdraw
         vm.expectEmit(true, true, true, true, hostIt);

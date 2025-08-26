@@ -11,6 +11,8 @@ import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {TicketData} from "@ticket-storage/FactoryStorage.sol";
 import {DeployHostItTicketsTest} from "@ticket-script/DeployHostItTickets.s.sol";
 import {HelperContract} from "@diamond-test/helpers/HelperContract.sol";
+import {ERC6551Registry} from "erc6551/src/ERC6551Registry.sol";
+import {ERC6551_REGISTRY} from "@ticket-script/helper/AddressesAndFees.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 
@@ -61,6 +63,8 @@ abstract contract DeployedHostItTickets is HelperContract {
         marketplaceFacet = IMarketplace(hostIt);
 
         facetAddresses = diamondLoupe.facetAddresses();
+
+        vm.etch(ERC6551_REGISTRY, address(new ERC6551Registry()).code);
     }
 
     function _createFreeTicket() internal {

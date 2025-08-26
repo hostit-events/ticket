@@ -87,6 +87,7 @@ abstract contract DeployedHostItTickets is HelperContract {
         tokenId_ = marketplaceFacet.mintTicket(ticketId_, FeeType.NONE, alice);
     }
 
+    /// forge-lint: disable-next-line(mixed-case-function)
     function _mintTicketETH() internal returns (uint56 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_) {
         _createPaidTicket();
         ticketId_ = factoryFacet.ticketCount();
@@ -103,6 +104,7 @@ abstract contract DeployedHostItTickets is HelperContract {
         hostItFee_ = hostItFee;
     }
 
+    /// forge-lint: disable-next-line(mixed-case-function)
     function _mintTicketUSDT()
         internal
         returns (uint56 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdt_)
@@ -122,6 +124,7 @@ abstract contract DeployedHostItTickets is HelperContract {
         hostItFee_ = hostItFee;
     }
 
+    /// forge-lint: disable-next-line(mixed-case-function)
     function _mintTicketUSDC()
         internal
         returns (uint56 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdc_)

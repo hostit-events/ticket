@@ -152,6 +152,7 @@ contract Ticket is
     /// @param from The address to transfer the token from
     /// @param to The address to transfer the token to
     /// @param tokenId The ID of the token to transfer
+    /// forge-lint: disable-next-item(erc20-unchecked-transfer)
     function transferFrom(address from, address to, uint256 tokenId)
         public
         override(IERC721, ERC721Upgradeable)

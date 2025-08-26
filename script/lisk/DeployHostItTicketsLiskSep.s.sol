@@ -13,7 +13,7 @@ import {FactoryFacet} from "@ticket/facets/FactoryFacet.sol";
 import {CheckInFacet} from "@ticket/facets/CheckInFacet.sol";
 import {MarketplaceFacet} from "@ticket/facets/MarketplaceFacet.sol";
 import {Ticket} from "@ticket/Ticket.sol";
-import {TokenAddresses} from "@ticket-script/helper/TokenAddresses.sol";
+import {AddressesAndFees} from "@ticket-script/helper/AddressesAndFees.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {DeployHostItTicketsHelper} from "@ticket-script/helper/DeployHostItTicketsHelper.sol";
@@ -55,8 +55,8 @@ contract DeployHostItTicketsLiskSep is Script, DeployHostItTicketsHelper {
                     erc165Init,
                     hostItInit,
                     ticketProxy,
-                    TokenAddresses._getLiskSepoliaFeeTypes(),
-                    TokenAddresses._getLiskSepoliaAddresses()
+                    AddressesAndFees._getLiskSepoliaFeeTypes(),
+                    AddressesAndFees._getLiskSepoliaAddresses()
                 )
             )
         );

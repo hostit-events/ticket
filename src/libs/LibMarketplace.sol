@@ -75,6 +75,12 @@ library LibMarketplace {
         if (tokenId_ != LibFactory._factoryStorage().ticketIdToData[_ticketId].soldTickets) {
             revert FatalErrorTicketMismatch();
         }
+
+        // Create ERC6551 Account
+        IERC6551Registry(ERC6551_REGISTRY).createAccount(
+            ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, ticketData.ticketAddress, tokenId_
+        );
+
         emit TicketMinted(_ticketId, _feeType, totalFee, tokenId_);
     }
 

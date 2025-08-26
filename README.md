@@ -1,66 +1,100 @@
-## Foundry
+# HostIt Protocol - Ticket Smart Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Overview
 
-Foundry consists of:
+This repository contains the smart contracts for the **Ticket** module of the [HostIt Protocol](https://hostit.xyz), a decentralized event and ticketing platform. The Ticket contracts manage the lifecycle of event tickets, including creation, sales, fee management, check-in, and administrative controls. The system is modular, upgradeable, and designed for extensibility and security.
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Architecture
 
-## Documentation
+The Ticket contracts are implemented using the [EIP-2535 Diamond Standard](https://eips.ethereum.org/EIPS/eip-2535) for modular and upgradeable smart contracts. The core logic is split into several "facets," each responsible for a specific domain:
 
-https://book.getfoundry.sh/
+- **FactoryFacet**: Handles ticket creation, updates, and querying ticket data.
+- **MarketplaceFacet**: Manages ticket sales, fee configuration, withdrawals, and marketplace logic.
+- **CheckInFacet**: Supports ticket check-in and admin management for events.
+- **Init**: Handles protocol initialization and configuration.
 
-## Usage
+Supporting libraries and storage contracts are used to manage state and reusable logic.
 
-### Build
+## Key Contracts
 
-```shell
-$ forge build
+- `src/facets/FactoryFacet.sol`: Ticket creation, update, and admin queries.
+- `src/facets/MarketplaceFacet.sol`: Ticket minting, fee management, and withdrawals.
+- `src/facets/CheckInFacet.sol`: Check-in logic and admin controls.
+- `src/inits/HostItInit.sol`: Initialization logic for protocol deployment.
+- `src/interfaces/IMarketplace.sol`: Interface for marketplace operations.
+
+## Features
+
+- **Modular architecture** for upgradeability and separation of concerns
+- **Fee management**: Multi-fee support per ticket, including HostIt platform fees
+- **Ticket minting**: Secure, on-chain ticket sales
+- **Check-in system**: On-chain proof of attendance
+- **Admin roles**: Fine-grained admin controls per ticket
+- **Upgradeable**: Built on the Diamond Standard for future-proofing
+
+## Directory Structure
+
+```
+/contract-root
+├── src/
+│   ├── facets/
+│   │   ├── FactoryFacet.sol
+│   │   ├── MarketplaceFacet.sol
+│   │   └── CheckInFacet.sol
+│   ├── inits/
+│   │   └── HostItInit.sol
+│   ├── interfaces/
+│   │   └── IMarketplace.sol
+│   └── libs/
+│       └── ...
+├── script/
+│   └── ...
+├── test/
+│   └── ...
+└── ...
 ```
 
-### Test
+## Getting Started
 
-```shell
-$ forge test
+### Prerequisites
+- [Foundry](https://book.getfoundry.sh/) (for Solidity development and testing)
+- Node.js (for scripting, if needed)
+- An Ethereum-compatible wallet and testnet access
+
+### Installation
+1. Clone this repository
+2. Install dependencies:
+   ```sh
+   forge install
+   ```
+
+### Compilation
+```sh
+forge build
 ```
 
-### Format
-
-```shell
-$ forge fmt
+### Testing
+```sh
+forge test
 ```
 
-### Gas Snapshots
-
-```shell
-$ forge snapshot
+### Deployment
+Deployment scripts are located in the `/script` directory. Example:
+```sh
+forge script script/DeployHostItTickets.s.sol --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> --broadcast
 ```
 
-### Anvil
+## Security
+- All contracts are licensed under AGPL-3.0-only.
+- Uses OpenZeppelin libraries and patterns for security.
+- Modular upgradeable architecture to enable rapid patching.
 
-```shell
-$ anvil
-```
+## Contributing
+Pull requests, issues, and suggestions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) if available.
 
-### Deploy
+## License
+[AGPL-3.0-only](LICENSE)
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+---
 
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+*For more information, visit [hostit.events](https://www.hostit.events) or contact the maintainers.*

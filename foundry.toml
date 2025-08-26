@@ -8,7 +8,10 @@ remappings = [
     '@ticket-test/=test/',
     '@ticket-errors/=src/libs/errors/',
     '@ticket-logs/=src/libs/logs/',
-    '@ticket-storage/=src/libs/storage/'
+    '@ticket-storage/=src/libs/storage/',
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
+    "@tokenbound/=lib/contracts/src/"
 ]
 ffi = true
 optimizer_runs = 30_000

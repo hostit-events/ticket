@@ -3,12 +3,15 @@ src = "src"
 out = "out"
 libs = ["lib"]
 remappings = [
-    '@host-it/=src/',
-    '@host-it-script/=script/',
-    '@host-it-test/=test/',
-    '@host-it-errors/=src/libs/errors/',
-    '@host-it-logs/=src/libs/logs/',
-    '@host-it-storage/=src/libs/storage/'
+    '@ticket/=src/',
+    '@ticket-script/=script/',
+    '@ticket-test/=test/',
+    '@ticket-errors/=src/libs/errors/',
+    '@ticket-logs/=src/libs/logs/',
+    '@ticket-storage/=src/libs/storage/',
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
+    "@tokenbound/=lib/contracts/src/"
 ]
 ffi = true
 optimizer_runs = 30_000
@@ -28,12 +31,13 @@ arbitrum-sepolia = "${ARBITRUM_SEPOLIA_URL}"
 avalanche-fuji = "${AVALANCHE_FUJI_URL}"
 
 [etherscan]
+# mainnet
 eth-mainnet = { key = "${ETHERSCAN_API_KEY}" }
 base = { key = "${ETHERSCAN_API_KEY}" }
 lisk = { key = "123", url = "${LISK_VERIFIER_URL}" }
 arbitrum-one = { key = "${ETHERSCAN_API_KEY}" }
 avalanche = { key = "verifyContract", url = "${AVALANCHE_VERIFIER_URL}" }
-###################################################
+# testnets
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
 base-sepolia = { key = "${ETHERSCAN_API_KEY}" }
 lisk-sepolia = { key = "123", url = "${LISK_SEPOLIA_VERIFIER_URL}" }

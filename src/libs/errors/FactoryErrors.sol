@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {FeeType} from "@host-it-storage/MarketplaceStorage.sol";
+import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 
 error EmptyName();
 error EmptyURI();
@@ -12,6 +12,10 @@ error MaxTicketsIsZero();
 error ArrayMismatch();
 error FeeAlreadySet(FeeType);
 error ZeroFee(FeeType);
-error TicketDoesNotExist(uint40);
+error TicketDoesNotExist(uint56);
 error TicketUseHasCommenced();
 error MaxTicketsShouldEqualSupply();
+error TicketImplementationNotSet();
+error UpdateNameFailed();
+error UpdateSymbolFailed();
+error UpdateURIFailed();

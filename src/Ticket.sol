@@ -2,15 +2,16 @@
 pragma solidity 0.8.30;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {ERC721EnumerableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import {ERC721RoyaltyUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
-import {ERC721PausableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721PausableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ITicket} from "@ticket/interfaces/ITicket.sol";
 
 /*
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀      ╔╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╦╗
@@ -36,26 +37,10 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 contract Ticket is
     ERC721EnumerableUpgradeable,
     ERC721RoyaltyUpgradeable,
-    ERC721PausableUpgradeable,
+    PausableUpgradeable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    ITicket
 {
-    //*//////////////////////////////////////////////////////////////////////////
-    //                                   EVENTS
-    //////////////////////////////////////////////////////////////////////////*//
-
-    /// @notice Emitted when the base URI is updated
-    /// @param newBaseUri The new base URI set for the NFT collection
-    event BaseURIUpdated(string indexed newBaseUri);
-
-    /// @notice Emitted when the metadata of the NFT collection is updated
-    /// @param newName The new name of the NFT collection
-    event NameUpdated(string indexed newName);
-
-    /// @notice Emitted when the metadata of the NFT collection is updated
-    /// @param newSymbol The new symbol of the NFT collection
-    event SymbolUpdated(string indexed newSymbol);
-
     //*//////////////////////////////////////////////////////////////////////////
     //                                  STORAGE
     //////////////////////////////////////////////////////////////////////////*//
@@ -92,9 +77,9 @@ contract Ticket is
 
     /// @notice Constructor disables initializers on implementation contracts
     /// @dev Only proxy contracts can initialize this contract
-    // constructor() {
-    //     _disableInitializers();
-    // }
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @notice Initializes the contract
     /// @param _owner The owner of the contract
@@ -104,9 +89,7 @@ contract Ticket is
         __ERC721_init(_name, "TICKET");
         __ERC721Enumerable_init();
         __ERC721Royalty_init();
-        __ERC721Pausable_init();
         __Ownable_init(_owner);
-        __UUPSUpgradeable_init();
 
         // Set default royalty to 5%
         _setDefaultRoyalty(_owner, 500);
@@ -190,6 +173,10 @@ contract Ticket is
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
+    function paused() public view override(ITicket, PausableUpgradeable) returns (bool) {
+        return PausableUpgradeable.paused();
+    }
+
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
@@ -199,7 +186,12 @@ contract Ticket is
     /// @param _tokenId The ID of the token
     /// @return The URI pointing to the token's metadata
     /// forge-lint: disable-next-line(mixed-case-function)
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        override(ERC721Upgradeable, IERC721Metadata)
+        returns (string memory)
+    {
         _requireOwned(_tokenId);
         return _baseURI();
     }
@@ -218,7 +210,7 @@ contract Ticket is
     function supportsInterface(bytes4 _interfaceId)
         public
         view
-        override(ERC721Upgradeable, ERC721RoyaltyUpgradeable, ERC721EnumerableUpgradeable)
+        override(IERC165, ERC721RoyaltyUpgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(_interfaceId);
@@ -243,7 +235,7 @@ contract Ticket is
     /// @return The address of the token owner
     function _update(address _to, uint256 _tokenId, address _auth)
         internal
-        override(ERC721Upgradeable, ERC721PausableUpgradeable, ERC721EnumerableUpgradeable)
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
         returns (address)
     {
         return ERC721EnumerableUpgradeable._update(_to, _tokenId, _auth);
@@ -258,8 +250,6 @@ contract Ticket is
     {
         ERC721EnumerableUpgradeable._increaseBalance(account, amount);
     }
-
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
 
 /*

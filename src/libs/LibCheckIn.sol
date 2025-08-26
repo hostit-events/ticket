@@ -52,7 +52,7 @@ library LibCheckIn {
         uint8 day = uint8((time - ticketData.startTime) / 1 days);
         if (!cs.checkedInByDay[_ticketId][day].add(_ticketOwner)) revert AlreadyCheckedInForDay(day);
 
-        emit CheckedIn(_ticketId, _ticketOwner, time);
+        emit CheckedIn(_ticketId, _ticketOwner, _tokenId);
     }
 
     function _addTicketAdmins(uint56 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {

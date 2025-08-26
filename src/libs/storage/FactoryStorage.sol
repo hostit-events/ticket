@@ -7,8 +7,8 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 bytes32 constant FACTORY_STORAGE_LOCATION = 0x610b7ed6689c503e651500bb8179583591f93afc835ec7dbed5872619168c100;
 
 struct FactoryStorage {
+    address ticketProxy;
     uint56 ticketId;
-    address ticketImplementation;
     mapping(uint56 => ExtraTicketData) ticketIdToData;
     mapping(address => EnumerableSet.UintSet) adminTicketIds;
 }

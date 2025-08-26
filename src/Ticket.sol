@@ -11,6 +11,7 @@ import {ERC721RoyaltyUpgradeable} from
     "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 
 /*
@@ -39,6 +40,7 @@ contract Ticket is
     ERC721RoyaltyUpgradeable,
     PausableUpgradeable,
     OwnableUpgradeable,
+    UUPSUpgradeable,
     ITicket
 {
     //*//////////////////////////////////////////////////////////////////////////
@@ -90,6 +92,7 @@ contract Ticket is
         __ERC721Enumerable_init();
         __ERC721Royalty_init();
         __Ownable_init(_owner);
+        __UUPSUpgradeable_init();
 
         // Set default royalty to 5%
         _setDefaultRoyalty(_owner, 500);
@@ -103,27 +106,24 @@ contract Ticket is
 
     /// @notice Allows the owner to update the name of the NFT collection
     /// @param _name The name to assign
-    function updateName(string calldata _name) external onlyOwner returns (bool) {
+    function updateName(string calldata _name) external onlyOwner {
         _getErc721Storage()._name = _name;
         emit NameUpdated(_name);
-        return true;
     }
 
     /// @notice Allows the owner to update the symbol of the NFT collection
     /// @param _symbol The symbol to assign
-    function updateSymbol(string calldata _symbol) external onlyOwner returns (bool) {
+    function updateSymbol(string calldata _symbol) external onlyOwner {
         _getErc721Storage()._symbol = _symbol;
         emit SymbolUpdated(_symbol);
-        return true;
     }
 
     /// @notice Allows the owner to set the base URI
     /// @param __baseUri The URI to assign
     /// forge-lint: disable-next-line(mixed-case-function)
-    function updateURI(string calldata __baseUri) external onlyOwner returns (bool) {
+    function updateURI(string calldata __baseUri) external onlyOwner {
         _getErc721UriStorage()._uri = __baseUri;
         emit BaseURIUpdated(__baseUri);
-        return true;
     }
 
     /// @notice Mints a new token to a given address
@@ -137,16 +137,14 @@ contract Ticket is
 
     /// @notice Pauses token transfers
     /// @dev This function is used to pause token transfers apart from minting
-    function pause() external onlyOwner returns (bool) {
+    function pause() external onlyOwner {
         _pause();
-        return true;
     }
 
     /// @notice Unpauses token transfers
     /// @dev This function is used to unpause token transfers apart from minting
-    function unpause() external onlyOwner returns (bool) {
+    function unpause() external onlyOwner {
         _unpause();
-        return true;
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -256,6 +254,9 @@ contract Ticket is
     {
         ERC721EnumerableUpgradeable._increaseBalance(account, amount);
     }
+
+    /// @dev Internal override for upgrade logic
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
 
 /*

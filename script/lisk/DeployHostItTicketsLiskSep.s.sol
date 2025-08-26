@@ -18,8 +18,9 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {DeployHostItTicketsHelper} from "@ticket-script/helper/DeployHostItTicketsHelper.sol";
 
-contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
+contract DeployHostItTicketsLiskSep is Script, DeployHostItTicketsHelper {
     function run() public returns (address hostIt_) {
+        // vm.createSelectFork("lisk-sepolia");
         vm.startBroadcast();
         // Deploy facets
         address diamondCutFacet = address(new DiamondCutFacet());
@@ -54,8 +55,8 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
                     erc165Init,
                     hostItInit,
                     ticketProxy,
-                    TokenAddresses._getMockFeeTypes(),
-                    TokenAddresses._getMockAddresses()
+                    TokenAddresses._getLiskSepoliaFeeTypes(),
+                    TokenAddresses._getLiskSepoliaAddresses()
                 )
             )
         );

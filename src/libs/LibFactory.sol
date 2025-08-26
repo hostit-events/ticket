@@ -122,15 +122,24 @@ library LibFactory {
         _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 
         if (bytes(_ticketData.name).length > 0) {
-            if (!ticket.updateName(_ticketData.name)) revert UpdateNameFailed();
+            try ticket.updateName(_ticketData.name) {}
+            catch {
+                revert UpdateNameFailed();
+            }
         }
 
         if (bytes(_ticketData.symbol).length > 0) {
-            if (!ticket.updateSymbol(_ticketData.symbol)) revert UpdateSymbolFailed();
+            try ticket.updateSymbol(_ticketData.symbol) {}
+            catch {
+                revert UpdateSymbolFailed();
+            }
         }
 
         if (bytes(_ticketData.uri).length > 0) {
-            if (!ticket.updateURI(_ticketData.uri)) revert UpdateURIFailed();
+            try ticket.updateURI(_ticketData.uri) {}
+            catch {
+                revert UpdateURIFailed();
+            }
         }
 
         emit TicketUpdated(_ticketId, LibContext._msgSender(), extraTicketData);

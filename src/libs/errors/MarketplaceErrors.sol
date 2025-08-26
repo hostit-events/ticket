@@ -18,4 +18,4 @@ error WithdrawPeriodNotReached();
 error InsufficientWithdrawBalance();
 error TicketPurchaseFailed(FeeType, uint256);
 error FatalErrorTicketMismatch();
-error UnpauseFailed();
+error TicketUnpauseFailed();

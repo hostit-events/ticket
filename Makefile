@@ -115,7 +115,7 @@ deploy-pk:
 deploy:
 	@if [ -z "$(RPC_URL)" ] || [ -z "$(ACCOUNT)" ]; then \
 		echo "RPC_URL and ACCOUNT must be set. Example:"; \
-		echo "make deploy-verify RPC_URL=$(RPC_URL).. ACCOUNT=mainKey.. SENDER=0x.. VERIFIER=blockscout"; \
+		echo "make deploy RPC_URL=$(RPC_URL).. ACCOUNT=mainKey.. SENDER=0x.. VERIFIER=blockscout"; \
 		exit 1; \
 	fi; \
 	$(FORGE) script $(SCRIPT) \

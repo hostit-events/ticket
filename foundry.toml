@@ -28,12 +28,13 @@ arbitrum-sepolia = "${ARBITRUM_SEPOLIA_URL}"
 avalanche-fuji = "${AVALANCHE_FUJI_URL}"
 
 [etherscan]
+# mainnet
 eth-mainnet = { key = "${ETHERSCAN_API_KEY}" }
 base = { key = "${ETHERSCAN_API_KEY}" }
 lisk = { key = "123", url = "${LISK_VERIFIER_URL}" }
 arbitrum-one = { key = "${ETHERSCAN_API_KEY}" }
 avalanche = { key = "verifyContract", url = "${AVALANCHE_VERIFIER_URL}" }
-###################################################
+# testnets
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
 base-sepolia = { key = "${ETHERSCAN_API_KEY}" }
 lisk-sepolia = { key = "123", url = "${LISK_SEPOLIA_VERIFIER_URL}" }

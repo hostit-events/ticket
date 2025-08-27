@@ -157,7 +157,7 @@ library LibFactory {
         address ticketProxy = _factoryStorage().ticketProxy;
         if (ticketProxy.code.length == 0) revert TicketImplementationNotSet();
         address ticketAddress = ticketProxy.cloneDeterministic(_generateTicketHash(_ticketId));
-        Ticket(ticketAddress).initialize(address(this), _ticketData.name, _ticketData.uri);
+        Ticket(ticketAddress).initialize(address(this), _ticketData.name, _ticketData.symbol, _ticketData.uri);
 
         extraTicketData_ = ExtraTicketData({
             id: _ticketId,

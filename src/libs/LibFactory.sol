@@ -15,7 +15,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {LibContext} from "@ticket/libs/LibContext.sol";
-import {Ticket} from "@ticket/Ticket.sol";
+import {Ticket} from "@ticket/libs/Ticket.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-errors/FactoryErrors.sol";
 

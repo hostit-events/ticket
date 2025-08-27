@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Ticket} from "@ticket/Ticket.sol";
+import {Ticket} from "@ticket/libs/Ticket.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";

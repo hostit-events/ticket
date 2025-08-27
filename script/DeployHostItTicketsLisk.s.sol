@@ -12,7 +12,7 @@ import {HostItTickets} from "@ticket/HostItTickets.sol";
 import {FactoryFacet} from "@ticket/facets/FactoryFacet.sol";
 import {CheckInFacet} from "@ticket/facets/CheckInFacet.sol";
 import {MarketplaceFacet} from "@ticket/facets/MarketplaceFacet.sol";
-import {Ticket} from "@ticket/Ticket.sol";
+import {Ticket} from "@ticket/libs/Ticket.sol";
 import {AddressesAndFees} from "@ticket-script/helper/AddressesAndFees.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";

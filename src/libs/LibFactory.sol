@@ -92,11 +92,8 @@ library LibFactory {
 
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 
-        uint40 currentTime = uint40(block.timestamp);
-        if (currentTime > extraTicketData.startTime) revert TicketUseHasCommenced();
-
         if (_ticketData.startTime > 0) {
-            if (_ticketData.startTime < currentTime) revert StartTimeShouldBeAhead();
+            if (_ticketData.startTime < uint40(block.timestamp)) revert StartTimeShouldBeAhead();
             extraTicketData.startTime = _ticketData.startTime;
         }
 
@@ -118,7 +115,7 @@ library LibFactory {
             extraTicketData.maxTickets = _ticketData.maxTickets;
         }
 
-        extraTicketData.updatedAt = currentTime;
+        extraTicketData.updatedAt = uint40(block.timestamp);
         _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 
         if (bytes(_ticketData.name).length > 0) {

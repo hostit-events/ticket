@@ -15,7 +15,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {LibContext} from "@ticket/libs/LibContext.sol";
-import {Ticket} from "@ticket/Ticket.sol";
+import {Ticket} from "@ticket/libs/Ticket.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-errors/FactoryErrors.sol";
 
@@ -92,11 +92,8 @@ library LibFactory {
 
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 
-        uint40 currentTime = uint40(block.timestamp);
-        if (currentTime > extraTicketData.startTime) revert TicketUseHasCommenced();
-
         if (_ticketData.startTime > 0) {
-            if (_ticketData.startTime < currentTime) revert StartTimeShouldBeAhead();
+            if (_ticketData.startTime < uint40(block.timestamp)) revert StartTimeShouldBeAhead();
             extraTicketData.startTime = _ticketData.startTime;
         }
 
@@ -118,7 +115,7 @@ library LibFactory {
             extraTicketData.maxTickets = _ticketData.maxTickets;
         }
 
-        extraTicketData.updatedAt = currentTime;
+        extraTicketData.updatedAt = uint40(block.timestamp);
         _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 
         if (bytes(_ticketData.name).length > 0) {
@@ -157,7 +154,7 @@ library LibFactory {
         address ticketProxy = _factoryStorage().ticketProxy;
         if (ticketProxy.code.length == 0) revert TicketImplementationNotSet();
         address ticketAddress = ticketProxy.cloneDeterministic(_generateTicketHash(_ticketId));
-        Ticket(ticketAddress).initialize(address(this), _ticketData.name, _ticketData.uri);
+        Ticket(ticketAddress).initialize(address(this), _ticketData.name, _ticketData.symbol, _ticketData.uri);
 
         extraTicketData_ = ExtraTicketData({
             id: _ticketId,

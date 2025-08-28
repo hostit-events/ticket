@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the smart contracts for the **Ticket** module of the [HostIt Protocol](https://hostit.xyz), a decentralized event and ticketing platform. The Ticket contracts manage the lifecycle of event tickets, including creation, sales, fee management, check-in, and administrative controls. The system is modular, upgradeable, and designed for extensibility and security.
+This repository contains the smart contracts for the **Ticket** module of the [HostIt Protocol](https://www.hostit.events), a decentralized event and ticketing platform. The Ticket contracts manage the lifecycle of event tickets, including creation, sales, fee management, check-in, and administrative controls. The system is modular, upgradeable, and designed for extensibility and security.
 
 ## Architecture
 

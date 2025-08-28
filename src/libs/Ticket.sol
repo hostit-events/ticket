@@ -87,8 +87,9 @@ contract Ticket is
     /// @param _owner The owner of the contract
     /// @param _name The name of the NFT collection
     /// @param _uri The URI of the NFT collection
-    function initialize(address _owner, string calldata _name, string calldata _uri) public initializer {
-        __ERC721_init(_name, "TICKET");
+    function initialize(address _owner, string calldata _name, string calldata _symbol, string calldata _uri) public initializer {
+        string memory symbol = bytes(_symbol).length != 0 ? _symbol : "TICKET";
+        __ERC721_init(_name, symbol);
         __ERC721Enumerable_init();
         __ERC721Royalty_init();
         __Ownable_init(_owner);
@@ -204,7 +205,7 @@ contract Ticket is
     /// @dev This function returns the base URI set for the NFT collection, which is used
     /// @return The URI pointing to the collection's metadata
     /// forge-lint: disable-next-line(mixed-case-function)
-    function baseURI() public view returns (string memory) {
+    function baseURI() external view returns (string memory) {
         return _baseURI();
     }
 
@@ -258,35 +259,3 @@ contract Ticket is
     /// @dev Internal override for upgrade logic
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }
-
-/*
-t>6cXt+Y=JccMMiM~'i:tJcNXi'.'~''~:::::::::::::~:~~~~~~~~~~~~~~~~~~~~'~''
-+>+>+>i+: '+MM5+      'YDc:.~~~~~::::;;:;;::::~:::::~~~~'.          .'~~
-iiiiiiii+~.>KMMH+':!+=JD6=''~~~~:::::::::::::::~:~:~~'.                '
-ccci===i=; .iMMMMMMMMMMQc: ~;!:::::::::::::::;:::::~'   '>=+;!>++>!:
-ijcii==++>~ ~jMMMMMMMNSi~ .;!;:::;;;;:;;;;:;;;;;::~'  '>j5YYY565YYYJj+~
-cjjci===++!~ .;+icccc+~   ~;;:;;;;!!!!!;!;!!;;;:::'. ~=Y66665Y5665YY55j;
-cJttii=+>>>>;~.         '::;;!!!;;!!!!!!;;;;;;;;:~. '+Y665Yt>  :=J55666c
-cJJttcc=>>!!!;;:~''~::;;;;;:;;;;!;!!!!!!!!;;!;;;:~. :i5S556t!   '=Y566St
-=jYYJJti=+!!;;::;!!>!!;;::;;;;;:;;;;;;;;;;;;;;;;:~  :=5S55Yj>  .+t55SSt;
-=jY6S6Ytci>;;;::::~~~~:::;:::::::;;!:;;;;:;;;;;;::'  !tXS666Jtt5SDDSJ+
-+itSNQSYji+>;;;;;;::::::::~::;;;;;;;!!;!;!;;;;!;;;:'  :=JSDKQKKQQ5j!.
-!+=jDMQtji>;;;;:::;:::::~:~~::::::;;;;;;;;!!!;;!;:::'    .:!++>;~     .~
-!;;;=MMMNti+>!;;;:;;::~:~~~~~~~::::::::;;;;;!!!!;;!;;::'            ':::
->;;~':iMMMM5j=>;:::::::::~~~~~~~:~~:::::::;;;;;;;;;;;:;:::~;!!>>>;;:::::
-+!;:~.  ~MMMM6Jc=>;;:;;:::::::::::~~~::::::::;;;:;::;:::::::::~:::::::::
-c+!;:~~  ;MMMMMSi+;;:;;;;;;;:::::::::::::;;;:::::;;;::;;::::::::::::::::
-Yc+!;::~   iMMMMMMMc!:;;!!;;!;;;;;:;:::::::::;;;;::;::;:;:::::::::::::::
-QJc+!::~''   >MMMMMMMKYc++==+>!!;;;;;;;;::::::::;;;:;;:;;:::::::::::::::
-MM6j=!::~''.     '=tXNHSYJJYt==+!!;!;:::::::::::::;:;;;;:;::::::::::::::
-MMMXc=!:~~''''          ':!+===>+>!!;::::::~::::~::::::::::::::::;::::~:
-MMMMMt>::~~~~''.    .~:'    ':;;!!;;!!;;;::::~~~~~~~~~~:~::::::::~~:::::
-MMMMMMJ!:::~~~''.   .~;!>>:.    :;:::~:;;;;;;;:::::~~''''''~~~~~~:~~::::
-MMMMMMMc::~~''''..     .':!!;'''                            '''''~~~~~::
-MMMMMMMM>~~::~~''...         .::;!!!;:.                    .'''~~:~::;;;
-MMMMMMMMM:~~~~~~''''....                              ...''''~~::::;::;:
-MMMMMMMMMN~~~~'''''''''....  .               . .    ..'''''~~::::;:::;::
-MMMMMMMMMMX'~::~~~~'~~~~'''''''..........'''''.....'~~~:::;;;;;;;;;:;;;;
-MMMMMMMMMMMN!;::~~~'''~~~~''~~~~~'''''''''''..'''~~::;;;;;:;;;;;:;;;:;;;
-                            THANKS FOR COMING
-*/

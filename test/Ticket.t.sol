@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Ticket} from "@ticket/Ticket.sol";
+import {Ticket} from "@ticket/libs/Ticket.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -24,12 +24,12 @@ contract TicketTest is Test {
         ticketClone = Ticket(address(ticketImpl).clone());
         vm.expectEmit(true, true, true, true);
         emit Initializable.Initialized(1);
-        ticketClone.initialize(owner, "Test Ticket", "ipfs://");
+        ticketClone.initialize(owner, "Test Ticket", "", "ipfs://");
     }
 
     function test_revertTicketProxyInit() public {
         vm.expectRevert();
-        ticketImpl.initialize(owner, "Test Ticket", "ipfs://");
+        ticketImpl.initialize(owner, "Test Ticket", "", "ipfs://");
     }
 
     function test_ticketInitialize() public view {
@@ -140,7 +140,7 @@ contract TicketTest is Test {
 
     function test_otherClonesDontClash() public {
         Ticket ticketClone2 = Ticket(address(ticketImpl).clone());
-        ticketClone2.initialize(alice, "Test Ticket 2", "ipfs://2");
+        ticketClone2.initialize(alice, "Test Ticket 2", "", "ipfs://2");
         assertEq(ticketClone2.owner(), alice);
         assertEq(ticketClone2.name(), "Test Ticket 2");
         assertEq(ticketClone2.baseURI(), "ipfs://2");

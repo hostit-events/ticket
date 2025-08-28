@@ -17,30 +17,40 @@ interface ITicket is IERC721Metadata, IERC721Enumerable {
     /// @param newSymbol The new symbol of the NFT collection
     event SymbolUpdated(string indexed newSymbol);
 
-    function initialize(address, string calldata, string calldata) external;
-
-    /// forge-lint: disable-next-line(mixed-case-function)
-    function baseURI() external view returns (string memory);
+    /// @notice Initializes the contract
+    /// @param owner The owner of the contract
+    /// @param name The name of the NFT collection
+    /// @param symbol The symbol of the NFT collection
+    /// @param uri The URI of the NFT collection
+    function initialize(address owner, string calldata name, string calldata symbol, string calldata uri) external;
 
     /// @notice Updates the name of the NFT collection
-    function updateName(string calldata) external;
+    /// @param _name The name to assign
+    function updateName(string calldata _name) external;
 
     /// @notice Updates the symbol of the NFT collection
-    function updateSymbol(string calldata) external;
+    /// @param _symbol The symbol to assign
+    function updateSymbol(string calldata _symbol) external;
 
     /// @notice Updates the base URI of the NFT collection
     /// forge-lint: disable-next-line(mixed-case-function)
-    function updateURI(string calldata) external;
+    function updateURI(string calldata _uri) external;
 
     /// @notice Mints a new token to a given address
-    function mint(address) external returns (uint256);
-
-    /// @notice Checks if token transfers are paused
-    function paused() external returns (bool);
+    /// @param _to The address to receive the newly minted token
+    /// @return tokenId_ The ID of the newly minted token
+    function mint(address _to) external returns (uint256 tokenId_);
 
     /// @notice Pauses token transfers
     function pause() external;
 
     /// @notice Unpauses token transfers
     function unpause() external;
+
+    /// @notice Returns the base URI of the NFT collection
+    /// forge-lint: disable-next-line(mixed-case-function)
+    function baseURI() external view returns (string memory);
+
+    /// @notice Checks if token transfers are paused
+    function paused() external view returns (bool);
 }

@@ -12,10 +12,10 @@ import {HostItTickets} from "@ticket/HostItTickets.sol";
 import {FactoryFacet} from "@ticket/facets/FactoryFacet.sol";
 import {CheckInFacet} from "@ticket/facets/CheckInFacet.sol";
 import {MarketplaceFacet} from "@ticket/facets/MarketplaceFacet.sol";
-import {Ticket} from "@ticket/Ticket.sol";
 import {AddressesAndFees} from "@ticket-script/helper/AddressesAndFees.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {Ticket} from "@ticket/libs/Ticket.sol";
+import {TicketProxy} from "@ticket/libs/TicketProxy.sol";
 import {DeployHostItTicketsHelper} from "@ticket-script/helper/DeployHostItTicketsHelper.sol";
 
 contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
@@ -41,7 +41,7 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
         address ticketBeacon = address(new UpgradeableBeacon(ticketImpl, _msgSender()));
 
         // Deploy Ticket Proxy
-        address ticketProxy = address(new BeaconProxy(ticketBeacon, ""));
+        address ticketProxy = address(new TicketProxy(ticketBeacon));
 
         // Deploy HostItTickets diamond
         hostIt_ = address(

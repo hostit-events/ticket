@@ -87,7 +87,10 @@ contract Ticket is
     /// @param _owner The owner of the contract
     /// @param _name The name of the NFT collection
     /// @param _uri The URI of the NFT collection
-    function initialize(address _owner, string calldata _name, string calldata _symbol, string calldata _uri) public initializer {
+    function initialize(address _owner, string calldata _name, string calldata _symbol, string calldata _uri)
+        public
+        initializer
+    {
         string memory symbol = bytes(_symbol).length != 0 ? _symbol : "TICKET";
         __ERC721_init(_name, symbol);
         __ERC721Enumerable_init();

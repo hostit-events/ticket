@@ -3,6 +3,6 @@ pragma solidity 0.8.30;
 
 import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
 
-event TicketCreated(uint56 indexed ticketId, address indexed ticketAdmin, ExtraTicketData ticketData);
+event TicketCreated(uint64 indexed ticketId, address indexed ticketAdmin, ExtraTicketData ticketData);
 
-event TicketUpdated(uint56 indexed ticketId, address indexed ticketAdmin, ExtraTicketData ticketData);
+event TicketUpdated(uint64 indexed ticketId, address indexed ticketAdmin, ExtraTicketData ticketData);

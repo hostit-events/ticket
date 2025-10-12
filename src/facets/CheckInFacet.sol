@@ -4,21 +4,21 @@ pragma solidity 0.8.30;
 import {LibCheckIn} from "@ticket/libs/LibCheckIn.sol";
 
 contract CheckInFacet {
-    using LibCheckIn for uint56;
+    using LibCheckIn for uint64;
 
     //*//////////////////////////////////////////////////////////////////////////
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function checkIn(uint56 _ticketId, address _ticketOwner, uint256 _tokenId) external {
+    function checkIn(uint64 _ticketId, address _ticketOwner, uint256 _tokenId) external {
         _ticketId._checkin(_ticketOwner, _tokenId);
     }
 
-    function addTicketAdmins(uint56 _ticketId, address[] calldata _admins) external {
+    function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) external {
         _ticketId._addTicketAdmins(_admins);
     }
 
-    function removeTicketAdmins(uint56 _ticketId, address[] calldata _admins) external {
+    function removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) external {
         _ticketId._removeTicketAdmins(_admins);
     }
 
@@ -26,19 +26,19 @@ contract CheckInFacet {
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function isCheckedIn(uint56 _ticketId, address _ticketOwner) external view returns (bool) {
+    function isCheckedIn(uint64 _ticketId, address _ticketOwner) external view returns (bool) {
         return _ticketId._isCheckedIn(_ticketOwner);
     }
 
-    function isCheckedInForDay(uint56 _ticketId, uint8 _day, address _ticketOwner) external view returns (bool) {
+    function isCheckedInForDay(uint64 _ticketId, uint8 _day, address _ticketOwner) external view returns (bool) {
         return _ticketId._isCheckedInForDay(_day, _ticketOwner);
     }
 
-    function getCheckedIn(uint56 _ticketId) external view returns (address[] memory) {
+    function getCheckedIn(uint64 _ticketId) external view returns (address[] memory) {
         return _ticketId._getCheckedIn();
     }
 
-    function getCheckedInForDay(uint56 _ticketId, uint8 _day) external view returns (address[] memory) {
+    function getCheckedInForDay(uint64 _ticketId, uint8 _day) external view returns (address[] memory) {
         return _ticketId._getCheckedInForDay(_day);
     }
 }

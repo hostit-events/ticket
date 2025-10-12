@@ -18,7 +18,7 @@ import "@ticket-logs/MarketplaceLogs.sol";
 import "@ticket-errors/MarketplaceErrors.sol";
 
 library LibMarketplace {
-    using LibFactory for uint56;
+    using LibFactory for uint64;
     using SafeTransferLib for address;
     using SafeERC20 for IERC20;
 
@@ -42,7 +42,7 @@ library LibMarketplace {
     //                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _mintTicket(uint56 _ticketId, FeeType _feeType, address _buyer) internal returns (uint40 tokenId_) {
+    function _mintTicket(uint64 _ticketId, FeeType _feeType, address _buyer) internal returns (uint40 tokenId_) {
         _ticketId._checkTicketExists();
 
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
@@ -84,7 +84,7 @@ library LibMarketplace {
         emit TicketMinted(_ticketId, _feeType, totalFee, tokenId_);
     }
 
-    function _setTicketFees(uint56 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
+    function _setTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
         onlyMainTicketAdmin(_ticketId)
     {
@@ -107,14 +107,14 @@ library LibMarketplace {
     }
 
     // TODO
-    // function _requestRefund(uint56 _ticketId, FeeType _feeType, uint256 _tokenId) internal {
-    //     _ticketId._checkTicketExists();
-    // }
+    function _requestRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId) internal {
+        _ticketId._checkTicketExists();
+    }
 
     // TODO
-    // function _fulfillRefund(uint56 _ticketId, FeeType _feeType) internal onlyRoleOrOwner {}
+    // function _fulfillRefund(uint64 _ticketId, FeeType _feeType) internal onlyRoleOrOwner {}
 
-    function _withdrawTicketBalance(uint56 _ticketId, FeeType _feeType, address _to)
+    function _withdrawTicketBalance(uint64 _ticketId, FeeType _feeType, address _to)
         internal
         onlyMainTicketAdmin(_ticketId)
     {
@@ -186,8 +186,6 @@ library LibMarketplace {
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _isFeeEnabled(uint56 _ticketId, FeeType _feeType) internal view returns (bool) {
-        return _marketplaceStorage().feeEnabled[_ticketId][_feeType];
     }
 
     function _getFeeTokenAddress(FeeType _feeType) internal view returns (address tokenAddress_) {
@@ -199,7 +197,7 @@ library LibMarketplace {
         return _marketplaceStorage().ticketFee[_ticketId][_feeType];
     }
 
-    function _getFees(uint56 _ticketId, FeeType _feeType)
+    function _getFees(uint64 _ticketId, FeeType _feeType)
         internal
         view
         returns (uint256 ticketFee_, uint256 hostItFee_, uint256 totalFee_)
@@ -233,7 +231,7 @@ library LibMarketplace {
     //                                 MODIFIERS
     //////////////////////////////////////////////////////////////////////////*//
 
-    modifier onlyMainTicketAdmin(uint56 _ticketId) {
+    modifier onlyMainTicketAdmin(uint64 _ticketId) {
         LibFactory._checkMainTicketAdminRole(_ticketId);
         _;
     }

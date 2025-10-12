@@ -8,6 +8,9 @@ out/
 /broadcast/**/dry-run/
 *broadcast/
 
+# Crytic
+crytic-export/
+
 # Docs
 docs/
 

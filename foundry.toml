@@ -16,6 +16,9 @@ remappings = [
 ffi = true
 optimizer_runs = 30_000
 
+[fmt]
+sort_imports = true
+
 [rpc_endpoints]
 # mainnet
 eth-mainnet = "${ETH_MAINNET_URL}"

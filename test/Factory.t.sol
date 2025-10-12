@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {TicketData, ExtraTicketData, FullTicketData} from "@ticket-storage/FactoryStorage.sol";
-import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 import {TicketCreated, TicketUpdated} from "@ticket-logs/FactoryLogs.sol";
+import {ExtraTicketData, FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
+import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 
 contract FactoryTest is DeployedHostItTickets {
     function test_createFreeTicket() public {

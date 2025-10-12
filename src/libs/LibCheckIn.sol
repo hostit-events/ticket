@@ -3,10 +3,10 @@ pragma solidity 0.8.30;
 
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {CheckInStorage, CHECKIN_STORAGE_LOCATION} from "@ticket-storage/CheckInStorage.sol";
-import {LibFactory} from "@ticket/libs/LibFactory.sol";
-import {ITicket} from "@ticket/interfaces/ITicket.sol";
+import {CHECKIN_STORAGE_LOCATION, CheckInStorage} from "@ticket-storage/CheckInStorage.sol";
 import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
+import {ITicket} from "@ticket/interfaces/ITicket.sol";
+import {LibFactory} from "@ticket/libs/LibFactory.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-errors/CheckInErrors.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)

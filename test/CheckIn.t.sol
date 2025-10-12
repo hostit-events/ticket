@@ -7,7 +7,7 @@ import "@ticket-logs/CheckInLogs.sol";
 
 contract CheckInTest is DeployedHostItTickets {
     function test_checkIn() public {
-        (uint56 ticketId, uint40 tokenId) = _mintTicketFree();
+        (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
         vm.warp(1 days + 1);
         vm.expectEmit(true, true, true, true, hostIt);
         emit CheckedIn(ticketId, alice, tokenId);
@@ -23,7 +23,7 @@ contract CheckInTest is DeployedHostItTickets {
     }
 
     function test_addTicketAdmins() public {
-        (uint56 ticketId,) = _mintTicketFree();
+        (uint64 ticketId,) = _mintTicketFree();
         address[] memory admins = new address[](2);
         admins[0] = bob;
         admins[1] = charlie;
@@ -41,7 +41,7 @@ contract CheckInTest is DeployedHostItTickets {
     }
 
     function test_removeTicketAdmins() public {
-        (uint56 ticketId,) = _mintTicketFree();
+        (uint64 ticketId,) = _mintTicketFree();
         address[] memory admins = new address[](1);
         admins[0] = bob;
         checkInFacet.addTicketAdmins(ticketId, admins);

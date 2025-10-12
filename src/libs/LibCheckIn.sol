@@ -13,7 +13,7 @@ import "@ticket-errors/CheckInErrors.sol";
 import "@ticket-logs/CheckInLogs.sol";
 
 library LibCheckIn {
-    using LibFactory for uint56;
+    using LibFactory for uint64;
     using LibOwnableRoles for *;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -31,7 +31,7 @@ library LibCheckIn {
     //                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _checkin(uint56 _ticketId, address _ticketOwner, uint256 _tokenId) internal onlyTicketAdmin(_ticketId) {
+    function _checkin(uint64 _ticketId, address _ticketOwner, uint256 _tokenId) internal onlyTicketAdmin(_ticketId) {
         _ticketId._checkTicketExists();
 
         uint40 time = uint40(block.timestamp);
@@ -60,7 +60,7 @@ library LibCheckIn {
         emit CheckedIn(_ticketId, _ticketOwner, _tokenId);
     }
 
-    function _addTicketAdmins(uint56 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
+    function _addTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
         _ticketId._checkTicketExists();
 
         uint256 adminsLength = _admins.length;
@@ -73,10 +73,7 @@ library LibCheckIn {
         }
     }
 
-    function _removeTicketAdmins(uint56 _ticketId, address[] calldata _admins)
-        internal
-        onlyMainTicketAdmin(_ticketId)
-    {
+    function _removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
         _ticketId._checkTicketExists();
 
         uint256 adminsLength = _admins.length;
@@ -92,19 +89,19 @@ library LibCheckIn {
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
-    function _isCheckedIn(uint56 _ticketId, address _ticketOwner) internal view returns (bool) {
+    function _isCheckedIn(uint64 _ticketId, address _ticketOwner) internal view returns (bool) {
         return _checkInStorage().checkedIn[_ticketId].contains(_ticketOwner);
     }
 
-    function _isCheckedInForDay(uint56 _ticketId, uint8 _day, address _ticketOwner) internal view returns (bool) {
+    function _isCheckedInForDay(uint64 _ticketId, uint8 _day, address _ticketOwner) internal view returns (bool) {
         return _checkInStorage().checkedInByDay[_ticketId][_day].contains(_ticketOwner);
     }
 
-    function _getCheckedIn(uint56 _ticketId) internal view returns (address[] memory) {
+    function _getCheckedIn(uint64 _ticketId) internal view returns (address[] memory) {
         return _checkInStorage().checkedIn[_ticketId].values();
     }
 
-    function _getCheckedInForDay(uint56 _ticketId, uint8 _day) internal view returns (address[] memory) {
+    function _getCheckedInForDay(uint64 _ticketId, uint8 _day) internal view returns (address[] memory) {
         return _checkInStorage().checkedInByDay[_ticketId][_day].values();
     }
 
@@ -112,12 +109,12 @@ library LibCheckIn {
     //                                 MODIFIERS
     //////////////////////////////////////////////////////////////////////////*//
 
-    modifier onlyMainTicketAdmin(uint56 _ticketId) {
+    modifier onlyMainTicketAdmin(uint64 _ticketId) {
         LibFactory._checkMainTicketAdminRole(_ticketId);
         _;
     }
 
-    modifier onlyTicketAdmin(uint56 _ticketId) {
+    modifier onlyTicketAdmin(uint64 _ticketId) {
         LibFactory._checkTicketAdminRole(_ticketId);
         _;
     }

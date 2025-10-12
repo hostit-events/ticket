@@ -7,6 +7,6 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 bytes32 constant CHECKIN_STORAGE_LOCATION = 0xe193d680ae43ded63724eb4ee4d68fd7efbded9778d44414c0bab0177a079700;
 
 struct CheckInStorage {
-    mapping(uint56 => EnumerableSet.AddressSet) checkedIn;
-    mapping(uint56 => mapping(uint8 => EnumerableSet.AddressSet)) checkedInByDay;
+    mapping(uint64 => EnumerableSet.AddressSet) checkedIn;
+    mapping(uint64 => mapping(uint8 => EnumerableSet.AddressSet)) checkedInByDay;
 }

@@ -12,7 +12,7 @@ import "@ticket-logs/MarketplaceLogs.sol";
 contract MarketplaceTest is DeployedHostItTickets {
     function test_mintFreeTicket() public {
         vm.prank(alice);
-        (uint56 ticketId, uint40 tokenId) = _mintTicketFree();
+        (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         ITicket ticket = ITicket(fullTicketData.ticketAddress);
         assertEq(ticket.ownerOf(tokenId), alice);
@@ -20,7 +20,7 @@ contract MarketplaceTest is DeployedHostItTickets {
     }
 
     function test_mintPaidTicketETH() public {
-        (uint56 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee) = _mintTicketETH();
+        (uint64 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee) = _mintTicketETH();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         ITicket ticket = ITicket(fullTicketData.ticketAddress);
         assertEq(ticket.ownerOf(tokenId), alice);
@@ -30,7 +30,7 @@ contract MarketplaceTest is DeployedHostItTickets {
     }
 
     function test_mintPaidTicketUSDT() public {
-        (uint56 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee,) = _mintTicketUSDT();
+        (uint64 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee,) = _mintTicketUSDT();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         ITicket ticket = ITicket(fullTicketData.ticketAddress);
         assertEq(ticket.ownerOf(tokenId), alice);
@@ -40,7 +40,7 @@ contract MarketplaceTest is DeployedHostItTickets {
     }
 
     function test_mintPaidTicketUSDC() public {
-        (uint56 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee,) = _mintTicketUSDC();
+        (uint64 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee,) = _mintTicketUSDC();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         ITicket ticket = ITicket(fullTicketData.ticketAddress);
         assertEq(ticket.ownerOf(tokenId), alice);
@@ -51,7 +51,7 @@ contract MarketplaceTest is DeployedHostItTickets {
 
     function test_setTicketFees() public {
         _createFreeTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         marketplaceFacet.setTicketFees(ticketId, _getFeeTypes(), _getFees());
         assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.ETH), _getFees()[0]);
         assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDT), _getFees()[1]);
@@ -59,7 +59,7 @@ contract MarketplaceTest is DeployedHostItTickets {
     }
 
     function test_withdrawTicketBalanceETH() public {
-        (uint56 ticketId,, uint256 ethFee,) = _mintTicketETH();
+        (uint64 ticketId,, uint256 ethFee,) = _mintTicketETH();
         // Check platform balances before withdraw
         // Withdraw
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
@@ -74,7 +74,7 @@ contract MarketplaceTest is DeployedHostItTickets {
     }
 
     function test_withdrawTicketBalanceUSDT() public {
-        (uint56 ticketId,, uint256 usdtFee,, ERC20Mock usdt) = _mintTicketUSDT();
+        (uint64 ticketId,, uint256 usdtFee,, ERC20Mock usdt) = _mintTicketUSDT();
         // Check platform balances before withdraw
         assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDT), usdtFee);
         // Withdraw
@@ -90,7 +90,7 @@ contract MarketplaceTest is DeployedHostItTickets {
     }
 
     function test_withdrawTicketBalanceUSDC() public {
-        (uint56 ticketId,, uint256 usdcFee,, ERC20Mock usdc) = _mintTicketUSDC();
+        (uint64 ticketId,, uint256 usdcFee,, ERC20Mock usdc) = _mintTicketUSDC();
         // Check platform balances before withdraw
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         vm.warp(fullTicketData.endTime + marketplaceFacet.getRefundPeriod());

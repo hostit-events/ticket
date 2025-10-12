@@ -11,7 +11,7 @@ contract FactoryTest is DeployedHostItTickets {
         vm.expectEmit(true, true, true, false, hostIt);
         emit TicketCreated(1, owner, extraTicketData);
         _createFreeTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getFreeTicketData();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         assertTrue(factoryFacet.ticketExists(ticketId));
@@ -34,7 +34,7 @@ contract FactoryTest is DeployedHostItTickets {
 
     function test_updateFreeTicket() public {
         _createFreeTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getFreeUpdatedTicketData();
         vm.warp(10000);
         ExtraTicketData memory extraTicketData;
@@ -58,7 +58,7 @@ contract FactoryTest is DeployedHostItTickets {
         vm.expectEmit(true, true, true, false, hostIt);
         emit TicketCreated(1, owner, extraTicketData);
         _createPaidTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getPaidTicketData();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         assertEq(fullTicketData.name, ticketData.name);
@@ -74,7 +74,7 @@ contract FactoryTest is DeployedHostItTickets {
 
     function test_updatePaidTicket() public {
         _createPaidTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getPaidUpdatedTicketData();
         vm.warp(10000);
         ExtraTicketData memory extraTicketData;
@@ -151,19 +151,19 @@ contract FactoryTest is DeployedHostItTickets {
     }
 
     function test_ticketHash() public view {
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         bytes32 ticketHash = factoryFacet.ticketHash(ticketId);
         assertEq(ticketHash, keccak256(abi.encode(keccak256("host.it.ticket"), ticketId)));
     }
 
     function test_mainAdminRole() public view {
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
         assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
     }
 
     function test_ticketAdminRole() public view {
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
         assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
     }

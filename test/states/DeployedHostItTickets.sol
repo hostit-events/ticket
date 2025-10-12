@@ -83,7 +83,7 @@ abstract contract DeployedHostItTickets is HelperContract {
         factoryFacet.updateTicket(_getPaidUpdatedTicketData(), _ticketId);
     }
 
-    function _mintTicketFree() internal returns (uint56 ticketId_, uint40 tokenId_) {
+    function _mintTicketFree() internal returns (uint64 ticketId_, uint40 tokenId_) {
         _createFreeTicket();
         ticketId_ = factoryFacet.ticketCount();
         vm.expectEmit(true, true, true, true, hostIt);
@@ -92,7 +92,7 @@ abstract contract DeployedHostItTickets is HelperContract {
     }
 
     /// forge-lint: disable-next-line(mixed-case-function)
-    function _mintTicketETH() internal returns (uint56 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_) {
+    function _mintTicketETH() internal returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_) {
         _createPaidTicket();
         ticketId_ = factoryFacet.ticketCount();
         (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.ETH);
@@ -111,7 +111,7 @@ abstract contract DeployedHostItTickets is HelperContract {
     /// forge-lint: disable-next-line(mixed-case-function)
     function _mintTicketUSDT()
         internal
-        returns (uint56 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdt_)
+        returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdt_)
     {
         _createPaidTicket();
         ticketId_ = factoryFacet.ticketCount();
@@ -131,7 +131,7 @@ abstract contract DeployedHostItTickets is HelperContract {
     /// forge-lint: disable-next-line(mixed-case-function)
     function _mintTicketUSDC()
         internal
-        returns (uint56 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdc_)
+        returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdc_)
     {
         _createPaidTicket();
         ticketId_ = factoryFacet.ticketCount();

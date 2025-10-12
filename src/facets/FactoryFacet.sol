@@ -19,7 +19,7 @@ contract FactoryFacet {
         _ticketData._createTicket(_feeTypes, _fees);
     }
 
-    function updateTicket(TicketData calldata _ticketData, uint56 _ticketId) external {
+    function updateTicket(TicketData calldata _ticketData, uint64 _ticketId) external {
         _ticketData._updateTicket(_ticketId);
     }
 
@@ -27,15 +27,15 @@ contract FactoryFacet {
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function ticketCount() public view returns (uint56) {
+    function ticketCount() public view returns (uint64) {
         return LibFactory._getTicketCount();
     }
 
-    function ticketExists(uint56 _ticketId) public view returns (bool) {
+    function ticketExists(uint64 _ticketId) public view returns (bool) {
         return _ticketId._ticketExists();
     }
 
-    function ticketData(uint56 _ticketId) public view returns (FullTicketData memory) {
+    function ticketData(uint64 _ticketId) public view returns (FullTicketData memory) {
         return _ticketId._getFullTicketData();
     }
 
@@ -43,7 +43,7 @@ contract FactoryFacet {
         return LibFactory._getAllFullTicketData();
     }
 
-    function adminTickets(address _ticketAdmin) public view returns (uint56[] memory) {
+    function adminTickets(address _ticketAdmin) public view returns (uint64[] memory) {
         return _ticketAdmin._getAdminTicketIds();
     }
 
@@ -59,15 +59,15 @@ contract FactoryFacet {
         return LibFactory._getHostItTicketHash();
     }
 
-    function ticketHash(uint56 _ticketId) public pure returns (bytes32) {
+    function ticketHash(uint64 _ticketId) public pure returns (bytes32) {
         return _ticketId._generateTicketHash();
     }
 
-    function mainAdminRole(uint56 _ticketId) public pure returns (uint256) {
+    function mainAdminRole(uint64 _ticketId) public pure returns (uint256) {
         return _ticketId._generateMainTicketAdminRole();
     }
 
-    function ticketAdminRole(uint56 _ticketId) public pure returns (uint256) {
+    function ticketAdminRole(uint64 _ticketId) public pure returns (uint256) {
         return _ticketId._generateTicketAdminRole();
     }
 }

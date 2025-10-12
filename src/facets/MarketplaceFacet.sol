@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
+import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {IMarketplace} from "@ticket/interfaces/IMarketplace.sol";
 import {LibMarketplace} from "@ticket/libs/LibMarketplace.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 
 contract MarketplaceFacet is IMarketplace {
     using LibMarketplace for *;

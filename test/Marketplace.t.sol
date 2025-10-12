@@ -2,10 +2,10 @@
 pragma solidity 0.8.30;
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import {ITicket} from "@ticket/interfaces/ITicket.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {FullTicketData} from "@ticket-storage/FactoryStorage.sol";
+import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
+import {ITicket} from "@ticket/interfaces/ITicket.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 

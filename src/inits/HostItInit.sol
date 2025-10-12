@@ -2,10 +2,10 @@
 pragma solidity 0.8.30;
 
 import {LibDiamond} from "@diamond/libraries/LibDiamond.sol";
+import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {LibFactory} from "@ticket/libs/LibFactory.sol";
 import {LibMarketplace} from "@ticket/libs/LibMarketplace.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 
 event HostItInitialized();
 

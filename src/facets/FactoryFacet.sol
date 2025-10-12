@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {LibFactory} from "@ticket/libs/LibFactory.sol";
-import {TicketData, FullTicketData} from "@ticket-storage/FactoryStorage.sol";
+import {FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
+import {IFactory} from "@ticket/interfaces/IFactory.sol";
+import {LibFactory} from "@ticket/libs/LibFactory.sol";
 
 contract FactoryFacet {
     using LibFactory for *;

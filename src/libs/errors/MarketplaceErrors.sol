@@ -20,3 +20,4 @@ error TicketPurchaseFailed(FeeType, uint256);
 error TicketAccountingMismatch();
 error TicketUnpauseFailed();
 error CreateERC6551AccountFailed();
+error InvalidHostItFeeBps();

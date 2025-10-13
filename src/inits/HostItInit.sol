@@ -14,6 +14,7 @@ contract HostItInit {
         LibDiamond._diamondStorage().supportedInterfaces[type(ITicket).interfaceId] = true;
         LibFactory._factoryStorage().ticketProxy = _ticketProxy;
         LibMarketplace._setFeeTokenAddresses(_feeTypes, _tokens);
+        LibMarketplace._setHostItFeeBps(300);
         emit HostItInitialized();
     }
 }

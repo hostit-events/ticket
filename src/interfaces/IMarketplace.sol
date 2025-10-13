@@ -34,10 +34,11 @@ interface IMarketplace {
 
     function getHostItBalance(FeeType feeType) external view returns (uint256);
 
+    function calculateHostItFee(uint256 fee) external view returns (uint256);
+
     //*//////////////////////////////////////////////////////////////////////////
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function calculateHostItFee(uint256 fee) external pure returns (uint256);
     function getRefundPeriod() external pure returns (uint256);
 }

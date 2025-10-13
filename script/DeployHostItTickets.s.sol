@@ -43,6 +43,7 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
         // Deploy Ticket Proxy
         address ticketProxy = address(new TicketProxy(ticketBeacon));
 
+        // Get addresses and fees
         (address[] memory addresses, uint8[] memory feeTypes) =
             LibAddressesAndFees._getAddressesAndFeesByChainId(block.chainid);
 

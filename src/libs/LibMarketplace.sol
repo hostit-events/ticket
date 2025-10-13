@@ -80,19 +80,6 @@ library LibMarketplace {
         emit TicketMinted(_ticketId, _feeType, totalFee, tokenId_);
     }
 
-    function _createErc6551Account(address _ticketAddress, uint256 _tokenId) internal {
-        try IERC6551Registry(ERC6551_REGISTRY)
-            .createAccount(
-                ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, _ticketAddress, _tokenId
-            ) returns (address account) {
-            if (account == address(0)) {
-                revert CreateERC6551AccountFailed();
-            }
-        } catch {
-            revert CreateERC6551AccountFailed();
-        }
-    }
-
     function _setTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
         onlyMainTicketAdmin(_ticketId)
@@ -114,14 +101,6 @@ library LibMarketplace {
             emit TicketFeeSet(_ticketId, _feeTypes[i], _fees[i]);
         }
     }
-
-    // TODO
-    function _requestRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId) internal {
-        _ticketId._checkTicketExists();
-    }
-
-    // TODO
-    // function _fulfillRefund(uint64 _ticketId, FeeType _feeType) internal onlyRoleOrOwner {}
 
     function _withdrawTicketBalance(uint64 _ticketId, FeeType _feeType, address _to)
         internal
@@ -178,6 +157,19 @@ library LibMarketplace {
         }
         if (!token.trySafeTransferFrom(caller, address(this), _totalFee)) {
             revert TicketPurchaseFailed(_feeType, _totalFee);
+        }
+    }
+
+    function _createErc6551Account(address _ticketAddress, uint256 _tokenId) internal {
+        try IERC6551Registry(ERC6551_REGISTRY)
+            .createAccount(
+                ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, _ticketAddress, _tokenId
+            ) returns (address account) {
+            if (account == address(0)) {
+                revert CreateERC6551AccountFailed();
+            }
+        } catch {
+            revert CreateERC6551AccountFailed();
         }
     }
 

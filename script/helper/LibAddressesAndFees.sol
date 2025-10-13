@@ -4,7 +4,49 @@ pragma solidity ^0.8.4;
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 
-library AddressesAndFees {
+library LibAddressesAndFees {
+    function _getAddressesAndFeesByChainId(uint256 _chainId)
+        internal
+        returns (address[] memory addresses_, uint8[] memory feeTypes_)
+    {
+        if (_chainId == 1) {
+            addresses_ = _getEthereumAddresses();
+            feeTypes_ = _getEthereumFeeTypes();
+        } else if (_chainId == 8453) {
+            addresses_ = _getBaseAddresses();
+            feeTypes_ = _getBaseFeeTypes();
+        } else if (_chainId == 43114) {
+            addresses_ = _getAvalancheAddresses();
+            feeTypes_ = _getAvalancheFeeTypes();
+        } else if (_chainId == 42161) {
+            addresses_ = _getArbitrumOneAddresses();
+            feeTypes_ = _getArbitrumOneFeeTypes();
+        } else if (_chainId == 1135) {
+            addresses_ = _getLiskAddresses();
+            feeTypes_ = _getLiskFeeTypes();
+        } else if (_chainId == 11155111) {
+            addresses_ = _getEthereumSepoliaAddresses();
+            feeTypes_ = _getEthereumSepoliaFeeTypes();
+        } else if (_chainId == 84532) {
+            addresses_ = _getBaseSepoliaAddresses();
+            feeTypes_ = _getBaseSepoliaFeeTypes();
+        } else if (_chainId == 43113) {
+            addresses_ = _getAvalancheFujiAddresses();
+            feeTypes_ = _getAvalancheFujiFeeTypes();
+        } else if (_chainId == 421614) {
+            addresses_ = _getArbitrumSepoliaAddresses();
+            feeTypes_ = _getArbitrumSepoliaFeeTypes();
+        } else if (_chainId == 4202) {
+            addresses_ = _getLiskSepoliaAddresses();
+            feeTypes_ = _getLiskSepoliaFeeTypes();
+        } else if (_chainId == 31337) {
+            addresses_ = _getMockAddresses();
+            feeTypes_ = _getMockFeeTypes();
+        } else {
+            revert("Chain not supported");
+        }
+    }
+
     //*//////////////////////////////////////////////////////////////////////////
     //                             MAINNET ADDRESSES
     //////////////////////////////////////////////////////////////////////////*//

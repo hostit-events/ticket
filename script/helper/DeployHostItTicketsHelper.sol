@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {DiamondArgs, FacetCut, FacetCutAction} from "@diamond-storage/DiamondStorage.sol";
+import {FacetCut, FacetCutAction} from "@diamond-storage/DiamondStorage.sol";
 import {GetSelectors} from "@diamond-test/helpers/GetSelectors.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
@@ -13,7 +13,7 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
         address _factoryFacet,
         address _checkInFacet,
         address _marketplaceFacet
-    ) internal returns (FacetCut[] memory cuts_) {
+    ) internal view returns (FacetCut[] memory cuts_) {
         cuts_ = new FacetCut[](6);
 
         cuts_[0] = FacetCut({
@@ -49,27 +49,22 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
         });
     }
 
-    function _createDiamondArgs(
-        address _multiInit,
-        address _erc165Init,
+    function _createInitCalldata(
+        address _diamondInit,
         address _hostItInit,
         address _ticketProxy,
         uint8[] memory _feeTypes,
         address[] memory _addresses
-    ) internal view returns (DiamondArgs memory args_) {
+    ) internal view returns (bytes memory calldata_) {
         address[] memory initAddr = new address[](2);
-        initAddr[0] = _erc165Init;
+        initAddr[0] = _diamondInit;
         initAddr[1] = _hostItInit;
 
         bytes[] memory initData = new bytes[](2);
-        initData[0] = abi.encodeWithSignature("initErc165()");
+        initData[0] = abi.encodeWithSignature("initDiamond(address)", _msgSender());
         initData[1] =
             abi.encodeWithSignature("initHostIt(address,uint8[],address[])", _ticketProxy, _feeTypes, _addresses);
 
-        args_ = DiamondArgs({
-            owner: _msgSender(),
-            init: _multiInit,
-            initData: abi.encodeWithSignature("multiInit(address[],bytes[])", initAddr, initData)
-        });
+        calldata_ = abi.encodeWithSignature("multiInit(address[],bytes[])", initAddr, initData);
     }
 }

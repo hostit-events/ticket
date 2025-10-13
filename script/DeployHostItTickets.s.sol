@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 import {DiamondCutFacet} from "@diamond/facets/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "@diamond/facets/DiamondLoupeFacet.sol";
 import {OwnableRolesFacet} from "@diamond/facets/OwnableRolesFacet.sol";
-import {ERC165Init} from "@diamond/initializers/ERC165Init.sol";
+import {DiamondInit} from "@diamond/initializers/DiamondInit.sol";
 import {MultiInit} from "@diamond/initializers/MultiInit.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {DeployHostItTicketsHelper} from "@ticket-script/helper/DeployHostItTicketsHelper.sol";
@@ -31,7 +31,7 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
 
         // Deploy initializers
         address multiInit = address(new MultiInit());
-        address erc165Init = address(new ERC165Init());
+        address diamondInit = address(new DiamondInit());
         address hostItInit = address(new HostItInit());
 
         // Deploy Ticket Impl
@@ -52,7 +52,8 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
                 _createFacetCuts(
                     diamondCutFacet, diamondLoupeFacet, ownableRolesFacet, factoryFacet, checkInFacet, marketplaceFacet
                 ),
-                _createDiamondArgs(multiInit, erc165Init, hostItInit, ticketProxy, feeTypes, addresses)
+                multiInit,
+                _createInitCalldata(diamondInit, hostItInit, ticketProxy, feeTypes, addresses)
             )
         );
         vm.stopBroadcast();

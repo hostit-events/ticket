@@ -6,7 +6,7 @@ import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {IFactory} from "@ticket/interfaces/IFactory.sol";
 import {LibFactory} from "@ticket/libs/LibFactory.sol";
 
-contract FactoryFacet {
+contract FactoryFacet is IFactory {
     using LibFactory for *;
 
     //*//////////////////////////////////////////////////////////////////////////

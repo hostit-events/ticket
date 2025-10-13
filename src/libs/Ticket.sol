@@ -183,13 +183,15 @@ contract Ticket is
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
-    function paused() public view override(ITicket, PausableUpgradeable) returns (bool) {
-        return PausableUpgradeable.paused();
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
+
+    /// @notice Returns whether the contract is paused
+    /// @return Whether the contract is paused
+    function paused() public view override(ITicket, PausableUpgradeable) returns (bool) {
+        return PausableUpgradeable.paused();
+    }
 
     /// @notice Returns the metadata URI for the TicketNFT
     /// @dev This function returns the base URI set for the NFT collection, which is used
@@ -210,7 +212,7 @@ contract Ticket is
     /// @dev This function returns the base URI set for the NFT collection, which is used
     /// @return The URI pointing to the collection's metadata
     /// forge-lint: disable-next-line(mixed-case-function)
-    function baseURI() external view returns (string memory) {
+    function baseURI() public view returns (string memory) {
         return _baseURI();
     }
 

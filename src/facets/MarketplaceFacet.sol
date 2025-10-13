@@ -60,13 +60,13 @@ contract MarketplaceFacet is IMarketplace {
         return _feeType._getHostItBalance();
     }
 
+    function calculateHostItFee(uint256 _fee) external view returns (uint256) {
+        return _fee._calculateHostItFee();
+    }
+
     //*//////////////////////////////////////////////////////////////////////////
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
-
-    function calculateHostItFee(uint256 _fee) external pure returns (uint256) {
-        return _fee._calculateHostItFee();
-    }
 
     function getRefundPeriod() external pure returns (uint256) {
         return LibMarketplace.REFUND_PERIOD;

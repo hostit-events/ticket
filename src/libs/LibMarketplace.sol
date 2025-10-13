@@ -181,6 +181,10 @@ library LibMarketplace {
         }
     }
 
+    //*//////////////////////////////////////////////////////////////////////////
+    //                              ADMIN FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////*//
+
     function _setFeeTokenAddresses(FeeType[] calldata _feeTypes, address[] calldata _tokenAddresses) internal {
         uint256 feeTypesLength = _feeTypes.length;
         if (feeTypesLength != _tokenAddresses.length && feeTypesLength > 0) revert InvalidFeeConfig();
@@ -189,6 +193,12 @@ library LibMarketplace {
             _marketplaceStorage().feeTokenAddress[_feeTypes[i]] = _tokenAddresses[i];
             emit TicketFeeAddressSet(_feeTypes[i], _tokenAddresses[i]);
         }
+    }
+
+    function _setHostItFeeBps(uint16 _hostItFeePercentage) internal {
+        if (_hostItFeePercentage > HOSTIT_FEE_BPS) revert InvalidHostItFeeBps();
+        _marketplaceStorage().hostItFeeBps = _hostItFeePercentage;
+        emit HostItFeeBpsSet(_hostItFeePercentage);
     }
 
     //*//////////////////////////////////////////////////////////////////////////

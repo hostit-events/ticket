@@ -5,6 +5,8 @@ import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 
 event TicketFeeSet(uint64 indexed ticketId, FeeType indexed feeType, uint256 fee);
 
+event HostItFeeBpsSet(uint16 indexed hostItFeeBps);
+
 event TicketFeeAddressSet(FeeType indexed feeType, address indexed token);
 
 event TicketMinted(uint64 indexed ticketId, FeeType indexed feeType, uint256 fee, uint40 tokenId);

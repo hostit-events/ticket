@@ -10,6 +10,7 @@ struct MarketplaceStorage {
     mapping(FeeType => address) feeTokenAddress;
     mapping(uint64 => mapping(FeeType => uint256)) ticketBalance;
     mapping(FeeType => uint256) hostItBalance;
+    uint16 hostItFeeBps;
 }
 
 enum FeeType {
@@ -18,10 +19,9 @@ enum FeeType {
     WETH,
     USDT,
     USDC,
-    EURC,
     USDT0,
+    EURC,
     GHO,
     LINK,
-    LSK,
-    DISCOUNT
+    LSK
 }

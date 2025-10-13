@@ -117,6 +117,20 @@ contract FactoryTest is DeployedHostItTickets {
         assertEq(fullTicketDatas[2].id, 3);
     }
 
+    function test_adminTickets() public {
+        _createFreeTicket();
+        _createFreeTicket();
+        vm.prank(alice);
+        _createPaidTicket();
+        uint64[] memory ownerTickets = factoryFacet.adminTickets(owner);
+        uint64[] memory aliceTickets = factoryFacet.adminTickets(alice);
+        assertEq(ownerTickets.length, 2);
+        assertEq(aliceTickets.length, 1);
+        assertEq(ownerTickets[0], 1);
+        assertEq(ownerTickets[1], 2);
+        assertEq(aliceTickets[0], 3);
+    }
+
     function test_adminTicketData() public {
         _createFreeTicket();
         _createFreeTicket();
@@ -129,20 +143,6 @@ contract FactoryTest is DeployedHostItTickets {
         assertEq(ownerTicketDatas[0].id, 1);
         assertEq(ownerTicketDatas[1].id, 2);
         assertEq(aliceTicketDatas[0].id, 3);
-    }
-
-    function test_adminTickets() public {
-        _createFreeTicket();
-        _createFreeTicket();
-        vm.prank(alice);
-        _createPaidTicket();
-        uint56[] memory ownerTickets = factoryFacet.adminTickets(owner);
-        uint56[] memory aliceTickets = factoryFacet.adminTickets(alice);
-        assertEq(ownerTickets.length, 2);
-        assertEq(aliceTickets.length, 1);
-        assertEq(ownerTickets[0], 1);
-        assertEq(ownerTickets[1], 2);
-        assertEq(aliceTickets[0], 3);
     }
 
     function test_hostItTicketHash() public view {
@@ -167,4 +167,28 @@ contract FactoryTest is DeployedHostItTickets {
         uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
         assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
     }
+
+    //*//////////////////////////////////////////////////////////////////////////
+    //                                 FUZZ TESTS
+    //////////////////////////////////////////////////////////////////////////*//
+
+    // /// forge-config: default.fuzz.runs = 20
+    // /// forge-config: default.fuzz.max-test-rejects = 100_000_000
+    // function test_fuzz_createTicket(TicketData memory _ticketData) public {
+    //     vm.assume(_ticketData.endTime > bound(_ticketData.startTime, 0, type(uint48).max - 2 days));
+    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
+    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
+    //     factoryFacet.createTicket(_ticketData, _getFeeTypes(), _getFees());
+    // }
+
+    // /// forge-config: default.fuzz.runs = 256
+    // /// forge-config: default.fuzz.max-test-rejects = 4_000_000
+    // function test_fuzz_updateTicket(TicketData memory _ticketData) public {
+    //     bound(_ticketData.startTime, 0, type(uint48).max - 2 days);
+    //     vm.assume(_ticketData.endTime == type(uint48).max - 1 days);
+    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
+    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
+    //     _createPaidTicket();
+    //     factoryFacet.updateTicket(_ticketData, 1);
+    // }
 }

@@ -43,20 +43,16 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
         // Deploy Ticket Proxy
         address ticketProxy = address(new TicketProxy(ticketBeacon));
 
+        (address[] memory addresses, uint8[] memory feeTypes) =
+            LibAddressesAndFees._getAddressesAndFeesByChainId(block.chainid);
+
         // Deploy HostItTickets diamond
         hostIt_ = address(
             new HostItTickets(
                 _createFacetCuts(
                     diamondCutFacet, diamondLoupeFacet, ownableRolesFacet, factoryFacet, checkInFacet, marketplaceFacet
                 ),
-                _createDiamondArgs(
-                    multiInit,
-                    erc165Init,
-                    hostItInit,
-                    ticketProxy,
-                    AddressesAndFees._getMockFeeTypes(),
-                    AddressesAndFees._getMockAddresses()
-                )
+                _createDiamondArgs(multiInit, erc165Init, hostItInit, ticketProxy, feeTypes, addresses)
             )
         );
         vm.stopBroadcast();

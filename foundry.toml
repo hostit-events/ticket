@@ -14,10 +14,14 @@ remappings = [
     "@tokenbound/=lib/contracts/src/"
 ]
 ffi = true
-optimizer_runs = 30_000
+optimizer_runs = 999_999
 
 [fmt]
 sort_imports = true
+
+[fuzz]
+runs = 10_000
+max_test_rejects = 999_999
 
 [rpc_endpoints]
 mainnet = "${ETH_MAINNET_URL}"

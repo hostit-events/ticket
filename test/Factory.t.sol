@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {TicketData, ExtraTicketData, FullTicketData} from "@ticket-storage/FactoryStorage.sol";
-import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 import {TicketCreated, TicketUpdated} from "@ticket-logs/FactoryLogs.sol";
+import {ExtraTicketData, FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
+import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 
 contract FactoryTest is DeployedHostItTickets {
     function test_createFreeTicket() public {
@@ -11,7 +11,7 @@ contract FactoryTest is DeployedHostItTickets {
         vm.expectEmit(true, true, true, false, hostIt);
         emit TicketCreated(1, owner, extraTicketData);
         _createFreeTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getFreeTicketData();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         assertTrue(factoryFacet.ticketExists(ticketId));
@@ -34,7 +34,7 @@ contract FactoryTest is DeployedHostItTickets {
 
     function test_updateFreeTicket() public {
         _createFreeTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getFreeUpdatedTicketData();
         vm.warp(10000);
         ExtraTicketData memory extraTicketData;
@@ -58,7 +58,7 @@ contract FactoryTest is DeployedHostItTickets {
         vm.expectEmit(true, true, true, false, hostIt);
         emit TicketCreated(1, owner, extraTicketData);
         _createPaidTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getPaidTicketData();
         FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
         assertEq(fullTicketData.name, ticketData.name);
@@ -74,7 +74,7 @@ contract FactoryTest is DeployedHostItTickets {
 
     function test_updatePaidTicket() public {
         _createPaidTicket();
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory ticketData = _getPaidUpdatedTicketData();
         vm.warp(10000);
         ExtraTicketData memory extraTicketData;
@@ -117,6 +117,20 @@ contract FactoryTest is DeployedHostItTickets {
         assertEq(fullTicketDatas[2].id, 3);
     }
 
+    function test_adminTickets() public {
+        _createFreeTicket();
+        _createFreeTicket();
+        vm.prank(alice);
+        _createPaidTicket();
+        uint64[] memory ownerTickets = factoryFacet.adminTickets(owner);
+        uint64[] memory aliceTickets = factoryFacet.adminTickets(alice);
+        assertEq(ownerTickets.length, 2);
+        assertEq(aliceTickets.length, 1);
+        assertEq(ownerTickets[0], 1);
+        assertEq(ownerTickets[1], 2);
+        assertEq(aliceTickets[0], 3);
+    }
+
     function test_adminTicketData() public {
         _createFreeTicket();
         _createFreeTicket();
@@ -131,40 +145,50 @@ contract FactoryTest is DeployedHostItTickets {
         assertEq(aliceTicketDatas[0].id, 3);
     }
 
-    function test_adminTickets() public {
-        _createFreeTicket();
-        _createFreeTicket();
-        vm.prank(alice);
-        _createPaidTicket();
-        uint56[] memory ownerTickets = factoryFacet.adminTickets(owner);
-        uint56[] memory aliceTickets = factoryFacet.adminTickets(alice);
-        assertEq(ownerTickets.length, 2);
-        assertEq(aliceTickets.length, 1);
-        assertEq(ownerTickets[0], 1);
-        assertEq(ownerTickets[1], 2);
-        assertEq(aliceTickets[0], 3);
-    }
-
     function test_hostItTicketHash() public view {
         bytes32 hostItTicketHash = factoryFacet.hostItTicketHash();
         assertEq(hostItTicketHash, keccak256("host.it.ticket"));
     }
 
     function test_ticketHash() public view {
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         bytes32 ticketHash = factoryFacet.ticketHash(ticketId);
         assertEq(ticketHash, keccak256(abi.encode(keccak256("host.it.ticket"), ticketId)));
     }
 
     function test_mainAdminRole() public view {
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
         assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
     }
 
     function test_ticketAdminRole() public view {
-        uint56 ticketId = factoryFacet.ticketCount();
+        uint64 ticketId = factoryFacet.ticketCount();
         uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
         assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
     }
+
+    //*//////////////////////////////////////////////////////////////////////////
+    //                                 FUZZ TESTS
+    //////////////////////////////////////////////////////////////////////////*//
+
+    // /// forge-config: default.fuzz.runs = 20
+    // /// forge-config: default.fuzz.max-test-rejects = 100_000_000
+    // function test_fuzz_createTicket(TicketData memory _ticketData) public {
+    //     vm.assume(_ticketData.endTime > bound(_ticketData.startTime, 0, type(uint48).max - 2 days));
+    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
+    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
+    //     factoryFacet.createTicket(_ticketData, _getFeeTypes(), _getFees());
+    // }
+
+    // /// forge-config: default.fuzz.runs = 256
+    // /// forge-config: default.fuzz.max-test-rejects = 4_000_000
+    // function test_fuzz_updateTicket(TicketData memory _ticketData) public {
+    //     bound(_ticketData.startTime, 0, type(uint48).max - 2 days);
+    //     vm.assume(_ticketData.endTime == type(uint48).max - 1 days);
+    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
+    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
+    //     _createPaidTicket();
+    //     factoryFacet.updateTicket(_ticketData, 1);
+    // }
 }

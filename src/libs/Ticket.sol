@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
-import {ERC721EnumerableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import {ERC721RoyaltyUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
-import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {
+    ERC721EnumerableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import {
+    ERC721RoyaltyUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 
 /*
@@ -181,13 +183,15 @@ contract Ticket is
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
-    function paused() public view override(ITicket, PausableUpgradeable) returns (bool) {
-        return PausableUpgradeable.paused();
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
+
+    /// @notice Returns whether the contract is paused
+    /// @return Whether the contract is paused
+    function paused() public view override(ITicket, PausableUpgradeable) returns (bool) {
+        return PausableUpgradeable.paused();
+    }
 
     /// @notice Returns the metadata URI for the TicketNFT
     /// @dev This function returns the base URI set for the NFT collection, which is used
@@ -208,7 +212,7 @@ contract Ticket is
     /// @dev This function returns the base URI set for the NFT collection, which is used
     /// @return The URI pointing to the collection's metadata
     /// forge-lint: disable-next-line(mixed-case-function)
-    function baseURI() external view returns (string memory) {
+    function baseURI() public view returns (string memory) {
         return _baseURI();
     }
 

@@ -8,46 +8,52 @@ bytes32 constant FACTORY_STORAGE_LOCATION = 0x610b7ed6689c503e651500bb8179583591
 
 struct FactoryStorage {
     address ticketProxy;
-    uint56 ticketId;
-    mapping(uint56 => ExtraTicketData) ticketIdToData;
+    uint64 ticketId;
+    mapping(uint64 => ExtraTicketData) ticketIdToData;
     mapping(address => EnumerableSet.UintSet) adminTicketIds;
 }
 
 struct TicketData {
-    uint40 startTime;
-    uint40 endTime;
-    uint40 purchaseStartTime;
+    uint48 startTime;
+    uint48 endTime;
+    uint48 purchaseStartTime;
     uint40 maxTickets;
+    uint8 maxTicketsPerUser;
     bool isFree;
+    bool isRefundable;
     string name;
     string symbol;
     string uri;
 }
 
 struct ExtraTicketData {
-    uint56 id;
-    uint40 createdAt;
-    uint40 updatedAt;
-    uint40 startTime;
-    uint40 endTime;
-    uint40 purchaseStartTime;
+    uint64 id;
+    uint48 createdAt;
+    uint48 updatedAt;
+    uint48 startTime;
+    uint48 endTime;
+    uint48 purchaseStartTime;
     uint40 maxTickets;
     uint40 soldTickets;
+    uint8 maxTicketsPerUser;
     bool isFree;
+    bool isRefundable;
     address ticketAdmin;
     address ticketAddress;
 }
 
 struct FullTicketData {
-    uint56 id;
-    uint40 createdAt;
-    uint40 updatedAt;
-    uint40 startTime;
-    uint40 endTime;
-    uint40 purchaseStartTime;
+    uint64 id;
+    uint48 createdAt;
+    uint48 updatedAt;
+    uint48 startTime;
+    uint48 endTime;
+    uint48 purchaseStartTime;
     uint40 maxTickets;
     uint40 soldTickets;
+    uint8 maxTicketsPerUser;
     bool isFree;
+    bool isRefundable;
     address ticketAdmin;
     address ticketAddress;
     string name;

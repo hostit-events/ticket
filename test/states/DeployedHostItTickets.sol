@@ -16,7 +16,7 @@ import {Test} from "forge-std/Test.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 
-abstract contract DeployedHostItTickets is HelperContract {
+abstract contract DeployedHostItTickets is Test {
     address public hostIt;
     DeployHostItTicketsTest public deployHostItTickets;
     IFactory public factoryFacet;
@@ -34,12 +34,7 @@ abstract contract DeployedHostItTickets is HelperContract {
 
     /// @notice List of facet contract names used in deployment.
     string[6] public facetNames = [
-        "DiamondCutFacet",
-        "DiamondLoupeFacet",
-        "OwnableRolesFacet",
-        "FactoryFacet",
-        "CheckInFacet",
-        "MarketplaceFacet"
+        "DiamondCutFacet", "DiamondLoupeFacet", "OwnableRolesFacet", "FactoryFacet", "CheckInFacet", "MarketplaceFacet"
     ];
 
     address owner = address(this);
@@ -67,22 +62,6 @@ abstract contract DeployedHostItTickets is HelperContract {
         vm.etch(ERC6551_REGISTRY, address(new ERC6551Registry()).code);
     }
 
-    function _createFreeTicket() internal {
-        factoryFacet.createTicket(_getFreeTicketData(), _getZeroFeeType(), _getZeroFee());
-    }
-
-    function _updateFreeTicket(uint40 _ticketId) internal {
-        factoryFacet.updateTicket(_getFreeUpdatedTicketData(), _ticketId);
-    }
-
-    function _createPaidTicket() internal {
-        factoryFacet.createTicket(_getPaidTicketData(), _getFeeTypes(), _getFees());
-    }
-
-    function _updatePaidTicket(uint40 _ticketId) internal {
-        factoryFacet.updateTicket(_getPaidUpdatedTicketData(), _ticketId);
-    }
-
     function _mintTicketFree() internal returns (uint64 ticketId_, uint40 tokenId_) {
         _createFreeTicket();
         ticketId_ = factoryFacet.ticketCount();
@@ -99,9 +78,10 @@ abstract contract DeployedHostItTickets is HelperContract {
         hoax(alice, totalFee);
         vm.expectEmit(true, true, true, true, hostIt);
         emit TicketMinted(ticketId_, FeeType.ETH, totalFee, 1);
-        (bool success, bytes memory result) = address(marketplaceFacet).call{value: totalFee}(
-            abi.encodeWithSelector(marketplaceFacet.mintTicket.selector, ticketId_, FeeType.ETH, alice)
-        );
+        (bool success, bytes memory result) = address(marketplaceFacet)
+        .call{
+            value: totalFee
+        }(abi.encodeWithSelector(marketplaceFacet.mintTicket.selector, ticketId_, FeeType.ETH, alice));
         assertTrue(success);
         tokenId_ = abi.decode(result, (uint40));
         fee_ = fee;
@@ -148,13 +128,31 @@ abstract contract DeployedHostItTickets is HelperContract {
         hostItFee_ = hostItFee;
     }
 
+    function _createFreeTicket() internal {
+        factoryFacet.createTicket(_getFreeTicketData(), _getZeroFeeType(), _getZeroFee());
+    }
+
+    function _updateFreeTicket(uint40 _ticketId) internal {
+        factoryFacet.updateTicket(_getFreeUpdatedTicketData(), _ticketId);
+    }
+
+    function _createPaidTicket() internal {
+        factoryFacet.createTicket(_getPaidTicketData(), _getFeeTypes(), _getFees());
+    }
+
+    function _updatePaidTicket(uint40 _ticketId) internal {
+        factoryFacet.updateTicket(_getPaidUpdatedTicketData(), _ticketId);
+    }
+
     function _getFreeTicketData() internal view returns (TicketData memory ticketData_) {
         ticketData_ = TicketData({
             startTime: uint40(block.timestamp + 1 days),
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
             isFree: true,
+            isRefundable: false,
             name: "Free Ticket",
             symbol: "",
             uri: "ipfs://"
@@ -167,7 +165,9 @@ abstract contract DeployedHostItTickets is HelperContract {
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: 100,
+            maxTicketsPerUser: 1,
             isFree: true,
+            isRefundable: false,
             name: "Updated Free Ticket",
             symbol: "UFT",
             uri: "ipfs://2"
@@ -180,7 +180,9 @@ abstract contract DeployedHostItTickets is HelperContract {
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
             isFree: false,
+            isRefundable: false,
             name: "Paid Ticket",
             symbol: "",
             uri: "ipfs://$"
@@ -193,7 +195,9 @@ abstract contract DeployedHostItTickets is HelperContract {
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
             isFree: false,
+            isRefundable: true,
             name: "Updated Paid Ticket",
             symbol: "UPT",
             uri: "ipfs://$$"

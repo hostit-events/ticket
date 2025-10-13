@@ -19,3 +19,4 @@ error TicketImplementationNotSet();
 error UpdateNameFailed();
 error UpdateSymbolFailed();
 error UpdateURIFailed();
+error TicketInitializationFailed();

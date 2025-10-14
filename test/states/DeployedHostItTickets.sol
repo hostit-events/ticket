@@ -43,7 +43,7 @@ abstract contract DeployedHostItTickets is Test {
     address charlie = makeAddr("charlie");
     address withdrawer = makeAddr("withdrawer");
 
-    uint40 public _currentTime = uint40(block.timestamp);
+    uint48 public _currentTime = uint48(block.timestamp);
 
     /// @notice Deploys the Diamond contract and initializes interface references and facet addresses.
     /// @dev This function is intended to be called in a test setup phase (e.g., `setUp()` in Foundry).

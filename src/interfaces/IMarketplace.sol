@@ -12,6 +12,8 @@ interface IMarketplace {
 
     function setTicketFees(uint64 ticketId, FeeType[] calldata feeTypes, uint256[] calldata fees) external;
 
+    function claimRefund(uint64 ticketId, FeeType feeType, uint256 tokenId, address to) external;
+
     function withdrawTicketBalance(uint64 ticketId, FeeType feeType, address to) external;
 
     function withdrawHostItBalance(FeeType feeType, address to) external;

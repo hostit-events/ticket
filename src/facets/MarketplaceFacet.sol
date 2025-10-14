@@ -20,6 +20,10 @@ contract MarketplaceFacet is IMarketplace {
         _ticketId._setTicketFees(_feeTypes, _fees);
     }
 
+    function claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId, address _to) external {
+        _ticketId._claimRefund(_feeType, _tokenId, _to);
+    }
+
     function withdrawTicketBalance(uint64 _ticketId, FeeType _feeType, address _to) external {
         _ticketId._withdrawTicketBalance(_feeType, _to);
     }

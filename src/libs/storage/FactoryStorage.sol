@@ -6,6 +6,9 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.factory.storage")) - 1)) & ~bytes32(uint256(0xff))
 bytes32 constant FACTORY_STORAGE_LOCATION = 0x610b7ed6689c503e651500bb8179583591f93afc835ec7dbed5872619168c100;
 
+/// @title FactoryStorage
+/// @notice Storage structure for managing factory data
+/// @custom:storage-location erc7201:host.it.ticket.factory.storage
 struct FactoryStorage {
     address ticketProxy;
     uint64 ticketId;
@@ -13,6 +16,8 @@ struct FactoryStorage {
     mapping(address => EnumerableSet.UintSet) adminTicketIds;
 }
 
+/// @title TicketData
+/// @notice Struct representing ticket data
 struct TicketData {
     uint48 startTime;
     uint48 endTime;
@@ -26,6 +31,8 @@ struct TicketData {
     string uri;
 }
 
+/// @title ExtraTicketData
+/// @notice Struct representing extra ticket data
 struct ExtraTicketData {
     uint64 id;
     uint48 createdAt;
@@ -42,6 +49,8 @@ struct ExtraTicketData {
     address ticketAddress;
 }
 
+/// @title FullTicketData
+/// @notice Struct representing full ticket data
 struct FullTicketData {
     uint64 id;
     uint48 createdAt;

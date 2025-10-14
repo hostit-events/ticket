@@ -4,15 +4,19 @@ pragma solidity 0.8.30;
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.marketplace.storage")) - 1)) & ~bytes32(uint256(0xff))
 bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f364669f622316549d801837d9eeba9778d00;
 
+/// @title MarketplaceStorage
+/// @notice Storage structure for managing marketplace data
+/// @custom:storage-location erc7201:host.it.ticket.marketplace.storage
 struct MarketplaceStorage {
     mapping(uint64 => mapping(FeeType => bool)) feeEnabled;
     mapping(uint64 => mapping(FeeType => uint256)) ticketFee;
     mapping(FeeType => address) feeTokenAddress;
     mapping(uint64 => mapping(FeeType => uint256)) ticketBalance;
     mapping(FeeType => uint256) hostItBalance;
-    uint16 hostItFeeBps;
 }
 
+/// @title FeeType
+/// @notice Enum for fee types
 enum FeeType {
     NONE,
     ETH,

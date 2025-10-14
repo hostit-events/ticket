@@ -34,7 +34,7 @@ import {Diamond, FacetCut} from "@diamond/Diamond.sol";
 */
 
 /// @title HostIt Tickets
-/// @notice Implements EIP-2535 Diamond proxy pattern, allowing dynamic addition, replacement, and removal of facets
+/// @notice Implements ERC-2535 Diamond proxy pattern, allowing dynamic addition, replacement, and removal of facets
 /// @author HostIt Protocol
 contract HostItTickets is Diamond {
     /// @notice Initializes the Diamond proxy with the provided facets and initialization parameters

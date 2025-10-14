@@ -34,12 +34,12 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 */
 
 /// @title TicketProxy
-/// @notice This is a proxy for the Ticket contract
+/// @notice Ticket proxy contract
 /// @author HostIt Protocol
 contract TicketProxy is BeaconProxy {
     /// @notice Initializes the TicketProxy with the provided beacon address
     /// @param _ticketBeacon The address of the Ticket beacon
-    constructor(address _ticketBeacon) BeaconProxy(_ticketBeacon, "") {}
+    constructor(address _ticketBeacon) payable BeaconProxy(_ticketBeacon, "") {}
 }
 
 /*

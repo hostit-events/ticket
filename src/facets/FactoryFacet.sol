@@ -15,8 +15,9 @@ contract FactoryFacet is IFactory {
 
     function createTicket(TicketData calldata _ticketData, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         external
+        returns (uint64)
     {
-        _ticketData._createTicket(_feeTypes, _fees);
+        return _ticketData._createTicket(_feeTypes, _fees);
     }
 
     function updateTicket(TicketData calldata _ticketData, uint64 _ticketId) external {

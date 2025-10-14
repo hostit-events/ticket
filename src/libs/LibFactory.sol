@@ -49,6 +49,7 @@ library LibFactory {
 
     function _createTicket(TicketData calldata _ticketData, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
+        returns (uint64 ticketId_)
     {
         {
             if (bytes(_ticketData.name).length == 0) revert EmptyName();
@@ -67,13 +68,13 @@ library LibFactory {
         }
 
         FactoryStorage storage fs = _factoryStorage();
-        uint64 ticketId = ++fs.ticketId;
+        ticketId_ = ++fs.ticketId;
         address ticketAdmin = LibContext._msgSender();
-        _grantTicketAdminRoles(ticketAdmin, ticketId);
+        _grantTicketAdminRoles(ticketAdmin, ticketId_);
 
-        ExtraTicketData memory extraTicketData = _createExtraTicketData(fs, _ticketData, ticketId, ticketAdmin);
-        fs.ticketIdToData[ticketId] = extraTicketData;
-        fs.adminTicketIds[ticketAdmin].add(ticketId);
+        ExtraTicketData memory extraTicketData = _createExtraTicketData(fs, _ticketData, ticketId_, ticketAdmin);
+        fs.ticketIdToData[ticketId_] = extraTicketData;
+        fs.adminTicketIds[ticketAdmin].add(ticketId_);
 
         if (!_ticketData.isFree) {
             uint256 feeTypesLength = _feeTypes.length;
@@ -83,17 +84,17 @@ library LibFactory {
             MarketplaceStorage storage mps = LibMarketplace._marketplaceStorage();
             for (uint256 i; i < feeTypesLength; ++i) {
                 FeeType feeType = _feeTypes[i];
-                if (mps.feeEnabled[ticketId][feeType]) {
+                if (mps.feeEnabled[ticketId_][feeType]) {
                     revert FeeAlreadySet(feeType);
                 }
 
                 if (_fees[i] == 0) revert ZeroFee(feeType);
-                mps.feeEnabled[ticketId][feeType] = true;
-                mps.ticketFee[ticketId][feeType] = _fees[i];
+                mps.feeEnabled[ticketId_][feeType] = true;
+                mps.ticketFee[ticketId_][feeType] = _fees[i];
             }
         }
 
-        emit TicketCreated(ticketId, ticketAdmin, extraTicketData);
+        emit TicketCreated(ticketId_, ticketAdmin, extraTicketData);
     }
 
     function _updateTicket(TicketData calldata _ticketData, uint64 _ticketId) internal {

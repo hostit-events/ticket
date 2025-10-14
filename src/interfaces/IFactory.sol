@@ -10,7 +10,8 @@ interface IFactory {
     //////////////////////////////////////////////////////////////////////////*//
 
     function createTicket(TicketData calldata _ticketData, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
-        external;
+        external
+        returns (uint64);
 
     function updateTicket(TicketData calldata _ticketData, uint64 _ticketId) external;
 

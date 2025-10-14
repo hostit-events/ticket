@@ -220,12 +220,6 @@ library LibMarketplace {
         emit TicketFeeAddressSet(_feeTypes, _tokenAddresses);
     }
 
-    function _setHostItFeeBps(uint16 _hostItFeePercentage) internal {
-        if (_hostItFeePercentage > HOSTIT_FEE_BPS) revert InvalidHostItFeeBps();
-        _marketplaceStorage().hostItFeeBps = _hostItFeePercentage;
-        emit HostItFeeBpsSet(_hostItFeePercentage);
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
@@ -273,7 +267,7 @@ library LibMarketplace {
         returns (uint256 ticketFee_, uint256 hostItFee_, uint256 totalFee_)
     {
         ticketFee_ = _getTicketFee(_ticketId, _feeType);
-        hostItFee_ = _calculateHostItFee(ticketFee_);
+        hostItFee_ = _getHostItFee(ticketFee_);
         totalFee_ = ticketFee_ + hostItFee_;
     }
 
@@ -283,7 +277,7 @@ library LibMarketplace {
         returns (uint256 ticketFee_, uint256 hostItFee_, uint256 totalFee_)
     {
         ticketFee_ = _getTicketFee(_ms, _ticketId, _feeType);
-        hostItFee_ = _calculateHostItFee(_ms, ticketFee_);
+        hostItFee_ = _getHostItFee(ticketFee_);
         totalFee_ = ticketFee_ + hostItFee_;
     }
 
@@ -311,12 +305,8 @@ library LibMarketplace {
         if (_address.code.length > 0) revert ContractNotAllowed();
     }
 
-    function _calculateHostItFee(uint256 _fee) internal view returns (uint256) {
-        return _calculateHostItFee(_marketplaceStorage(), _fee);
-    }
-
-    function _calculateHostItFee(MarketplaceStorage storage _ms, uint256 _fee) internal view returns (uint256) {
-        return ((_fee * _ms.hostItFeeBps) / FEE_BASIS_POINTS);
+    function _getHostItFee(uint256 _fee) internal pure returns (uint256) {
+        return ((_fee * HOSTIT_FEE_BPS) / FEE_BASIS_POINTS);
     }
 
     //*//////////////////////////////////////////////////////////////////////////

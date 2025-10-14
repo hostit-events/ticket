@@ -49,7 +49,9 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
 
         // Deploy HostItTickets diamond
         hostIt_ = address(
-            new HostItTickets(
+            new HostItTickets{
+                salt: vm.envBytes32("HOST_IT_SALT")
+            }(
                 _createFacetCuts(
                     diamondCutFacet, diamondLoupeFacet, ownableRolesFacet, factoryFacet, checkInFacet, marketplaceFacet
                 ),

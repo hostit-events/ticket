@@ -123,6 +123,10 @@ library LibFactory {
             extraTicketData.purchaseStartTime = _ticketData.purchaseStartTime;
         }
 
+        if (_ticketData.maxTicketsPerUser > 0) {
+            extraTicketData.maxTicketsPerUser = _ticketData.maxTicketsPerUser;
+        }
+
         ITicket ticket = ITicket(extraTicketData.ticketAddress);
         if (_ticketData.maxTickets > 0) {
             if (_ticketData.maxTickets < ticket.totalSupply()) {
@@ -131,7 +135,7 @@ library LibFactory {
             extraTicketData.maxTickets = _ticketData.maxTickets;
         }
 
-        extraTicketData.updatedAt = uint40(block.timestamp);
+        extraTicketData.updatedAt = uint48(block.timestamp);
         _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 
         if (bytes(_ticketData.name).length > 0) {

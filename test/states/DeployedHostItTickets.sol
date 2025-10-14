@@ -182,7 +182,7 @@ abstract contract DeployedHostItTickets is Test {
             maxTickets: type(uint40).max,
             maxTicketsPerUser: 0,
             isFree: false,
-            isRefundable: false,
+            isRefundable: true,
             name: "Paid Ticket",
             symbol: "",
             uri: "ipfs://$"

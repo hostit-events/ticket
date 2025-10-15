@@ -5,12 +5,12 @@ import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {LibFactory} from "@ticket/libs/LibFactory.sol";
 import {LibMarketplace} from "@ticket/libs/LibMarketplace.sol";
 
-event HostItInitialized();
+event HostItInitialized(address ticketProxy, FeeType[] feeTypes, address[] tokens);
 
 contract HostItInit {
     function initHostIt(address _ticketProxy, FeeType[] calldata _feeTypes, address[] calldata _tokens) public {
         LibFactory._factoryStorage().ticketProxy = _ticketProxy;
         LibMarketplace._setFeeTokenAddresses(_feeTypes, _tokens);
-        emit HostItInitialized();
+        emit HostItInitialized(_ticketProxy, _feeTypes, _tokens);
     }
 }

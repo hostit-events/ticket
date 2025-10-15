@@ -31,7 +31,7 @@ library LibCheckIn {
     //                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _checkin(uint64 _ticketId, address _ticketOwner, uint256 _tokenId) internal onlyTicketAdmin(_ticketId) {
+    function _checkin(uint64 _ticketId, address _ticketOwner, uint40 _tokenId) internal onlyTicketAdmin(_ticketId) {
         _ticketId._checkTicketExists();
 
         uint40 time = uint40(block.timestamp);

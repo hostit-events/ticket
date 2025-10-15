@@ -142,7 +142,10 @@ library LibMarketplace {
 
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
 
-        if (block.timestamp < ticketData.endTime + REFUND_PERIOD) revert WithdrawPeriodNotReached();
+        if (ticketData.isRefundable) {
+            if (block.timestamp < ticketData.endTime + REFUND_PERIOD) revert WithdrawPeriodNotReached();
+        }
+
         uint256 balance = _getTicketBalance(_ticketId, _feeType);
         if (balance == 0) revert InsufficientWithdrawBalance();
         delete _marketplaceStorage().ticketBalance[_ticketId][_feeType];

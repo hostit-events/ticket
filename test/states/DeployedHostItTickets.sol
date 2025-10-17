@@ -50,6 +50,7 @@ abstract contract DeployedHostItTickets is Test {
     function setUp() public virtual {
         deployHostItTickets = new DeployHostItTicketsTest();
         hostIt = deployHostItTickets.run();
+        deployHostItTickets.init(hostIt);
 
         diamondCut = IDiamondCut(hostIt);
         diamondLoupe = IDiamondLoupe(hostIt);

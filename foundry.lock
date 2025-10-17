@@ -3,7 +3,7 @@
     "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
   },
   "lib/diamond-lib": {
-    "rev": "95faf293ac04cb21f41fcf2ae4f51f68fba037ec"
+    "rev": "f1dfda3a56ce134326a1914fdb2039abb2625c02"
   },
   "lib/forge-std": {
     "rev": "551a2d30d7fecba7092ab45a587b5268149a48fb"

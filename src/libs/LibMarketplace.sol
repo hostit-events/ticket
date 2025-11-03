@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {LibOwnableRoles} from "@diamond/libraries/LibOwnableRoles.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ACCOUNT_V3_IMPLEMENTATION, ERC6551_REGISTRY} from "@ticket-script/helper/LibAddressesAndFees.sol";
+import {ACCOUNT_V3_IMPLEMENTATION, ERC6551_REGISTRY} from "@ticket-script/helpers/LibAddressesAndFees.sol";
 import {ExtraTicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType, MARKETPLACE_STORAGE_LOCATION, MarketplaceStorage} from "@ticket-storage/MarketplaceStorage.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";

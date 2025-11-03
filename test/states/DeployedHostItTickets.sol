@@ -5,7 +5,7 @@ import {IDiamondCut} from "@diamond/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "@diamond/interfaces/IDiamondLoupe.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {DeployHostItTicketsTest} from "@ticket-script/DeployHostItTickets.s.sol";
-import {ERC6551_REGISTRY} from "@ticket-script/helper/LibAddressesAndFees.sol";
+import {ERC6551_REGISTRY} from "@ticket-script/helpers/LibAddressesAndFees.sol";
 import {TicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {ICheckIn} from "@ticket/interfaces/ICheckIn.sol";

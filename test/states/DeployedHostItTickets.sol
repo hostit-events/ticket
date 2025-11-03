@@ -79,10 +79,9 @@ abstract contract DeployedHostItTickets is Test {
         hoax(alice, totalFee);
         vm.expectEmit(true, true, true, true, hostIt);
         emit TicketMinted(ticketId_, FeeType.ETH, totalFee, 1);
-        (bool success, bytes memory result) = address(marketplaceFacet)
-        .call{
-            value: totalFee
-        }(abi.encodeWithSelector(marketplaceFacet.mintTicket.selector, ticketId_, FeeType.ETH, alice));
+        (bool success, bytes memory result) = address(marketplaceFacet).call{value: totalFee}(
+            abi.encodeWithSelector(marketplaceFacet.mintTicket.selector, ticketId_, FeeType.ETH, alice)
+        );
         assertTrue(success);
         tokenId_ = abi.decode(result, (uint40));
         fee_ = fee;

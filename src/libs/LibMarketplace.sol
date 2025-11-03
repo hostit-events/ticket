@@ -198,9 +198,9 @@ library LibMarketplace {
 
     function _createErc6551Account(address _ticketAddress, uint256 _tokenId) internal {
         try IERC6551Registry(ERC6551_REGISTRY)
-            .createAccount(
-                ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, _ticketAddress, _tokenId
-            ) returns (address account) {
+            .createAccount(ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, _ticketAddress, _tokenId) returns (
+            address account
+        ) {
             if (account == address(0)) {
                 revert CreateERC6551AccountFailed();
             }

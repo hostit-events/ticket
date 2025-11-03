@@ -31,9 +31,7 @@ contract DeployHostItTicketsTest is Script, DeployHostItTicketsHelper {
 
         // Deploy HostItTickets diamond
         hostIt_ = address(
-            new HostItTickets{
-                salt: vm.envBytes32("HOST_IT_SALT")
-            }(
+            new HostItTickets{salt: vm.envBytes32("HOST_IT_SALT")}(
                 _createInitFacetCuts(diamondCutFacet, diamondLoupeFacet, ownableRolesFacet),
                 diamondInit,
                 abi.encodeWithSignature("initDiamond(address)", _msgSender())

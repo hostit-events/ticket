@@ -11,7 +11,7 @@ remappings = [
     '@ticket-storage/=src/libs/storage/',
     "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
     "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
-    "@tokenbound/=lib/contracts/src/"
+    "@tokenbound/=lib/contracts/src/",
 ]
 ffi = true
 optimizer_runs = 999_999

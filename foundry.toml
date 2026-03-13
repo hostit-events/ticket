@@ -15,6 +15,9 @@ remappings = [
 ]
 ffi = true
 optimizer_runs = 999_999
+# Disable metadata hash for deterministic bytecode
+bytecode_hash = "none"
+cbor_metadata = false
 
 [fmt]
 sort_imports = true

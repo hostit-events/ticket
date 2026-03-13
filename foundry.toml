@@ -11,10 +11,13 @@ remappings = [
     '@ticket-storage/=src/libs/storage/',
     "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
     "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
-    "@tokenbound/=lib/contracts/src/"
+    "@tokenbound/=lib/contracts/src/",
 ]
 ffi = true
 optimizer_runs = 999_999
+# Disable metadata hash for deterministic bytecode
+bytecode_hash = "none"
+cbor_metadata = false
 
 [fmt]
 sort_imports = true
@@ -34,6 +37,8 @@ arbitrum-one = "${ARBITRUM_MAINNET_URL}"
 arbitrum-sepolia = "${ARBITRUM_SEPOLIA_URL}"
 avalanche = "${AVALANCHE_MAINNET_URL}"
 avalanche-fuji = "${AVALANCHE_FUJI_URL}"
+mantle = "${MANTLE_MAINNET_URL}"
+mantle-sepolia = "${MANTLE_SEPOLIA_URL}"
 
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }

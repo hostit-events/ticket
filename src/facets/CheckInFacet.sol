@@ -11,7 +11,7 @@ contract CheckInFacet is ICheckIn {
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function checkIn(uint64 _ticketId, address _ticketOwner, uint256 _tokenId) external {
+    function checkIn(uint64 _ticketId, address _ticketOwner, uint40 _tokenId) external {
         _ticketId._checkin(_ticketOwner, _tokenId);
     }
 

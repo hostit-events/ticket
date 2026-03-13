@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {FullTicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
@@ -9,7 +10,7 @@ import {ITicket} from "@ticket/interfaces/ITicket.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket-logs/MarketplaceLogs.sol";
 
-contract MarketplaceTest is DeployedHostItTickets {
+contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     function test_mintFreeTicket() public {
         vm.prank(alice);
         (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
@@ -56,6 +57,72 @@ contract MarketplaceTest is DeployedHostItTickets {
         assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.ETH), _getFees()[0]);
         assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDT), _getFees()[1]);
         assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDC), _getFees()[2]);
+    }
+
+    function test_claimRefundETH() public {
+        (uint64 ticketId, uint40 tokenId, uint256 ethFee, uint256 hostItFee) = _mintTicketETH();
+        FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(fullTicketData.ticketAddress);
+        assertEq(ticket.ownerOf(tokenId), alice);
+        assertEq(fullTicketData.soldTickets, 1);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), ethFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee);
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+        vm.prank(alice);
+        vm.warp(fullTicketData.endTime);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketRefunded(ticketId, FeeType.ETH, ethFee, bob);
+        marketplaceFacet.claimRefund(ticketId, FeeType.ETH, tokenId, bob);
+        assertEq(ticket.ownerOf(tokenId), owner);
+        assertEq(fullTicketData.soldTickets, 1);
+        assertEq(bob.balance, ethFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), 0);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee);
+    }
+
+    function test_claimRefundUSDT() public {
+        (uint64 ticketId, uint40 tokenId, uint256 usdtFee, uint256 hostItFee, ERC20Mock usdt) = _mintTicketUSDT();
+        FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(fullTicketData.ticketAddress);
+        assertEq(ticket.ownerOf(tokenId), alice);
+        assertEq(fullTicketData.soldTickets, 1);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDT), usdtFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.USDT), hostItFee);
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+        vm.prank(alice);
+        vm.warp(fullTicketData.endTime);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketRefunded(ticketId, FeeType.USDT, usdtFee, bob);
+        marketplaceFacet.claimRefund(ticketId, FeeType.USDT, tokenId, bob);
+        assertEq(ticket.ownerOf(tokenId), owner);
+        assertEq(fullTicketData.soldTickets, 1);
+        assertEq(usdt.balanceOf(bob), usdtFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDT), 0);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.USDT), hostItFee);
+    }
+
+    function test_claimRefundUSDC() public {
+        (uint64 ticketId, uint40 tokenId, uint256 usdcFee, uint256 hostItFee, ERC20Mock usdc) = _mintTicketUSDC();
+        FullTicketData memory fullTicketData = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(fullTicketData.ticketAddress);
+        assertEq(ticket.ownerOf(tokenId), alice);
+        assertEq(fullTicketData.soldTickets, 1);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDC), usdcFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.USDC), hostItFee);
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+        vm.prank(alice);
+        vm.warp(fullTicketData.endTime);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketRefunded(ticketId, FeeType.USDC, usdcFee, bob);
+        marketplaceFacet.claimRefund(ticketId, FeeType.USDC, tokenId, bob);
+        assertEq(ticket.ownerOf(tokenId), owner);
+        assertEq(fullTicketData.soldTickets, 1);
+        assertEq(usdc.balanceOf(bob), usdcFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDC), 0);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.USDC), hostItFee);
     }
 
     function test_withdrawTicketBalanceETH() public {

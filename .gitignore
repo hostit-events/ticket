@@ -2,15 +2,8 @@
 cache/
 out/
 
-# Ignores development broadcast logs
-!/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
-*broadcast/
-
-# Crytic
-crytic-export/
-medusa.json
+# Ignores all broadcast logs
+/broadcast
 
 # Docs
 docs/

@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/hostit-events/ticket)
+
 # HostIt Protocol - Ticket Smart Contracts
 
 ## Overview

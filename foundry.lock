@@ -1,29 +1,17 @@
 {
-  "lib/solady": {
-    "rev": "33b4b98e350bbcba6aa85642957c313e98b5f911"
+  "lib/contracts": {
+    "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
+  },
+  "lib/diamond-lib": {
+    "rev": "f1dfda3a56ce134326a1914fdb2039abb2625c02"
   },
   "lib/forge-std": {
-    "tag": {
-      "name": "v1.10.0",
-      "rev": "8bbcf6e3f8f62f419e5429a0bd89331c85c37824"
-    }
-  },
-  "lib/erc2535-diamond-template": {
-    "tag": {
-      "name": "v1.0.0-rc.3",
-      "rev": "cbc0de4c7e72210150a56b69a00bf03f2c22a9b2"
-    }
-  },
-  "lib/contracts": {
-    "tag": {
-      "name": "v0.3.1",
-      "rev": "2bd70ff3fb5f1c0e562425b4d5312f619d9f2720"
-    }
+    "rev": "551a2d30d7fecba7092ab45a587b5268149a48fb"
   },
   "lib/openzeppelin-contracts-upgradeable": {
-    "tag": {
-      "name": "v5.4.0",
-      "rev": "e725abddf1e01cf05ace496e950fc8e243cc7cab"
-    }
+    "rev": "e725abddf1e01cf05ace496e950fc8e243cc7cab"
+  },
+  "lib/solady": {
+    "rev": "208e4f31cfae26e4983eb95c3488a14fdc497ad7"
   }
 }

@@ -6,6 +6,9 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.checkin.storage")) - 1)) & ~bytes32(uint256(0xff))
 bytes32 constant CHECKIN_STORAGE_LOCATION = 0xe193d680ae43ded63724eb4ee4d68fd7efbded9778d44414c0bab0177a079700;
 
+/// @title CheckInStorage
+/// @notice Storage structure for managing check-in data
+/// @custom:storage-location erc7201:host.it.ticket.checkin.storage
 struct CheckInStorage {
     mapping(uint64 => EnumerableSet.AddressSet) checkedIn;
     mapping(uint64 => mapping(uint8 => EnumerableSet.AddressSet)) checkedInByDay;

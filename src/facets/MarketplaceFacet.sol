@@ -20,6 +20,10 @@ contract MarketplaceFacet is IMarketplace {
         _ticketId._setTicketFees(_feeTypes, _fees);
     }
 
+    function claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId, address _to) external {
+        _ticketId._claimRefund(_feeType, _tokenId, _to);
+    }
+
     function withdrawTicketBalance(uint64 _ticketId, FeeType _feeType, address _to) external {
         _ticketId._withdrawTicketBalance(_feeType, _to);
     }
@@ -60,13 +64,13 @@ contract MarketplaceFacet is IMarketplace {
         return _feeType._getHostItBalance();
     }
 
-    function calculateHostItFee(uint256 _fee) external view returns (uint256) {
-        return _fee._calculateHostItFee();
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
+
+    function getHostItFee(uint256 _fee) external pure returns (uint256) {
+        return _fee._getHostItFee();
+    }
 
     function getRefundPeriod() external pure returns (uint256) {
         return LibMarketplace.REFUND_PERIOD;

@@ -39,6 +39,9 @@ library LibAddressesAndFees {
         } else if (_chainId == 4202) {
             addresses_ = _getLiskSepoliaAddresses();
             feeTypes_ = _getLiskSepoliaFeeTypes();
+        } else if (_chainId == 5003) {
+            addresses_ = _getMantleSepoliaAddresses();
+            feeTypes_ = _getMantleSepoliaFeeTypes();
         } else if (_chainId == 31337) {
             addresses_ = _getMockAddresses();
             feeTypes_ = _getMockFeeTypes();
@@ -221,6 +224,22 @@ library LibAddressesAndFees {
         addresses_[3] = LISK_SEPOLIA_LSK;
     }
 
+    function _getMantleSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
+        feeType_ = new uint8[](4);
+        feeType_[0] = uint8(FeeType.USDC);
+        feeType_[1] = uint8(FeeType.USDT);
+        feeType_[2] = uint8(FeeType.LINK);
+        feeType_[3] = uint8(FeeType.WETH);
+    }
+
+    function _getMantleSepoliaAddresses() internal pure returns (address[] memory addresses_) {
+        addresses_ = new address[](4);
+        addresses_[0] = MANTLE_SEPOLIA_USDC;
+        addresses_[1] = MANTLE_SEPOLIA_USDT;
+        addresses_[2] = MANTLE_SEPOLIA_LINK;
+        addresses_[3] = MANTLE_SEPOLIA_WMNT;
+    }
+
     function _getMockFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](8);
         feeType_[0] = uint8(FeeType.WETH);
@@ -338,6 +357,26 @@ address constant ARBITRUM_ONE_WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 address constant ARBITRUM_SEPOLIA_USDC = 0x5Df6eD08EEC2fD5e41914d291c0cf48Cd3564421;
 address constant ARBITRUM_SEPOLIA_LINK = 0xb1D4538B4571d411F07960EF2838Ce337FE1E80E;
 address constant ARBITRUM_SEPOLIA_WETH = 0xE591bf0A0CF924A0674d7792db046B23CEbF5f34;
+
+//*//////////////////////////////////////////////////////////////////////////
+//                              MANTLE ADDRESSES
+//////////////////////////////////////////////////////////////////////////*//
+
+address constant MANTLE_ETH = 0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111;
+address constant MANTLE_USDT = 0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE;
+address constant MANTLE_USDC = 0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9;
+address constant MANTLE_LINK = 0xfe36cF0B43aAe49fBc5cFC5c0AF22a623114E043;
+address constant MANTLE_WMNT = 0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8;
+
+//*//////////////////////////////////////////////////////////////////////////
+//                          MANTLE SEPOLIA ADDRESSES
+//////////////////////////////////////////////////////////////////////////*//
+
+address constant MANTLE_SEPOLIA_ETH = 0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111;
+address constant MANTLE_SEPOLIA_USDT = 0x201EBa5CC46D216Ce6DC03F6a759e8E766e956aE;
+address constant MANTLE_SEPOLIA_USDC = 0x09Bc4E0D864854c6aFB6eB9A9cdF58aC190D0dF9;
+address constant MANTLE_SEPOLIA_LINK = 0x22bdEdEa0beBdD7CfFC95bA53826E55afFE9DE04;
+address constant MANTLE_SEPOLIA_WMNT = 0x19f5557E23e9914A18239990f6C70D68FDF0deD5;
 
 //*//////////////////////////////////////////////////////////////////////////
 //                            TOKENBOUND ADDRESSES

@@ -7,9 +7,9 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
-[submodule "lib/erc2535-diamond-template"]
-	path = lib/erc2535-diamond-template
-	url = https://github.com/dadadave80/erc2535-diamond-template
 [submodule "lib/contracts"]
 	path = lib/contracts
 	url = https://github.com/tokenbound/contracts
+[submodule "lib/diamond-lib"]
+	path = lib/diamond-lib
+	url = https://github.com/dadadave80/diamond-lib

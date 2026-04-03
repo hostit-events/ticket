@@ -4,6 +4,8 @@ pragma solidity 0.8.30;
 import {TicketCreated, TicketUpdated} from "@ticket-logs/FactoryLogs.sol";
 import {ExtraTicketData, FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
+/// forge-lint: disable-next-line(unaliased-plain-import)
+import "@ticket-errors/FactoryErrors.sol";
 
 contract FactoryTest is DeployedHostItTickets {
     function test_createFreeTicket() public {
@@ -172,23 +174,101 @@ contract FactoryTest is DeployedHostItTickets {
     //                                 FUZZ TESTS
     //////////////////////////////////////////////////////////////////////////*//
 
-    // /// forge-config: default.fuzz.runs = 20
-    // /// forge-config: default.fuzz.max-test-rejects = 100_000_000
-    // function test_fuzz_createTicket(TicketData memory _ticketData) public {
-    //     vm.assume(_ticketData.endTime > bound(_ticketData.startTime, 0, type(uint48).max - 2 days));
-    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
-    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
-    //     factoryFacet.createTicket(_ticketData, _getFeeTypes(), _getFees());
-    // }
+    function testFuzz_createTicket_validTimes(uint48 startOffset, uint48 duration) public {
+        startOffset = uint48(bound(startOffset, 2 days, 365 days));
+        duration = uint48(bound(duration, 1 days, 365 days));
 
-    // /// forge-config: default.fuzz.runs = 256
-    // /// forge-config: default.fuzz.max-test-rejects = 4_000_000
-    // function test_fuzz_updateTicket(TicketData memory _ticketData) public {
-    //     bound(_ticketData.startTime, 0, type(uint48).max - 2 days);
-    //     vm.assume(_ticketData.endTime == type(uint48).max - 1 days);
-    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
-    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
-    //     _createPaidTicket();
-    //     factoryFacet.updateTicket(_ticketData, 1);
-    // }
+        uint48 startTime = uint48(block.timestamp) + startOffset;
+        uint48 endTime = startTime + duration;
+        uint48 purchaseStartTime = startTime - uint48(1 days);
+
+        TicketData memory td = TicketData({
+            startTime: startTime,
+            endTime: endTime,
+            purchaseStartTime: purchaseStartTime,
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: true,
+            isRefundable: false,
+            name: "Fuzz Ticket",
+            symbol: "",
+            uri: "ipfs://fuzz"
+        });
+
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        assertTrue(factoryFacet.ticketExists(ticketId));
+
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        assertEq(ftd.startTime, startTime);
+        assertEq(ftd.endTime, endTime);
+        assertEq(ftd.purchaseStartTime, purchaseStartTime);
+    }
+
+    function testFuzz_createTicket_revertsStartTimeInPast(uint48 offset) public {
+        offset = uint48(bound(offset, 1, uint48(block.timestamp)));
+        uint48 startTime = uint48(block.timestamp) - offset;
+
+        TicketData memory td = TicketData({
+            startTime: startTime,
+            endTime: startTime + uint48(2 days),
+            purchaseStartTime: 0,
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: true,
+            isRefundable: false,
+            name: "Bad Ticket",
+            symbol: "",
+            uri: "ipfs://bad"
+        });
+
+        vm.expectRevert(StartTimeShouldBeAhead.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function testFuzz_createTicket_revertsEndTimeTooClose(uint48 gap) public {
+        gap = uint48(bound(gap, 0, 1 days - 1));
+        uint48 startTime = uint48(block.timestamp + 2 days);
+        uint48 endTime = startTime + gap;
+
+        TicketData memory td = TicketData({
+            startTime: startTime,
+            endTime: endTime,
+            purchaseStartTime: uint48(block.timestamp),
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: true,
+            isRefundable: false,
+            name: "Bad Ticket",
+            symbol: "",
+            uri: "ipfs://bad"
+        });
+
+        vm.expectRevert(EndTimeShouldBeOneDayAfterStartTime.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function testFuzz_ticketHash(uint64 ticketId) public view {
+        bytes32 ticketHash = factoryFacet.ticketHash(ticketId);
+        assertEq(ticketHash, keccak256(abi.encode(keccak256("host.it.ticket"), ticketId)));
+    }
+
+    function testFuzz_mainAdminRole(uint64 ticketId) public view {
+        uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
+        assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
+    }
+
+    function testFuzz_ticketAdminRole(uint64 ticketId) public view {
+        uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
+        assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
+    }
+
+    function testFuzz_ticketExists(uint64 ticketId) public {
+        _createFreeTicket();
+        if (ticketId == 1) {
+            assertTrue(factoryFacet.ticketExists(ticketId));
+        } else {
+            assertFalse(factoryFacet.ticketExists(ticketId));
+        }
+    }
 }

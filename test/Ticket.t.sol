@@ -146,4 +146,44 @@ contract TicketTest is Test {
         assertEq(ticketClone2.baseURI(), "ipfs://2");
         assertNotEq(address(ticketClone), address(ticketClone2));
     }
+
+    // ======================================================================
+    //                           FUZZ TESTS
+    // ======================================================================
+
+    function testFuzz_mint(uint8 count) public {
+        count = uint8(bound(count, 1, 50));
+        for (uint8 i; i < count; ++i) {
+            ticketClone.mint(alice);
+        }
+        assertEq(ticketClone.totalSupply(), count);
+        assertEq(ticketClone.balanceOf(alice), count);
+    }
+
+    function testFuzz_updateName(string calldata name) public {
+        vm.assume(bytes(name).length > 0);
+        ticketClone.updateName(name);
+        assertEq(ticketClone.name(), name);
+    }
+
+    function testFuzz_updateSymbol(string calldata symbol) public {
+        ticketClone.updateSymbol(symbol);
+        assertEq(ticketClone.symbol(), symbol);
+    }
+
+    function testFuzz_updateURI(string calldata uri) public {
+        ticketClone.updateURI(uri);
+        assertEq(ticketClone.baseURI(), uri);
+    }
+
+    /// forge-lint: disable-next-item(erc20-unchecked-transfer)
+    function testFuzz_transferBetweenAddresses(address to) public {
+        vm.assume(to != address(0) && to.code.length == 0 && to != alice);
+        uint256 tokenId = ticketClone.mint(alice);
+        vm.prank(alice);
+        ticketClone.transferFrom(alice, to, tokenId);
+        assertEq(ticketClone.ownerOf(tokenId), to);
+        assertEq(ticketClone.balanceOf(to), 1);
+        assertEq(ticketClone.balanceOf(alice), 0);
+    }
 }

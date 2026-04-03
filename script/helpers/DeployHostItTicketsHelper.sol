@@ -75,9 +75,7 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     function _getHostItTickets() internal returns (address) {
         return HOST_IT_TICKETS.code.length == 0
             ? address(
-                new HostItTickets{
-                    salt: HOST_IT_SALT
-                }(
+                new HostItTickets{salt: HOST_IT_SALT}(
                     _createInitFacetCuts(_getDiamondCutFacet(), _getDiamondLoupeFacet(), _getOwnableRolesFacet()),
                     _getDiamondInit(),
                     abi.encodeWithSignature("initDiamond(address)", _msgSender())

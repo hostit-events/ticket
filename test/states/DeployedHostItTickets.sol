@@ -178,6 +178,62 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
         hostItFee_ = hostItFee;
     }
 
+    /// forge-lint: disable-next-line(mixed-case-function)
+    function _mintTicketETHRefundable()
+        internal
+        returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_)
+    {
+        _createRefundablePaidTicket();
+        ticketId_ = factoryFacet.ticketCount();
+        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.ETH);
+        hoax(alice, totalFee);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketMinted(ticketId_, FeeType.ETH, totalFee, 1);
+        tokenId_ = marketplaceFacet.mintTicket{value: totalFee}(ticketId_, FeeType.ETH, alice);
+        fee_ = fee;
+        hostItFee_ = hostItFee;
+    }
+
+    /// forge-lint: disable-next-line(mixed-case-function)
+    function _mintTicketUSDTRefundable()
+        internal
+        returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdt_)
+    {
+        _createRefundablePaidTicket();
+        ticketId_ = factoryFacet.ticketCount();
+        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.USDT);
+        usdt_ = ERC20Mock(marketplaceFacet.getFeeTokenAddress(FeeType.USDT));
+        usdt_.mint(alice, totalFee);
+        vm.prank(alice);
+        usdt_.approve(address(marketplaceFacet), totalFee);
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketMinted(ticketId_, FeeType.USDT, totalFee, 1);
+        tokenId_ = marketplaceFacet.mintTicket(ticketId_, FeeType.USDT, alice);
+        fee_ = fee;
+        hostItFee_ = hostItFee;
+    }
+
+    /// forge-lint: disable-next-line(mixed-case-function)
+    function _mintTicketUSDCRefundable()
+        internal
+        returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_, ERC20Mock usdc_)
+    {
+        _createRefundablePaidTicket();
+        ticketId_ = factoryFacet.ticketCount();
+        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.USDC);
+        usdc_ = ERC20Mock(marketplaceFacet.getFeeTokenAddress(FeeType.USDC));
+        usdc_.mint(alice, totalFee);
+        vm.prank(alice);
+        usdc_.approve(address(marketplaceFacet), totalFee);
+        vm.prank(alice);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketMinted(ticketId_, FeeType.USDC, totalFee, 1);
+        tokenId_ = marketplaceFacet.mintTicket(ticketId_, FeeType.USDC, alice);
+        fee_ = fee;
+        hostItFee_ = hostItFee;
+    }
+
     function _createFreeTicket() internal {
         factoryFacet.createTicket(_getFreeTicketData(), _getZeroFeeType(), _getZeroFee());
     }
@@ -188,6 +244,10 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
 
     function _createPaidTicket() internal {
         factoryFacet.createTicket(_getPaidTicketData(), _getFeeTypes(), _getFees());
+    }
+
+    function _createRefundablePaidTicket() internal {
+        factoryFacet.createTicket(_getRefundablePaidTicketData(), _getFeeTypes(), _getFees());
     }
 
     function _updatePaidTicket(uint40 _ticketId) internal {
@@ -236,6 +296,21 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
             name: "Paid Ticket",
             symbol: "",
             uri: "ipfs://$"
+        });
+    }
+
+    function _getRefundablePaidTicketData() internal view returns (TicketData memory ticketData_) {
+        ticketData_ = TicketData({
+            startTime: uint40(block.timestamp + 1 days),
+            endTime: uint40(block.timestamp + 2 days),
+            purchaseStartTime: _currentTime,
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: false,
+            isRefundable: true,
+            name: "Refundable Paid Ticket",
+            symbol: "",
+            uri: "ipfs://refundable"
         });
     }
 

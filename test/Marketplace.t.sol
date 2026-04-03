@@ -563,6 +563,145 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     }
 
     // ======================================================================
+    //                    TICKET SOLD OUT
+    // ======================================================================
+
+    function test_mintTicket_revertsTicketSoldOut() public {
+        TicketData memory td = _getFreeTicketData();
+        td.maxTickets = 1;
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        vm.expectRevert(TicketSoldOut.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, bob);
+    }
+
+    // ======================================================================
+    //                    MAX TICKETS PER USER
+    // ======================================================================
+
+    function test_mintTicket_revertsMaxTicketsHeld() public {
+        TicketData memory td = _getFreeTicketData();
+        td.maxTicketsPerUser = 1;
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        // Mint first ticket (balance becomes 1, check is > maxTicketsPerUser so 1 > 1 = false, ok)
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        // Second mint: balance is 1, but then check is 1 > 1 = false. Need to check logic...
+        // Actually the check is: if (ticket.balanceOf(_buyer) > ticketData.maxTicketsPerUser) revert
+        // After first mint, balance = 1. maxTicketsPerUser = 1. 1 > 1 = false. So need to mint again.
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        // Now balance = 2. 2 > 1 = true. Revert.
+        vm.expectRevert(MaxTicketsHeld.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+    }
+
+    // ======================================================================
+    //                    PURCHASE TIME CHECKS
+    // ======================================================================
+
+    function test_mintTicket_revertsPurchaseTimeNotReached() public {
+        TicketData memory td = _getFreeTicketData();
+        td.purchaseStartTime = uint48(block.timestamp + 1 days);
+        td.startTime = uint48(block.timestamp + 2 days);
+        td.endTime = uint48(block.timestamp + 3 days);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        vm.expectRevert(PurchaseTimeNotReached.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+    }
+
+    function test_mintTicket_revertsAfterEventEnded() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        vm.warp(ftd.endTime + 1);
+        vm.expectRevert(PurchaseTimeNotReached.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+    }
+
+    // ======================================================================
+    //            SET TICKET FEES: REVERT CASES
+    // ======================================================================
+
+    function test_setTicketFees_revertsZeroFee() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = 0;
+        vm.expectRevert(ZeroFee.selector);
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+    }
+
+    function test_setTicketFees_revertsFeeAlreadySet() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = ETH_FEE;
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        vm.expectRevert(FeeAlreadySet.selector);
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+    }
+
+    function test_setTicketFees_revertsInvalidFeeConfig() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FeeType[] memory feeTypes = new FeeType[](2);
+        feeTypes[0] = FeeType.ETH;
+        feeTypes[1] = FeeType.USDT;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = ETH_FEE;
+        vm.expectRevert(InvalidFeeConfig.selector);
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+    }
+
+    function test_setTicketFees_revertsNonAdmin() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        vm.prank(alice);
+        vm.expectRevert();
+        marketplaceFacet.setTicketFees(ticketId, _getFeeTypes(), _getFees());
+    }
+
+    // ======================================================================
+    //            WITHDRAW TO CONTRACT REVERTS
+    // ======================================================================
+
+    function test_withdrawTicketBalance_revertsContractNotAllowed() public {
+        (uint64 ticketId,,,) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        vm.warp(ftd.endTime + marketplaceFacet.getRefundPeriod());
+        vm.expectRevert(ContractNotAllowed.selector);
+        marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.ETH, hostIt);
+    }
+
+    function test_withdrawHostItBalance_revertsContractNotAllowed() public {
+        _mintTicketETH();
+        vm.expectRevert(ContractNotAllowed.selector);
+        marketplaceFacet.withdrawHostItBalance(FeeType.ETH, hostIt);
+    }
+
+    function test_withdrawHostItBalance_revertsNonOwner() public {
+        _mintTicketETH();
+        vm.prank(alice);
+        vm.expectRevert();
+        marketplaceFacet.withdrawHostItBalance(FeeType.ETH, withdrawer);
+    }
+
+    // ======================================================================
+    //            TICKET DOES NOT EXIST
+    // ======================================================================
+
+    function test_mintTicket_revertsTicketDoesNotExist() public {
+        vm.expectRevert();
+        marketplaceFacet.mintTicket(999, FeeType.NONE, alice);
+    }
+
+    // ======================================================================
     //            MIXED: REFUNDABLE + NON-REFUNDABLE HOSTIT ACCUMULATION
     // ======================================================================
 

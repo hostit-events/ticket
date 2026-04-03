@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
+import {IERC2981} from "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import {IERC721Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {Ticket} from "@ticket/libs/Ticket.sol";
 import {Test} from "forge-std/Test.sol";
@@ -145,6 +149,109 @@ contract TicketTest is Test {
         assertEq(ticketClone2.name(), "Test Ticket 2");
         assertEq(ticketClone2.baseURI(), "ipfs://2");
         assertNotEq(address(ticketClone), address(ticketClone2));
+    }
+
+    // ======================================================================
+    //                        COVERAGE TESTS
+    // ======================================================================
+
+    function test_tokenURI_revertsNonExistentToken() public {
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(999)));
+        ticketClone.tokenURI(999);
+    }
+
+    function test_supportsInterface_ERC721() public view {
+        assertTrue(ticketClone.supportsInterface(type(IERC721).interfaceId));
+    }
+
+    function test_supportsInterface_ERC721Enumerable() public view {
+        assertTrue(ticketClone.supportsInterface(type(IERC721Enumerable).interfaceId));
+    }
+
+    function test_supportsInterface_ERC2981() public view {
+        assertTrue(ticketClone.supportsInterface(type(IERC2981).interfaceId));
+    }
+
+    function test_supportsInterface_ERC165() public view {
+        assertTrue(ticketClone.supportsInterface(type(IERC165).interfaceId));
+    }
+
+    function test_supportsInterface_invalid() public view {
+        assertFalse(ticketClone.supportsInterface(0xffffffff));
+    }
+
+    function test_royaltyInfo() public {
+        uint256 tokenId = ticketClone.mint(alice);
+        (address receiver, uint256 royalty) = ticketClone.royaltyInfo(tokenId, 10_000);
+        assertEq(receiver, owner);
+        assertEq(royalty, 500); // 5% of 10_000
+    }
+
+    function test_defaultSymbol() public view {
+        assertEq(ticketClone.symbol(), "TICKET");
+    }
+
+    function test_initializeWithCustomSymbol() public {
+        Ticket clone2 = Ticket(address(ticketImpl).clone());
+        clone2.initialize(owner, "Test", "CUSTOM", "ipfs://");
+        assertEq(clone2.symbol(), "CUSTOM");
+    }
+
+    function test_revertDoubleInitialize() public {
+        vm.expectRevert();
+        ticketClone.initialize(owner, "Again", "", "ipfs://");
+    }
+
+    function test_mintRevertsNonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.mint(alice);
+    }
+
+    function test_pauseRevertsNonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.pause();
+    }
+
+    function test_unpauseRevertsNonOwner() public {
+        ticketClone.pause();
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.unpause();
+    }
+
+    function test_updateNameRevertsNonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.updateName("Hack");
+    }
+
+    function test_updateSymbolRevertsNonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.updateSymbol("HACK");
+    }
+
+    function test_updateURIRevertsNonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.updateURI("ipfs://hack");
+    }
+
+    function test_totalSupplyAndTokenByIndex() public {
+        ticketClone.mint(alice);
+        ticketClone.mint(bob);
+        assertEq(ticketClone.totalSupply(), 2);
+        assertEq(ticketClone.tokenByIndex(0), 1);
+        assertEq(ticketClone.tokenByIndex(1), 2);
+    }
+
+    function test_tokenOfOwnerByIndex() public {
+        ticketClone.mint(alice);
+        ticketClone.mint(alice);
+        assertEq(ticketClone.tokenOfOwnerByIndex(alice, 0), 1);
+        assertEq(ticketClone.tokenOfOwnerByIndex(alice, 1), 2);
     }
 
     // ======================================================================

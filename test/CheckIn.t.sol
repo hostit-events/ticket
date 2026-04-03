@@ -59,6 +59,109 @@ contract CheckInTest is DeployedHostItTickets {
     }
 
     // ======================================================================
+    //                        REVERT TESTS
+    // ======================================================================
+
+    function test_checkIn_revertsNotTicketOwner() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        vm.warp(1 days + 1);
+        vm.expectRevert(abi.encodeWithSelector(NotTicketOwner.selector, uint40(1)));
+        checkInFacet.checkIn(ticketId, bob, 1);
+    }
+
+    function test_checkIn_revertsAlreadyCheckedInForDay() public {
+        (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
+        vm.warp(1 days + 1);
+        checkInFacet.checkIn(ticketId, alice, tokenId);
+        vm.expectRevert(abi.encodeWithSelector(AlreadyCheckedInForDay.selector, uint8(0)));
+        checkInFacet.checkIn(ticketId, alice, tokenId);
+    }
+
+    function test_addTicketAdmins_revertsNoAdmins() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        address[] memory admins = new address[](0);
+        vm.expectRevert(NoAdmins.selector);
+        checkInFacet.addTicketAdmins(ticketId, admins);
+    }
+
+    function test_addTicketAdmins_revertsAddressZero() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        address[] memory admins = new address[](1);
+        admins[0] = address(0);
+        vm.expectRevert(AddressZeroAdmin.selector);
+        checkInFacet.addTicketAdmins(ticketId, admins);
+    }
+
+    function test_removeTicketAdmins_revertsNoAdmins() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        address[] memory admins = new address[](0);
+        vm.expectRevert(NoAdmins.selector);
+        checkInFacet.removeTicketAdmins(ticketId, admins);
+    }
+
+    function test_removeTicketAdmins_revertsAddressZero() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        address[] memory admins = new address[](1);
+        admins[0] = address(0);
+        vm.expectRevert(AddressZeroAdmin.selector);
+        checkInFacet.removeTicketAdmins(ticketId, admins);
+    }
+
+    function test_addTicketAdmins_revertsNonMainAdmin() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        address[] memory admins = new address[](1);
+        admins[0] = charlie;
+        vm.prank(alice);
+        vm.expectRevert();
+        checkInFacet.addTicketAdmins(ticketId, admins);
+    }
+
+    function test_removeTicketAdmins_revertsNonMainAdmin() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        address[] memory admins = new address[](1);
+        admins[0] = bob;
+        checkInFacet.addTicketAdmins(ticketId, admins);
+        vm.prank(alice);
+        vm.expectRevert();
+        checkInFacet.removeTicketAdmins(ticketId, admins);
+    }
+
+    function test_checkIn_revertsNonAdmin() public {
+        (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
+        vm.warp(1 days + 1);
+        vm.prank(alice);
+        vm.expectRevert();
+        checkInFacet.checkIn(ticketId, alice, tokenId);
+    }
+
+    function test_getCheckedIn() public {
+        (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
+        vm.warp(1 days + 1);
+        checkInFacet.checkIn(ticketId, alice, tokenId);
+        address[] memory checkedIn = checkInFacet.getCheckedIn(ticketId);
+        assertEq(checkedIn.length, 1);
+        assertEq(checkedIn[0], alice);
+    }
+
+    function test_getCheckedInForDay() public {
+        (uint64 ticketId, uint40 tokenId) = _mintTicketFree();
+        vm.warp(1 days + 1);
+        checkInFacet.checkIn(ticketId, alice, tokenId);
+        address[] memory checkedIn = checkInFacet.getCheckedInForDay(ticketId, 0);
+        assertEq(checkedIn.length, 1);
+        assertEq(checkedIn[0], alice);
+        // Day 1 should be empty
+        address[] memory day1 = checkInFacet.getCheckedInForDay(ticketId, 1);
+        assertEq(day1.length, 0);
+    }
+
+    function test_isCheckedIn_returnsFalseWhenNot() public {
+        (uint64 ticketId,) = _mintTicketFree();
+        assertFalse(checkInFacet.isCheckedIn(ticketId, alice));
+        assertFalse(checkInFacet.isCheckedInForDay(ticketId, 0, alice));
+    }
+
+    // ======================================================================
     //                           FUZZ TESTS
     // ======================================================================
 

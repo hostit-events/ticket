@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import {FullTicketData} from "@ticket-storage/FactoryStorage.sol";
+import {FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
 import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
@@ -563,6 +563,145 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     }
 
     // ======================================================================
+    //                    TICKET SOLD OUT
+    // ======================================================================
+
+    function test_mintTicket_revertsTicketSoldOut() public {
+        TicketData memory td = _getFreeTicketData();
+        td.maxTickets = 1;
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        vm.expectRevert(TicketSoldOut.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, bob);
+    }
+
+    // ======================================================================
+    //                    MAX TICKETS PER USER
+    // ======================================================================
+
+    function test_mintTicket_revertsMaxTicketsHeld() public {
+        TicketData memory td = _getFreeTicketData();
+        td.maxTicketsPerUser = 1;
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        // Mint first ticket (balance becomes 1, check is > maxTicketsPerUser so 1 > 1 = false, ok)
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        // Second mint: balance is 1, but then check is 1 > 1 = false. Need to check logic...
+        // Actually the check is: if (ticket.balanceOf(_buyer) > ticketData.maxTicketsPerUser) revert
+        // After first mint, balance = 1. maxTicketsPerUser = 1. 1 > 1 = false. So need to mint again.
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        // Now balance = 2. 2 > 1 = true. Revert.
+        vm.expectRevert(MaxTicketsHeld.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+    }
+
+    // ======================================================================
+    //                    PURCHASE TIME CHECKS
+    // ======================================================================
+
+    function test_mintTicket_revertsPurchaseTimeNotReached() public {
+        TicketData memory td = _getFreeTicketData();
+        td.purchaseStartTime = uint48(block.timestamp + 1 days);
+        td.startTime = uint48(block.timestamp + 2 days);
+        td.endTime = uint48(block.timestamp + 3 days);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        vm.expectRevert(PurchaseTimeNotReached.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+    }
+
+    function test_mintTicket_revertsAfterEventEnded() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        vm.warp(ftd.endTime + 1);
+        vm.expectRevert(PurchaseTimeNotReached.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+    }
+
+    // ======================================================================
+    //            SET TICKET FEES: REVERT CASES
+    // ======================================================================
+
+    function test_setTicketFees_revertsZeroFee() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = 0;
+        vm.expectRevert(ZeroFee.selector);
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+    }
+
+    function test_setTicketFees_revertsFeeAlreadySet() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = ETH_FEE;
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        vm.expectRevert(FeeAlreadySet.selector);
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+    }
+
+    function test_setTicketFees_revertsInvalidFeeConfig() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        FeeType[] memory feeTypes = new FeeType[](2);
+        feeTypes[0] = FeeType.ETH;
+        feeTypes[1] = FeeType.USDT;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = ETH_FEE;
+        vm.expectRevert(InvalidFeeConfig.selector);
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+    }
+
+    function test_setTicketFees_revertsNonAdmin() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        vm.prank(alice);
+        vm.expectRevert();
+        marketplaceFacet.setTicketFees(ticketId, _getFeeTypes(), _getFees());
+    }
+
+    // ======================================================================
+    //            WITHDRAW TO CONTRACT REVERTS
+    // ======================================================================
+
+    function test_withdrawTicketBalance_revertsContractNotAllowed() public {
+        (uint64 ticketId,,,) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        vm.warp(ftd.endTime + marketplaceFacet.getRefundPeriod());
+        vm.expectRevert(ContractNotAllowed.selector);
+        marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.ETH, hostIt);
+    }
+
+    function test_withdrawHostItBalance_revertsContractNotAllowed() public {
+        _mintTicketETH();
+        vm.expectRevert(ContractNotAllowed.selector);
+        marketplaceFacet.withdrawHostItBalance(FeeType.ETH, hostIt);
+    }
+
+    function test_withdrawHostItBalance_revertsNonOwner() public {
+        _mintTicketETH();
+        vm.prank(alice);
+        vm.expectRevert();
+        marketplaceFacet.withdrawHostItBalance(FeeType.ETH, withdrawer);
+    }
+
+    // ======================================================================
+    //            TICKET DOES NOT EXIST
+    // ======================================================================
+
+    function test_mintTicket_revertsTicketDoesNotExist() public {
+        vm.expectRevert();
+        marketplaceFacet.mintTicket(999, FeeType.NONE, alice);
+    }
+
+    // ======================================================================
     //            MIXED: REFUNDABLE + NON-REFUNDABLE HOSTIT ACCUMULATION
     // ======================================================================
 
@@ -573,6 +712,321 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         (,,, uint256 hostItFee2) = _mintTicketETHRefundable();
 
         assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee1 + hostItFee2);
+    }
+
+    // ======================================================================
+    //                           FUZZ TESTS
+    // ======================================================================
+
+    function testFuzz_hostItFeeCalculation(uint256 fee) public view {
+        fee = bound(fee, 0, type(uint256).max / 300);
+        uint256 hostItFee = marketplaceFacet.getHostItFee(fee);
+        assertEq(hostItFee, (fee * 300) / 10_000);
+    }
+
+    function testFuzz_totalFeeIsSumOfParts(uint256 fee) public {
+        fee = bound(fee, 1, 1e30);
+
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = fee;
+        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+        assertEq(ticketFee, fee);
+        assertEq(hostItFee, (fee * 300) / 10_000);
+        assertEq(totalFee, ticketFee + hostItFee);
+    }
+
+    function testFuzz_directPayment_ETH_accounting(uint256 fee) public {
+        fee = bound(fee, 1, 1e24);
+
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = fee;
+        factoryFacet.createTicket(td, feeTypes, fees);
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+
+        uint256 ownerBalBefore = owner.balance;
+        uint256 contractBalBefore = hostIt.balance;
+
+        hoax(alice, totalFee);
+        marketplaceFacet.mintTicket{value: totalFee}(ticketId, FeeType.ETH, alice);
+
+        assertEq(owner.balance - ownerBalBefore, ticketFee);
+        assertEq(hostIt.balance - contractBalBefore, hostItFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), 0);
+        assertEq(alice.balance, 0);
+    }
+
+    function testFuzz_directPayment_USDT_accounting(uint256 fee) public {
+        fee = bound(fee, 1, 1e30);
+
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.USDT;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = fee;
+        factoryFacet.createTicket(td, feeTypes, fees);
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.USDT);
+        ERC20Mock usdt = ERC20Mock(marketplaceFacet.getFeeTokenAddress(FeeType.USDT));
+        usdt.mint(alice, totalFee);
+
+        vm.prank(alice);
+        usdt.approve(address(marketplaceFacet), totalFee);
+        vm.prank(alice);
+        marketplaceFacet.mintTicket(ticketId, FeeType.USDT, alice);
+
+        assertEq(usdt.balanceOf(owner), ticketFee);
+        assertEq(usdt.balanceOf(hostIt), hostItFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.USDT), hostItFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.USDT), 0);
+        assertEq(usdt.balanceOf(alice), 0);
+    }
+
+    function testFuzz_refundable_ETH_escrow(uint256 fee) public {
+        fee = bound(fee, 1, 1e24);
+
+        TicketData memory td = _getRefundablePaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = fee;
+        factoryFacet.createTicket(td, feeTypes, fees);
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+
+        uint256 ownerBalBefore = owner.balance;
+        uint256 contractBalBefore = hostIt.balance;
+
+        hoax(alice, totalFee);
+        marketplaceFacet.mintTicket{value: totalFee}(ticketId, FeeType.ETH, alice);
+
+        assertEq(owner.balance, ownerBalBefore);
+        assertEq(hostIt.balance - contractBalBefore, ticketFee + hostItFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), ticketFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee);
+    }
+
+    function testFuzz_refundable_ETH_claimWithinWindow(uint256 warpOffset) public {
+        (uint64 ticketId, uint40 tokenId, uint256 fee, uint256 hostItFee) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(ftd.ticketAddress);
+
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+
+        uint256 refundPeriod = marketplaceFacet.getRefundPeriod();
+        warpOffset = bound(warpOffset, 0, refundPeriod);
+        vm.warp(ftd.endTime + warpOffset);
+
+        vm.prank(alice);
+        marketplaceFacet.claimRefund(ticketId, FeeType.ETH, tokenId, bob);
+
+        assertEq(bob.balance, fee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), 0);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee);
+    }
+
+    function testFuzz_refundable_ETH_claimRevertsBeforeEndTime(uint256 warpTo) public {
+        (uint64 ticketId, uint40 tokenId,,) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(ftd.ticketAddress);
+
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+
+        warpTo = bound(warpTo, block.timestamp, ftd.endTime - 1);
+        vm.warp(warpTo);
+
+        vm.prank(alice);
+        vm.expectRevert(RefundPeriodNotReached.selector);
+        marketplaceFacet.claimRefund(ticketId, FeeType.ETH, tokenId, bob);
+    }
+
+    function testFuzz_refundable_ETH_claimRevertsAfterWindow(uint256 extraTime) public {
+        (uint64 ticketId, uint40 tokenId,,) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(ftd.ticketAddress);
+
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+
+        uint256 refundPeriod = marketplaceFacet.getRefundPeriod();
+        extraTime = bound(extraTime, 1, 365 days);
+        vm.warp(ftd.endTime + refundPeriod + extraTime);
+
+        vm.prank(alice);
+        vm.expectRevert(RefundPeriodExpired.selector);
+        marketplaceFacet.claimRefund(ticketId, FeeType.ETH, tokenId, bob);
+    }
+
+    function testFuzz_refundable_ETH_withdrawAfterRefundPeriod(uint256 extraTime) public {
+        (uint64 ticketId,, uint256 fee,) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+
+        uint256 refundPeriod = marketplaceFacet.getRefundPeriod();
+        extraTime = bound(extraTime, 0, 365 days);
+        vm.warp(ftd.endTime + refundPeriod + extraTime);
+
+        marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.ETH, withdrawer);
+        assertEq(withdrawer.balance, fee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), 0);
+    }
+
+    function testFuzz_refundable_ETH_withdrawRevertsBeforeRefundPeriod(uint256 warpTo) public {
+        (uint64 ticketId,,,) = _mintTicketETHRefundable();
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+
+        uint256 refundPeriod = marketplaceFacet.getRefundPeriod();
+        warpTo = bound(warpTo, block.timestamp, ftd.endTime + refundPeriod - 1);
+        vm.warp(warpTo);
+
+        vm.expectRevert(WithdrawPeriodNotReached.selector);
+        marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.ETH, withdrawer);
+    }
+
+    function testFuzz_directPayment_ETH_multipleBuyersAccumulate(uint8 buyerCount) public {
+        buyerCount = uint8(bound(buyerCount, 1, 20));
+
+        _createPaidTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+
+        uint256 ownerBalBefore = owner.balance;
+
+        for (uint8 i; i < buyerCount; ++i) {
+            address buyer = makeAddr(string(abi.encodePacked("buyer", i)));
+            hoax(buyer, totalFee);
+            marketplaceFacet.mintTicket{value: totalFee}(ticketId, FeeType.ETH, buyer);
+        }
+
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee * buyerCount);
+        assertEq(owner.balance - ownerBalBefore, ticketFee * buyerCount);
+
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        assertEq(ftd.soldTickets, buyerCount);
+    }
+
+    function testFuzz_directPayment_ETH_revertsInsufficientValue(uint256 underpay) public {
+        _createPaidTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        (,, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+
+        underpay = bound(underpay, 1, totalFee);
+        uint256 sent = totalFee - underpay;
+
+        hoax(alice, totalFee);
+        vm.expectRevert(abi.encodeWithSelector(TicketPurchaseFailed.selector, FeeType.ETH, totalFee));
+        marketplaceFacet.mintTicket{value: sent}(ticketId, FeeType.ETH, alice);
+    }
+
+    function testFuzz_withdrawHostItBalance_ETH(uint256 fee) public {
+        // fee must be >= 34 so hostItFee = fee * 300 / 10_000 > 0
+        fee = bound(fee, 34, 1e24);
+
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = fee;
+        factoryFacet.createTicket(td, feeTypes, fees);
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        (, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+
+        hoax(alice, totalFee);
+        marketplaceFacet.mintTicket{value: totalFee}(ticketId, FeeType.ETH, alice);
+
+        marketplaceFacet.withdrawHostItBalance(FeeType.ETH, withdrawer);
+        assertEq(withdrawer.balance, hostItFee);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), 0);
+    }
+
+    function testFuzz_refundable_ETH_fullLifecycle(uint256 fee, uint256 refundOffset) public {
+        fee = bound(fee, 1, 1e24);
+        uint256 refundPeriod = marketplaceFacet.getRefundPeriod();
+        refundOffset = bound(refundOffset, 0, refundPeriod);
+
+        TicketData memory td = _getRefundablePaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = fee;
+        factoryFacet.createTicket(td, feeTypes, fees);
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(ftd.ticketAddress);
+
+        hoax(alice, totalFee);
+        uint40 tokenId = marketplaceFacet.mintTicket{value: totalFee}(ticketId, FeeType.ETH, alice);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), ticketFee);
+
+        vm.prank(alice);
+        ticket.approve(hostIt, tokenId);
+        vm.warp(ftd.endTime + refundOffset);
+
+        vm.prank(alice);
+        marketplaceFacet.claimRefund(ticketId, FeeType.ETH, tokenId, bob);
+
+        assertEq(bob.balance, ticketFee);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), 0);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee);
+        assertEq(ticket.ownerOf(tokenId), owner);
+    }
+
+    function testFuzz_refundable_ETH_multipleBuyersPartialRefund(uint8 buyerCount, uint8 refundCount) public {
+        buyerCount = uint8(bound(buyerCount, 2, 10));
+        refundCount = uint8(bound(refundCount, 1, buyerCount - 1));
+
+        TicketData memory td = _getRefundablePaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = ETH_FEE;
+        factoryFacet.createTicket(td, feeTypes, fees);
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        ITicket ticket = ITicket(ftd.ticketAddress);
+
+        address[] memory buyers = new address[](buyerCount);
+        uint40[] memory tokenIds = new uint40[](buyerCount);
+        for (uint8 i; i < buyerCount; ++i) {
+            buyers[i] = makeAddr(string(abi.encodePacked("rbuyer", i)));
+            hoax(buyers[i], totalFee);
+            tokenIds[i] = marketplaceFacet.mintTicket{value: totalFee}(ticketId, FeeType.ETH, buyers[i]);
+        }
+
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), ticketFee * buyerCount);
+
+        vm.warp(ftd.endTime);
+
+        for (uint8 i; i < refundCount; ++i) {
+            vm.prank(buyers[i]);
+            ticket.approve(hostIt, tokenIds[i]);
+            vm.prank(buyers[i]);
+            marketplaceFacet.claimRefund(ticketId, FeeType.ETH, tokenIds[i], buyers[i]);
+        }
+
+        uint256 remaining = uint256(buyerCount - refundCount) * ticketFee;
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.ETH), remaining);
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.ETH), hostItFee * buyerCount);
     }
 
     receive() external payable {}

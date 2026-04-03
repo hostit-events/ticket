@@ -3,7 +3,10 @@ pragma solidity 0.8.30;
 
 import {TicketCreated, TicketUpdated} from "@ticket-logs/FactoryLogs.sol";
 import {ExtraTicketData, FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
+import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
+/// forge-lint: disable-next-line(unaliased-plain-import)
+import "@ticket-errors/FactoryErrors.sol";
 
 contract FactoryTest is DeployedHostItTickets {
     function test_createFreeTicket() public {
@@ -169,26 +172,236 @@ contract FactoryTest is DeployedHostItTickets {
     }
 
     //*//////////////////////////////////////////////////////////////////////////
+    //                            REVERT TESTS
+    //////////////////////////////////////////////////////////////////////////*//
+
+    function test_createTicket_revertsEmptyName() public {
+        TicketData memory td = _getFreeTicketData();
+        td.name = "";
+        vm.expectRevert(EmptyName.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function test_createTicket_revertsEmptyURI() public {
+        TicketData memory td = _getFreeTicketData();
+        td.uri = "";
+        vm.expectRevert(EmptyURI.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function test_createTicket_revertsMaxTicketsIsZero() public {
+        TicketData memory td = _getFreeTicketData();
+        td.maxTickets = 0;
+        vm.expectRevert(MaxTicketsIsZero.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function test_createTicket_revertsPurchaseStartTimeTooLate() public {
+        TicketData memory td = _getFreeTicketData();
+        // purchaseStartTime must be <= startTime - 1 day
+        td.purchaseStartTime = td.startTime;
+        vm.expectRevert(PurchaseStartTimeShouldBeOneDayBeforeStartTime.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function test_createPaidTicket_revertsArrayMismatch() public {
+        TicketData memory td = _getPaidTicketData();
+        // Empty feeTypes but paid ticket
+        vm.expectRevert(ArrayMismatch.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function test_createPaidTicket_revertsArrayLengthMismatch() public {
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](2);
+        feeTypes[0] = FeeType.ETH;
+        feeTypes[1] = FeeType.USDT;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = ETH_FEE;
+        vm.expectRevert(ArrayMismatch.selector);
+        factoryFacet.createTicket(td, feeTypes, fees);
+    }
+
+    function test_createPaidTicket_revertsZeroFee() public {
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](1);
+        feeTypes[0] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](1);
+        fees[0] = 0;
+        vm.expectRevert(abi.encodeWithSelector(ZeroFee.selector, FeeType.ETH));
+        factoryFacet.createTicket(td, feeTypes, fees);
+    }
+
+    function test_createPaidTicket_revertsDuplicateFeeType() public {
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory feeTypes = new FeeType[](2);
+        feeTypes[0] = FeeType.ETH;
+        feeTypes[1] = FeeType.ETH;
+        uint256[] memory fees = new uint256[](2);
+        fees[0] = ETH_FEE;
+        fees[1] = ETH_FEE;
+        vm.expectRevert(abi.encodeWithSelector(FeeAlreadySet.selector, FeeType.ETH));
+        factoryFacet.createTicket(td, feeTypes, fees);
+    }
+
+    function test_createTicket_revertsNonAdminCannotUpdate() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        TicketData memory td = _getFreeUpdatedTicketData();
+        vm.prank(alice);
+        vm.expectRevert();
+        factoryFacet.updateTicket(td, ticketId);
+    }
+
+    function test_updateTicket_revertsTicketDoesNotExist() public {
+        TicketData memory td = _getFreeUpdatedTicketData();
+        vm.expectRevert(abi.encodeWithSelector(TicketDoesNotExist.selector, uint64(999)));
+        factoryFacet.updateTicket(td, 999);
+    }
+
+    function test_updateTicket_revertsEndTimeTooClose() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        TicketData memory td = _getFreeUpdatedTicketData();
+        td.endTime = td.startTime; // Less than startTime + 1 day
+        vm.expectRevert(EndTimeShouldBeOneDayAfterStartTime.selector);
+        factoryFacet.updateTicket(td, ticketId);
+    }
+
+    function test_updateTicket_revertsPurchaseStartTimeTooLate() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        TicketData memory td = _getFreeUpdatedTicketData();
+        td.purchaseStartTime = td.startTime; // Must be <= startTime - 1 day
+        vm.expectRevert(PurchaseStartTimeShouldBeOneDayBeforeStartTime.selector);
+        factoryFacet.updateTicket(td, ticketId);
+    }
+
+    function test_updateTicket_revertsMaxTicketsBelowSupply() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        // Mint a ticket so supply > 0
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, alice);
+        // Try to set maxTickets to 0 (below supply of 1)
+        // maxTickets > 0 triggers the check, and totalSupply() == 1
+        TicketData memory td = _getFreeUpdatedTicketData();
+        // We need maxTickets > 0 but < totalSupply which is impossible with uint40
+        // Let's mint to get supply then try to lower max
+        // Actually we need maxTickets < totalSupply. Mint one, then update maxTickets to... well 0 won't trigger the branch.
+        // The condition is: _ticketData.maxTickets > 0 AND _ticketData.maxTickets < ticket.totalSupply()
+        // We can't hit this since totalSupply=1 and maxTickets must be uint40 >= 1
+        // BUT if we mint multiple...
+        marketplaceFacet.mintTicket(ticketId, FeeType.NONE, bob);
+        // Now totalSupply = 2. Setting maxTickets to 1 should revert
+        td.maxTickets = 1;
+        vm.expectRevert(MaxTicketsShouldEqualSupply.selector);
+        factoryFacet.updateTicket(td, ticketId);
+    }
+
+    function test_ticketData_revertsTicketDoesNotExist() public {
+        vm.expectRevert(abi.encodeWithSelector(TicketDoesNotExist.selector, uint64(999)));
+        factoryFacet.ticketData(999);
+    }
+
+    //*//////////////////////////////////////////////////////////////////////////
     //                                 FUZZ TESTS
     //////////////////////////////////////////////////////////////////////////*//
 
-    // /// forge-config: default.fuzz.runs = 20
-    // /// forge-config: default.fuzz.max-test-rejects = 100_000_000
-    // function test_fuzz_createTicket(TicketData memory _ticketData) public {
-    //     vm.assume(_ticketData.endTime > bound(_ticketData.startTime, 0, type(uint48).max - 2 days));
-    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
-    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
-    //     factoryFacet.createTicket(_ticketData, _getFeeTypes(), _getFees());
-    // }
+    function testFuzz_createTicket_validTimes(uint48 startOffset, uint48 duration) public {
+        startOffset = uint48(bound(startOffset, 2 days, 365 days));
+        duration = uint48(bound(duration, 1 days, 365 days));
 
-    // /// forge-config: default.fuzz.runs = 256
-    // /// forge-config: default.fuzz.max-test-rejects = 4_000_000
-    // function test_fuzz_updateTicket(TicketData memory _ticketData) public {
-    //     bound(_ticketData.startTime, 0, type(uint48).max - 2 days);
-    //     vm.assume(_ticketData.endTime == type(uint48).max - 1 days);
-    //     bound(_ticketData.purchaseStartTime, 0, _currentTime);
-    //     bound(_ticketData.maxTickets, 0, type(uint8).max);
-    //     _createPaidTicket();
-    //     factoryFacet.updateTicket(_ticketData, 1);
-    // }
+        uint48 startTime = uint48(block.timestamp) + startOffset;
+        uint48 endTime = startTime + duration;
+        uint48 purchaseStartTime = startTime - uint48(1 days);
+
+        TicketData memory td = TicketData({
+            startTime: startTime,
+            endTime: endTime,
+            purchaseStartTime: purchaseStartTime,
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: true,
+            isRefundable: false,
+            name: "Fuzz Ticket",
+            symbol: "",
+            uri: "ipfs://fuzz"
+        });
+
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+        uint64 ticketId = factoryFacet.ticketCount();
+        assertTrue(factoryFacet.ticketExists(ticketId));
+
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        assertEq(ftd.startTime, startTime);
+        assertEq(ftd.endTime, endTime);
+        assertEq(ftd.purchaseStartTime, purchaseStartTime);
+    }
+
+    function testFuzz_createTicket_revertsStartTimeInPast(uint48 offset) public {
+        offset = uint48(bound(offset, 1, uint48(block.timestamp)));
+        uint48 startTime = uint48(block.timestamp) - offset;
+
+        TicketData memory td = TicketData({
+            startTime: startTime,
+            endTime: startTime + uint48(2 days),
+            purchaseStartTime: 0,
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: true,
+            isRefundable: false,
+            name: "Bad Ticket",
+            symbol: "",
+            uri: "ipfs://bad"
+        });
+
+        vm.expectRevert(StartTimeShouldBeAhead.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function testFuzz_createTicket_revertsEndTimeTooClose(uint48 gap) public {
+        gap = uint48(bound(gap, 0, 1 days - 1));
+        uint48 startTime = uint48(block.timestamp + 2 days);
+        uint48 endTime = startTime + gap;
+
+        TicketData memory td = TicketData({
+            startTime: startTime,
+            endTime: endTime,
+            purchaseStartTime: uint48(block.timestamp),
+            maxTickets: type(uint40).max,
+            maxTicketsPerUser: 0,
+            isFree: true,
+            isRefundable: false,
+            name: "Bad Ticket",
+            symbol: "",
+            uri: "ipfs://bad"
+        });
+
+        vm.expectRevert(EndTimeShouldBeOneDayAfterStartTime.selector);
+        factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
+    }
+
+    function testFuzz_ticketHash(uint64 ticketId) public view {
+        bytes32 ticketHash = factoryFacet.ticketHash(ticketId);
+        assertEq(ticketHash, keccak256(abi.encode(keccak256("host.it.ticket"), ticketId)));
+    }
+
+    function testFuzz_mainAdminRole(uint64 ticketId) public view {
+        uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
+        assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
+    }
+
+    function testFuzz_ticketAdminRole(uint64 ticketId) public view {
+        uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
+        assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
+    }
+
+    function testFuzz_ticketExists(uint64 ticketId) public {
+        _createFreeTicket();
+        if (ticketId == 1) {
+            assertTrue(factoryFacet.ticketExists(ticketId));
+        } else {
+            assertFalse(factoryFacet.ticketExists(ticketId));
+        }
+    }
 }

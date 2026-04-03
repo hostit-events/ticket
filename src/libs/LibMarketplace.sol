@@ -47,13 +47,15 @@ library LibMarketplace {
 
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
 
-        uint48 time = block.timestamp.toUint48();
-        if (time < ticketData.purchaseStartTime) {
-            revert PurchaseTimeNotReached();
-        }
-        if (time > ticketData.endTime) revert PurchaseTimeNotReached();
-        if (ticketData.soldTickets == ticketData.maxTickets) {
-            revert TicketSoldOut();
+        {
+            uint48 time = block.timestamp.toUint48();
+            if (time < ticketData.purchaseStartTime) {
+                revert PurchaseTimeNotReached();
+            }
+            if (time > ticketData.endTime) revert PurchaseTimeNotReached();
+            if (ticketData.soldTickets == ticketData.maxTickets) {
+                revert TicketSoldOut();
+            }
         }
 
         ITicket ticket = ITicket(ticketData.ticketAddress);
@@ -66,15 +68,26 @@ library LibMarketplace {
         if (!ticketData.isFree) {
             if (!_isFeeEnabled(ms, _ticketId, _feeType)) revert FeeNotEnabled();
 
-            if (_feeType == FeeType.ETH) {
-                if (msg.value < totalFee) {
-                    revert InsufficientBalance(address(0), _feeType, totalFee);
+            if (ticketData.isRefundable) {
+                if (_feeType == FeeType.ETH) {
+                    if (msg.value < totalFee) {
+                        revert TicketPurchaseFailed(_feeType, totalFee);
+                    }
+                } else {
+                    _payWithToken(ms, _feeType, totalFee, address(this));
                 }
+                ms.ticketBalance[_ticketId][_feeType] += fee;
             } else {
-                _payWithToken(ms, _feeType, totalFee);
+                if (_feeType == FeeType.ETH) {
+                    if (msg.value < totalFee) {
+                        revert TicketPurchaseFailed(_feeType, totalFee);
+                    }
+                    ticketData.ticketAdmin.forceSafeTransferETH(fee);
+                } else {
+                    _payWithToken(ms, _feeType, fee, ticketData.ticketAdmin);
+                    _payWithToken(ms, _feeType, hostItFee, address(this));
+                }
             }
-
-            ms.ticketBalance[_ticketId][_feeType] += fee;
             ms.hostItBalance[_feeType] += hostItFee;
         }
 
@@ -191,14 +204,14 @@ library LibMarketplace {
         delete _marketplaceStorage().hostItBalance[_feeType];
 
         if (_feeType == FeeType.ETH) {
-            _to.safeTransferETH(balance);
+            _to.forceSafeTransferETH(balance);
         } else {
             _getFeeTokenAddress(_feeType).safeTransfer(_to, balance);
         }
         emit HostItBalanceWithdrawn(_feeType, balance, _to);
     }
 
-    function _payWithToken(MarketplaceStorage storage _ms, FeeType _feeType, uint256 _totalFee) internal {
+    function _payWithToken(MarketplaceStorage storage _ms, FeeType _feeType, uint256 _totalFee, address _to) internal {
         address caller = LibContext._msgSender();
 
         address tokenAddress = _getFeeTokenAddress(_ms, _feeType);
@@ -209,16 +222,16 @@ library LibMarketplace {
         if (token.allowance(caller, address(this)) < _totalFee) {
             revert InsufficientAllowance(tokenAddress, _feeType, _totalFee);
         }
-        if (!tokenAddress.trySafeTransferFrom(caller, address(this), _totalFee)) {
+        if (!tokenAddress.trySafeTransferFrom(caller, _to, _totalFee)) {
             revert TicketPurchaseFailed(_feeType, _totalFee);
         }
     }
 
     function _createErc6551Account(address _ticketAddress, uint256 _tokenId) internal {
         try IERC6551Registry(ERC6551_REGISTRY)
-            .createAccount(ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, _ticketAddress, _tokenId) returns (
-            address account
-        ) {
+            .createAccount(
+                ACCOUNT_V3_IMPLEMENTATION, "", block.chainid, _ticketAddress, _tokenId
+            ) returns (address account) {
             if (account == address(0)) {
                 revert CreateERC6551AccountFailed();
             }

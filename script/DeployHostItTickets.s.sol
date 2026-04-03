@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {DiamondCutFacet} from "@diamond/facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "@diamond/facets/DiamondLoupeFacet.sol";
-import {OwnableRolesFacet} from "@diamond/facets/OwnableRolesFacet.sol";
-import {DiamondInit} from "@diamond/initializers/DiamondInit.sol";
 import {IDiamondCut} from "@diamond/interfaces/IDiamondCut.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {DeployHostItTicketsHelper} from "@ticket-script/helpers/DeployHostItTicketsHelper.sol";
 import {LibAddressesAndFees} from "@ticket-script/helpers/LibAddressesAndFees.sol";
-import {HostItTickets} from "@ticket/HostItTickets.sol";
 import {CheckInFacet} from "@ticket/facets/CheckInFacet.sol";
 import {FactoryFacet} from "@ticket/facets/FactoryFacet.sol";
 import {MarketplaceFacet} from "@ticket/facets/MarketplaceFacet.sol";

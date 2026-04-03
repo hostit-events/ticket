@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {FacetCut} from "@diamond-storage/DiamondStorage.sol";
 import {IDiamondCut} from "@diamond/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "@diamond/interfaces/IDiamondLoupe.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
@@ -56,6 +55,10 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
 
     uint48 public _currentTime = uint48(block.timestamp);
 
+    uint256 constant ETH_FEE = 25e14;
+    uint256 constant USDT_FEE = 10e18;
+    uint256 constant USDC_FEE = 10e6;
+
     /// @notice Deploys the Diamond contract and initializes interface references and facet addresses.
     /// @dev This function is intended to be called in a test setup phase (e.g., `setUp()` in Foundry).
     function setUp() public virtual {
@@ -66,11 +69,6 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
                 abi.encodeWithSignature("initDiamond(address)", address(this))
             )
         );
-
-        // Deploy HostIt facets
-        address factoryFacetAddr = address(new FactoryFacet());
-        address marketplaceFacetAddr = address(new MarketplaceFacet());
-        address checkInFacetAddr = address(new CheckInFacet());
 
         // Deploy initializer
         address hostItInit = address(new HostItInit());
@@ -91,7 +89,9 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
         // Initialize HostItTickets - called directly from the test (which is the owner)
         IDiamondCut(hostIt)
             .diamondCut(
-                _createHostItFacetCuts(factoryFacetAddr, marketplaceFacetAddr, checkInFacetAddr),
+                _createHostItFacetCuts(
+                    address(new FactoryFacet()), address(new MarketplaceFacet()), address(new CheckInFacet())
+                ),
                 hostItInit,
                 abi.encodeWithSelector(HostItInit.initHostIt.selector, ticketProxy, feeTypes, addresses)
             );
@@ -105,6 +105,16 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
         facetAddresses = diamondLoupe.facetAddresses();
 
         vm.etch(ERC6551_REGISTRY, address(new ERC6551Registry()).code);
+        vm.label(alice, "ALICE");
+        vm.label(bob, "BOB");
+        vm.label(charlie, "CHARLIE");
+        vm.label(withdrawer, "WITHDRAWER");
+        vm.label(hostIt, "HOSTIT");
+        vm.label(ticketProxy, "TICKET_PROXY");
+        vm.label(ticketImpl, "TICKET_IMPL");
+        vm.label(ticketBeacon, "TICKET_BEACON");
+        vm.label(hostItInit, "HOSTIT_INIT");
+        vm.label(owner, "TEST_ADDRESS");
     }
 
     function _mintTicketFree() internal returns (uint64 ticketId_, uint40 tokenId_) {
@@ -123,11 +133,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
         hoax(alice, totalFee);
         vm.expectEmit(true, true, true, true, hostIt);
         emit TicketMinted(ticketId_, FeeType.ETH, totalFee, 1);
-        (bool success, bytes memory result) = address(marketplaceFacet).call{value: totalFee}(
-            abi.encodeWithSelector(marketplaceFacet.mintTicket.selector, ticketId_, FeeType.ETH, alice)
-        );
-        assertTrue(success);
-        tokenId_ = abi.decode(result, (uint40));
+        tokenId_ = marketplaceFacet.mintTicket{value: totalFee}(ticketId_, FeeType.ETH, alice);
         fee_ = fee;
         hostItFee_ = hostItFee;
     }
@@ -226,7 +232,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
             maxTickets: type(uint40).max,
             maxTicketsPerUser: 0,
             isFree: false,
-            isRefundable: true,
+            isRefundable: false,
             name: "Paid Ticket",
             symbol: "",
             uri: "ipfs://$"
@@ -241,7 +247,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
             maxTickets: type(uint40).max,
             maxTicketsPerUser: 0,
             isFree: false,
-            isRefundable: true,
+            isRefundable: false,
             name: "Updated Paid Ticket",
             symbol: "UPT",
             uri: "ipfs://$$"
@@ -265,8 +271,8 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
 
     function _getFees() internal pure returns (uint256[] memory fees_) {
         fees_ = new uint256[](3);
-        fees_[0] = 25e14;
-        fees_[1] = 10e18;
-        fees_[2] = 10e6;
+        fees_[0] = ETH_FEE;
+        fees_[1] = USDT_FEE;
+        fees_[2] = USDC_FEE;
     }
 }

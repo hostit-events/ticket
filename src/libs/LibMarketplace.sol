@@ -27,10 +27,10 @@ library LibMarketplace {
     //                                  STORAGE
     //////////////////////////////////////////////////////////////////////////*//
 
-    uint256 internal constant REFUND_PERIOD = 3 days;
+    uint256 internal constant REFUND_PERIOD = 3 days; // {s}
 
-    uint256 private constant HOSTIT_FEE_BPS = 300; // 3% fee in basis points
-    uint256 private constant FEE_BASIS_POINTS = 10_000; // 10,000 basis points
+    uint256 private constant HOSTIT_FEE_BPS = 300; // BPS{1} 3% fee in basis points
+    uint256 private constant FEE_BASIS_POINTS = 10_000; // BPS{1} 10,000 basis points
 
     function _marketplaceStorage() internal pure returns (MarketplaceStorage storage ms_) {
         assembly {
@@ -42,43 +42,52 @@ library LibMarketplace {
     //                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    /// @param _ticketId {ticketId}
+    /// @param _buyer {addr}
+    /// @return tokenId_ {ticket}
     function _mintTicket(uint64 _ticketId, FeeType _feeType, address _buyer) internal returns (uint40 tokenId_) {
         _ticketId._checkTicketExists();
 
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
 
         {
-            uint48 time = block.timestamp.toUint48();
+            uint48 time = block.timestamp.toUint48(); // {s}
+            // {s} < {s}
             if (time < ticketData.purchaseStartTime) {
                 revert PurchaseTimeNotReached();
             }
-            if (time > ticketData.endTime) revert PurchaseTimeNotReached();
+            if (time > ticketData.endTime) revert PurchaseTimeNotReached(); // {s} > {s}
             if (ticketData.soldTickets == ticketData.maxTickets) {
+                // {ticket} == {ticket}
                 revert TicketSoldOut();
             }
         }
 
         ITicket ticket = ITicket(ticketData.ticketAddress);
+        // {ticket} > {ticket}
         if (ticket.balanceOf(_buyer) > ticketData.maxTicketsPerUser) {
             revert MaxTicketsHeld();
         }
 
         MarketplaceStorage storage ms = _marketplaceStorage();
+        // {tok}, {tok}, {tok}
         (uint256 fee, uint256 hostItFee, uint256 totalFee) = _getFees(ms, _ticketId, _feeType);
         if (!ticketData.isFree) {
             if (!_isFeeEnabled(ms, _ticketId, _feeType)) revert FeeNotEnabled();
 
             if (ticketData.isRefundable) {
                 if (_feeType == FeeType.ETH) {
+                    // {tok} < {tok}
                     if (msg.value < totalFee) {
                         revert TicketPurchaseFailed(_feeType, totalFee);
                     }
                 } else {
                     _payWithToken(ms, _feeType, totalFee, address(this));
                 }
-                ms.ticketBalance[_ticketId][_feeType] += fee;
+                ms.ticketBalance[_ticketId][_feeType] += fee; // {tok} += {tok}
             } else {
                 if (_feeType == FeeType.ETH) {
+                    // {tok} < {tok}
                     if (msg.value < totalFee) {
                         revert TicketPurchaseFailed(_feeType, totalFee);
                     }
@@ -88,11 +97,12 @@ library LibMarketplace {
                     _payWithToken(ms, _feeType, hostItFee, address(this));
                 }
             }
-            ms.hostItBalance[_feeType] += hostItFee;
+            ms.hostItBalance[_feeType] += hostItFee; // {tok} += {tok}
         }
 
-        tokenId_ = ticket.mint(_buyer).toUint40();
-        ++LibFactory._factoryStorage().ticketIdToData[_ticketId].soldTickets;
+        tokenId_ = ticket.mint(_buyer).toUint40(); // {ticket}
+        ++LibFactory._factoryStorage().ticketIdToData[_ticketId].soldTickets; // {ticket}
+        // {ticket} != {ticket}
         if (tokenId_ != LibFactory._factoryStorage().ticketIdToData[_ticketId].soldTickets) {
             revert TicketAccountingMismatch();
         }
@@ -100,6 +110,8 @@ library LibMarketplace {
         emit TicketMinted(_ticketId, _feeType, totalFee, tokenId_);
     }
 
+    /// @param _ticketId {ticketId}
+    /// @param _fees {tok} per-ticket price in each fee token
     function _setTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
         onlyMainTicketAdmin(_ticketId)
@@ -120,12 +132,15 @@ library LibMarketplace {
             if (_fees[i] == 0) revert ZeroFee();
 
             ms.feeEnabled[_ticketId][_feeTypes[i]] = true;
-            ms.ticketFee[_ticketId][_feeTypes[i]] = _fees[i];
+            ms.ticketFee[_ticketId][_feeTypes[i]] = _fees[i]; // {tok}
         }
 
         emit TicketFeeSet(_ticketId, _feeTypes, _fees);
     }
 
+    /// @param _ticketId {ticketId}
+    /// @param _tokenId {ticket}
+    /// @param _to {addr}
     function _claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId, address _to) internal {
         _ticketId._checkTicketExists();
 
@@ -133,18 +148,19 @@ library LibMarketplace {
 
         if (!ticketData.isRefundable) revert RefundNotEnabled();
 
-        uint48 time = block.timestamp.toUint48();
-        if (time < ticketData.endTime) revert RefundPeriodNotReached();
+        uint48 time = block.timestamp.toUint48(); // {s}
+        if (time < ticketData.endTime) revert RefundPeriodNotReached(); // {s} < {s}
+        // {s} > {s} + {s}
         if (time > ticketData.endTime + REFUND_PERIOD) {
             revert RefundPeriodExpired();
         }
 
-        address caller = LibContext._msgSender();
+        address caller = LibContext._msgSender(); // {addr}
         ITicket ticket = ITicket(ticketData.ticketAddress);
-        if (caller != ticket.ownerOf(_tokenId)) revert TicketNotOwned(_tokenId);
+        if (caller != ticket.ownerOf(_tokenId)) revert TicketNotOwned(_tokenId); // {addr} != {addr}
 
-        uint256 ticketFee = _getTicketFee(_ticketId, _feeType);
-        _marketplaceStorage().ticketBalance[_ticketId][_feeType] -= ticketFee;
+        uint256 ticketFee = _getTicketFee(_ticketId, _feeType); // {tok}
+        _marketplaceStorage().ticketBalance[_ticketId][_feeType] -= ticketFee; // {tok} -= {tok}
 
         try ticket.safeTransferFrom(caller, ticketData.ticketAdmin, _tokenId) {}
         catch {
@@ -160,6 +176,8 @@ library LibMarketplace {
         emit TicketRefunded(_ticketId, _feeType, ticketFee, _to);
     }
 
+    /// @param _ticketId {ticketId}
+    /// @param _to {addr}
     function _withdrawTicketBalance(uint64 _ticketId, FeeType _feeType, address _to)
         internal
         onlyMainTicketAdmin(_ticketId)
@@ -170,12 +188,13 @@ library LibMarketplace {
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
 
         if (ticketData.isRefundable) {
+            // {s} < {s} + {s}
             if (block.timestamp < ticketData.endTime + REFUND_PERIOD) {
                 revert WithdrawPeriodNotReached();
             }
         }
 
-        uint256 balance = _getTicketBalance(_ticketId, _feeType);
+        uint256 balance = _getTicketBalance(_ticketId, _feeType); // {tok}
         if (balance == 0) revert InsufficientWithdrawBalance();
         delete _marketplaceStorage().ticketBalance[_ticketId][_feeType];
 
@@ -196,10 +215,11 @@ library LibMarketplace {
         emit TicketBalanceWithdrawn(_ticketId, _feeType, balance, _to);
     }
 
+    /// @param _to {addr}
     function _withdrawHostItBalance(FeeType _feeType, address _to) internal onlyOwner {
         _checkIfContract(_to);
 
-        uint256 balance = _getHostItBalance(_feeType);
+        uint256 balance = _getHostItBalance(_feeType); // {tok}
         if (balance == 0) revert InsufficientWithdrawBalance();
         delete _marketplaceStorage().hostItBalance[_feeType];
 
@@ -211,14 +231,18 @@ library LibMarketplace {
         emit HostItBalanceWithdrawn(_feeType, balance, _to);
     }
 
+    /// @param _totalFee {tok}
+    /// @param _to {addr}
     function _payWithToken(MarketplaceStorage storage _ms, FeeType _feeType, uint256 _totalFee, address _to) internal {
-        address caller = LibContext._msgSender();
+        address caller = LibContext._msgSender(); // {addr}
 
-        address tokenAddress = _getFeeTokenAddress(_ms, _feeType);
+        address tokenAddress = _getFeeTokenAddress(_ms, _feeType); // {addr}
         IERC20 token = IERC20(tokenAddress);
+        // {tok} < {tok}
         if (token.balanceOf(caller) < _totalFee) {
             revert InsufficientBalance(tokenAddress, _feeType, _totalFee);
         }
+        // {tok} < {tok}
         if (token.allowance(caller, address(this)) < _totalFee) {
             revert InsufficientAllowance(tokenAddress, _feeType, _totalFee);
         }
@@ -285,10 +309,12 @@ library LibMarketplace {
         if (tokenAddress_ == address(0)) revert TokenAddressZero();
     }
 
+    /// @return {tok}
     function _getTicketFee(uint64 _ticketId, FeeType _feeType) internal view returns (uint256) {
         return _getTicketFee(_marketplaceStorage(), _ticketId, _feeType);
     }
 
+    /// @return {tok}
     function _getTicketFee(MarketplaceStorage storage _ms, uint64 _ticketId, FeeType _feeType)
         internal
         view
@@ -297,30 +323,38 @@ library LibMarketplace {
         return _ms.ticketFee[_ticketId][_feeType];
     }
 
+    /// @return ticketFee_ {tok}
+    /// @return hostItFee_ {tok}
+    /// @return totalFee_ {tok}
     function _getFees(uint64 _ticketId, FeeType _feeType)
         internal
         view
         returns (uint256 ticketFee_, uint256 hostItFee_, uint256 totalFee_)
     {
-        ticketFee_ = _getTicketFee(_ticketId, _feeType);
-        hostItFee_ = _getHostItFee(ticketFee_);
-        totalFee_ = ticketFee_ + hostItFee_;
+        ticketFee_ = _getTicketFee(_ticketId, _feeType); // {tok}
+        hostItFee_ = _getHostItFee(ticketFee_); // {tok}
+        totalFee_ = ticketFee_ + hostItFee_; // {tok} = {tok} + {tok}
     }
 
+    /// @return ticketFee_ {tok}
+    /// @return hostItFee_ {tok}
+    /// @return totalFee_ {tok}
     function _getFees(MarketplaceStorage storage _ms, uint64 _ticketId, FeeType _feeType)
         internal
         view
         returns (uint256 ticketFee_, uint256 hostItFee_, uint256 totalFee_)
     {
-        ticketFee_ = _getTicketFee(_ms, _ticketId, _feeType);
-        hostItFee_ = _getHostItFee(ticketFee_);
-        totalFee_ = ticketFee_ + hostItFee_;
+        ticketFee_ = _getTicketFee(_ms, _ticketId, _feeType); // {tok}
+        hostItFee_ = _getHostItFee(ticketFee_); // {tok}
+        totalFee_ = ticketFee_ + hostItFee_; // {tok} = {tok} + {tok}
     }
 
+    /// @return {tok}
     function _getTicketBalance(uint64 _ticketId, FeeType _feeType) internal view returns (uint256) {
         return _getTicketBalance(_marketplaceStorage(), _ticketId, _feeType);
     }
 
+    /// @return {tok}
     function _getTicketBalance(MarketplaceStorage storage _ms, uint64 _ticketId, FeeType _feeType)
         internal
         view
@@ -329,10 +363,12 @@ library LibMarketplace {
         return _ms.ticketBalance[_ticketId][_feeType];
     }
 
+    /// @return {tok}
     function _getHostItBalance(FeeType _feeType) internal view returns (uint256) {
         return _getHostItBalance(_marketplaceStorage(), _feeType);
     }
 
+    /// @return {tok}
     function _getHostItBalance(MarketplaceStorage storage _ms, FeeType _feeType) internal view returns (uint256) {
         return _ms.hostItBalance[_feeType];
     }
@@ -341,7 +377,10 @@ library LibMarketplace {
         if (_address.code.length > 0) revert ContractNotAllowed();
     }
 
+    /// @param _fee {tok}
+    /// @return {tok}
     function _getHostItFee(uint256 _fee) internal pure returns (uint256) {
+        // {tok} = ({tok} * BPS{1}) / BPS{1}
         return ((_fee * HOSTIT_FEE_BPS) / FEE_BASIS_POINTS);
     }
 

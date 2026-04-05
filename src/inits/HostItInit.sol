@@ -8,6 +8,8 @@ import {LibMarketplace} from "@ticket/libs/LibMarketplace.sol";
 event HostItInitialized(address ticketProxy, FeeType[] feeTypes, address[] tokens);
 
 contract HostItInit {
+    /// @param _ticketProxy {addr} ticket implementation proxy
+    /// @param _tokens {addr} ERC20 token addresses for each fee type
     function initHostIt(address _ticketProxy, FeeType[] calldata _feeTypes, address[] calldata _tokens) public {
         LibFactory._factoryStorage().ticketProxy = _ticketProxy;
         LibMarketplace._setFeeTokenAddresses(_feeTypes, _tokens);

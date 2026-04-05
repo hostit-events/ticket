@@ -47,6 +47,8 @@ library LibFactory {
     //                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    /// @param _fees {tok} per-ticket prices in each fee token
+    /// @return ticketId_ {ticketId}
     function _createTicket(TicketData calldata _ticketData, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
         returns (uint64 ticketId_)
@@ -55,12 +57,15 @@ library LibFactory {
             if (bytes(_ticketData.name).length == 0) revert EmptyName();
             if (bytes(_ticketData.uri).length == 0) revert EmptyURI();
 
+            // {s} < {s}
             if (_ticketData.startTime < block.timestamp) {
                 revert StartTimeShouldBeAhead();
             }
+            // {s} < {s} + {s}
             if (_ticketData.endTime < _ticketData.startTime + 1 days) {
                 revert EndTimeShouldBeOneDayAfterStartTime();
             }
+            // {s} > {s} - {s}
             if (_ticketData.purchaseStartTime > _ticketData.startTime - 1 days) {
                 revert PurchaseStartTimeShouldBeOneDayBeforeStartTime();
             }
@@ -68,8 +73,8 @@ library LibFactory {
         }
 
         FactoryStorage storage fs = _factoryStorage();
-        ticketId_ = ++fs.ticketId;
-        address ticketAdmin = LibContext._msgSender();
+        ticketId_ = ++fs.ticketId; // {ticketId}
+        address ticketAdmin = LibContext._msgSender(); // {addr}
         _grantTicketAdminRoles(ticketAdmin, ticketId_);
 
         ExtraTicketData memory extraTicketData = _createExtraTicketData(fs, _ticketData, ticketId_, ticketAdmin);
@@ -90,13 +95,14 @@ library LibFactory {
 
                 if (_fees[i] == 0) revert ZeroFee(feeType);
                 mps.feeEnabled[ticketId_][feeType] = true;
-                mps.ticketFee[ticketId_][feeType] = _fees[i];
+                mps.ticketFee[ticketId_][feeType] = _fees[i]; // {tok}
             }
         }
 
         emit TicketCreated(ticketId_, ticketAdmin, extraTicketData);
     }
 
+    /// @param _ticketId {ticketId}
     function _updateTicket(TicketData calldata _ticketData, uint64 _ticketId) internal {
         _checkTicketExists(_ticketId);
         _generateMainTicketAdminRole(_ticketId)._checkRoles();
@@ -104,39 +110,43 @@ library LibFactory {
         ExtraTicketData memory extraTicketData = _getExtraTicketData(_ticketId);
 
         if (_ticketData.startTime > 0) {
+            // {s} < {s}
             if (_ticketData.startTime < uint40(block.timestamp)) {
                 revert StartTimeShouldBeAhead();
             }
-            extraTicketData.startTime = _ticketData.startTime;
+            extraTicketData.startTime = _ticketData.startTime; // {s}
         }
 
         if (_ticketData.endTime > 0) {
+            // {s} < {s} + {s}
             if (_ticketData.endTime < _ticketData.startTime + 1 days) {
                 revert EndTimeShouldBeOneDayAfterStartTime();
             }
-            extraTicketData.endTime = _ticketData.endTime;
+            extraTicketData.endTime = _ticketData.endTime; // {s}
         }
 
         if (_ticketData.purchaseStartTime > 0) {
+            // {s} > {s} - {s}
             if (_ticketData.purchaseStartTime > _ticketData.startTime - 1 days) {
                 revert PurchaseStartTimeShouldBeOneDayBeforeStartTime();
             }
-            extraTicketData.purchaseStartTime = _ticketData.purchaseStartTime;
+            extraTicketData.purchaseStartTime = _ticketData.purchaseStartTime; // {s}
         }
 
         if (_ticketData.maxTicketsPerUser > 0) {
-            extraTicketData.maxTicketsPerUser = _ticketData.maxTicketsPerUser;
+            extraTicketData.maxTicketsPerUser = _ticketData.maxTicketsPerUser; // {ticket}
         }
 
         ITicket ticket = ITicket(extraTicketData.ticketAddress);
         if (_ticketData.maxTickets > 0) {
+            // {ticket} < {ticket}
             if (_ticketData.maxTickets < ticket.totalSupply()) {
                 revert MaxTicketsShouldEqualSupply();
             }
-            extraTicketData.maxTickets = _ticketData.maxTickets;
+            extraTicketData.maxTickets = _ticketData.maxTickets; // {ticket}
         }
 
-        extraTicketData.updatedAt = uint48(block.timestamp);
+        extraTicketData.updatedAt = uint48(block.timestamp); // {s}
         _factoryStorage().ticketIdToData[_ticketId] = extraTicketData;
 
         if (bytes(_ticketData.name).length > 0) {
@@ -187,19 +197,19 @@ library LibFactory {
         }
 
         extraTicketData_ = ExtraTicketData({
-            id: _ticketId,
-            createdAt: uint48(block.timestamp),
+            id: _ticketId, // {ticketId}
+            createdAt: uint48(block.timestamp), // {s}
             updatedAt: 0,
-            startTime: _ticketData.startTime,
-            endTime: _ticketData.endTime,
-            purchaseStartTime: _ticketData.purchaseStartTime,
-            maxTickets: _ticketData.maxTickets,
-            soldTickets: 0,
-            maxTicketsPerUser: _ticketData.maxTicketsPerUser,
+            startTime: _ticketData.startTime, // {s}
+            endTime: _ticketData.endTime, // {s}
+            purchaseStartTime: _ticketData.purchaseStartTime, // {s}
+            maxTickets: _ticketData.maxTickets, // {ticket}
+            soldTickets: 0, // {ticket}
+            maxTicketsPerUser: _ticketData.maxTicketsPerUser, // {ticket}
             isFree: _ticketData.isFree,
             isRefundable: _ticketData.isRefundable,
-            ticketAdmin: _ticketAdmin,
-            ticketAddress: ticketAddress
+            ticketAdmin: _ticketAdmin, // {addr}
+            ticketAddress: ticketAddress // {addr}
         });
     }
 
@@ -207,6 +217,7 @@ library LibFactory {
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    /// @return {ticketId} total ticket type count
     function _getTicketCount() internal view returns (uint64) {
         return LibFactory._factoryStorage().ticketId;
     }

@@ -12,7 +12,9 @@ contract MarketplaceFacet is IMarketplace {
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    /// @inheritdoc IMarketplace
     function mintTicket(uint64 _ticketId, FeeType _feeType, address _buyer) external payable returns (uint40) {
+        // {ticket}
         return _ticketId._mintTicket(_feeType, _buyer);
     }
 
@@ -36,18 +38,22 @@ contract MarketplaceFacet is IMarketplace {
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    // @return {1}
     function isFeeEnabled(uint64 _ticketId, FeeType _feeType) external view returns (bool) {
         return _ticketId._isFeeEnabled(_feeType);
     }
 
+    // @return {addr}
     function getFeeTokenAddress(FeeType _feeType) external view returns (address) {
         return _feeType._getFeeTokenAddress();
     }
 
+    // @return {tok}
     function getTicketFee(uint64 _ticketId, FeeType _feeType) external view returns (uint256) {
         return _ticketId._getTicketFee(_feeType);
     }
 
+    // @return ticketFee_ {tok}, hostItFee_ {tok}, totalFee_ {tok}
     function getAllFees(uint64 _ticketId, FeeType _feeType)
         external
         view
@@ -56,10 +62,12 @@ contract MarketplaceFacet is IMarketplace {
         return _ticketId._getFees(_feeType);
     }
 
+    // @return {tok}
     function getTicketBalance(uint64 _ticketId, FeeType _feeType) external view returns (uint256) {
         return _ticketId._getTicketBalance(_feeType);
     }
 
+    // @return {tok}
     function getHostItBalance(FeeType _feeType) external view returns (uint256) {
         return _feeType._getHostItBalance();
     }
@@ -68,10 +76,12 @@ contract MarketplaceFacet is IMarketplace {
     //                               PURE FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    // @param _fee {tok} @return {tok}
     function getHostItFee(uint256 _fee) external pure returns (uint256) {
         return _fee._getHostItFee();
     }
 
+    // @return {s}
     function getRefundPeriod() external pure returns (uint256) {
         return LibMarketplace.REFUND_PERIOD;
     }

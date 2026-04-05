@@ -86,6 +86,32 @@ Deployment scripts are located in the `/script` directory. Example:
 forge script script/DeployHostItTickets.s.sol --rpc-url <YOUR_RPC_URL> --private-key <YOUR_PRIVATE_KEY> --broadcast
 ```
 
+## Dimensional Units
+
+The inline `// {unit}` comments throughout the Solidity source annotate dimensional types to prevent unit-mismatch bugs.
+
+### Base Units
+
+| Unit | Meaning |
+|------|---------|
+| `{tok}` | Token amounts (ETH or ERC20), in the smallest unit of the payment token selected via `FeeType` |
+| `{s}` | Timestamps and durations in seconds (Unix epoch for timestamps, raw seconds for durations) |
+| `{1}` | Dimensionless quantities (basis-point ratios, boolean flags, counters) |
+| `{ticket}` | Ticket token IDs and counts (NFT minting counters, `maxTickets`, `soldTickets`) |
+| `{ticketId}` | Ticket type identifiers (sequential `uint64` IDs assigned by the factory) |
+| `{day}` | Day index offset from event start (used in check-in tracking, derived from seconds) |
+| `{addr}` | Ethereum addresses (token, admin, buyer) |
+
+### Derived Units
+
+| Unit | Meaning |
+|------|---------|
+| `{1/1}` | Fee fraction: `HOSTIT_FEE_BPS / FEE_BASIS_POINTS` = 300 / 10,000 = 0.03 |
+
+### Precision
+
+- **BPS** -- Basis points (1/10,000). `FEE_BASIS_POINTS = 10_000`, `HOSTIT_FEE_BPS = 300` (3%).
+
 ## Security
 - All contracts are licensed under AGPL-3.0-only.
 - Uses OpenZeppelin libraries and patterns for security.

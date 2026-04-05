@@ -8,11 +8,11 @@ bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f36
 /// @notice Storage structure for managing marketplace data
 /// @custom:storage-location erc7201:host.it.ticket.marketplace.storage
 struct MarketplaceStorage {
-    mapping(uint64 => mapping(FeeType => bool)) feeEnabled;
-    mapping(uint64 => mapping(FeeType => uint256)) ticketFee;
-    mapping(FeeType => address) feeTokenAddress;
-    mapping(uint64 => mapping(FeeType => uint256)) ticketBalance;
-    mapping(FeeType => uint256) hostItBalance;
+    mapping(uint64 => mapping(FeeType => bool)) feeEnabled; // {ticketId} => FeeType => {1}
+    mapping(uint64 => mapping(FeeType => uint256)) ticketFee; // {ticketId} => FeeType => {tok}
+    mapping(FeeType => address) feeTokenAddress; // FeeType => {addr}
+    mapping(uint64 => mapping(FeeType => uint256)) ticketBalance; // {ticketId} => FeeType => {tok}
+    mapping(FeeType => uint256) hostItBalance; // FeeType => {tok}
 }
 
 /// @title FeeType

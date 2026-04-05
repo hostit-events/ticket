@@ -31,10 +31,13 @@ library LibCheckIn {
     //                             INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
+    /// @param _ticketId {ticketId}
+    /// @param _ticketOwner {addr}
+    /// @param _tokenId {ticket}
     function _checkin(uint64 _ticketId, address _ticketOwner, uint40 _tokenId) internal onlyTicketAdmin(_ticketId) {
         _ticketId._checkTicketExists();
 
-        uint40 time = uint40(block.timestamp);
+        uint40 time = uint40(block.timestamp); // {s}
         ExtraTicketData memory ticketData = _ticketId._getExtraTicketData();
 
         if (time < ticketData.startTime) revert TicketUsePeriodNotStarted();
@@ -54,6 +57,7 @@ library LibCheckIn {
 
         cs.checkedIn[_ticketId].add(_ticketOwner);
 
+        // {day} = ({s} - {s}) / {s}
         uint8 day = uint8((time - ticketData.startTime) / 1 days);
         if (!cs.checkedInByDay[_ticketId][day].add(_ticketOwner)) revert AlreadyCheckedInForDay(day);
 
@@ -93,6 +97,7 @@ library LibCheckIn {
         return _checkInStorage().checkedIn[_ticketId].contains(_ticketOwner);
     }
 
+    /// @param _day {day}
     function _isCheckedInForDay(uint64 _ticketId, uint8 _day, address _ticketOwner) internal view returns (bool) {
         return _checkInStorage().checkedInByDay[_ticketId][_day].contains(_ticketOwner);
     }
@@ -101,6 +106,7 @@ library LibCheckIn {
         return _checkInStorage().checkedIn[_ticketId].values();
     }
 
+    /// @param _day {day}
     function _getCheckedInForDay(uint64 _ticketId, uint8 _day) internal view returns (address[] memory) {
         return _checkInStorage().checkedInByDay[_ticketId][_day].values();
     }

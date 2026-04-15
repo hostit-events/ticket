@@ -3,15 +3,15 @@
     "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
   },
   "lib/diamond-lib": {
-    "rev": "f1dfda3a56ce134326a1914fdb2039abb2625c02"
+    "rev": "a1ec87b38c8863611cd5fa2faae8cf1b5118aa54"
   },
   "lib/forge-std": {
-    "rev": "551a2d30d7fecba7092ab45a587b5268149a48fb"
+    "rev": "0844d7e1fc5e60d77b68e469bff60265f236c398"
   },
   "lib/openzeppelin-contracts-upgradeable": {
-    "rev": "e725abddf1e01cf05ace496e950fc8e243cc7cab"
+    "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"
   },
   "lib/solady": {
-    "rev": "208e4f31cfae26e4983eb95c3488a14fdc497ad7"
+    "rev": "90db92ce173856605d24a554969f2c67cadbc7e9"
   }
 }

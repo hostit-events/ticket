@@ -98,7 +98,6 @@ contract Ticket is
         __ERC721Enumerable_init();
         __ERC721Royalty_init();
         __Ownable_init(_owner);
-        __UUPSUpgradeable_init();
 
         // Set default royalty to 5%
         _setDefaultRoyalty(_owner, 500);

@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {TicketCreated, TicketUpdated} from "@ticket-logs/FactoryLogs.sol";
-import {ExtraTicketData, FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
+import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@ticket-errors/FactoryErrors.sol";
+import "@ticket/libs/FactoryLib.sol";
 
 contract FactoryTest is DeployedHostItTickets {
     function test_createFreeTicket() public {
@@ -161,14 +159,14 @@ contract FactoryTest is DeployedHostItTickets {
 
     function test_mainAdminRole() public view {
         uint64 ticketId = factoryFacet.ticketCount();
-        uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
-        assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
+        bytes32 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
+        assertEq(mainAdminRole, keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId)));
     }
 
     function test_ticketAdminRole() public view {
         uint64 ticketId = factoryFacet.ticketCount();
-        uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
-        assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
+        bytes32 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
+        assertEq(ticketAdminRole, keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId)));
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -200,7 +198,7 @@ contract FactoryTest is DeployedHostItTickets {
         TicketData memory td = _getFreeTicketData();
         // purchaseStartTime must be <= startTime - 1 day
         td.purchaseStartTime = td.startTime;
-        vm.expectRevert(PurchaseStartTimeShouldBeOneDayBeforeStartTime.selector);
+        vm.expectRevert(PurchaseStartTimeShouldBeAtLeastOneDayBeforeStartTime.selector);
         factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
     }
 
@@ -264,7 +262,7 @@ contract FactoryTest is DeployedHostItTickets {
         uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory td = _getFreeUpdatedTicketData();
         td.endTime = td.startTime; // Less than startTime + 1 day
-        vm.expectRevert(EndTimeShouldBeOneDayAfterStartTime.selector);
+        vm.expectRevert(EndTimeShouldBeAtLeastADayAfterStartTime.selector);
         factoryFacet.updateTicket(td, ticketId);
     }
 
@@ -273,7 +271,7 @@ contract FactoryTest is DeployedHostItTickets {
         uint64 ticketId = factoryFacet.ticketCount();
         TicketData memory td = _getFreeUpdatedTicketData();
         td.purchaseStartTime = td.startTime; // Must be <= startTime - 1 day
-        vm.expectRevert(PurchaseStartTimeShouldBeOneDayBeforeStartTime.selector);
+        vm.expectRevert(PurchaseStartTimeShouldBeAtLeastOneDayBeforeStartTime.selector);
         factoryFacet.updateTicket(td, ticketId);
     }
 
@@ -377,7 +375,7 @@ contract FactoryTest is DeployedHostItTickets {
             uri: "ipfs://bad"
         });
 
-        vm.expectRevert(EndTimeShouldBeOneDayAfterStartTime.selector);
+        vm.expectRevert(EndTimeShouldBeAtLeastADayAfterStartTime.selector);
         factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
     }
 
@@ -387,13 +385,13 @@ contract FactoryTest is DeployedHostItTickets {
     }
 
     function testFuzz_mainAdminRole(uint64 ticketId) public view {
-        uint256 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
-        assertEq(mainAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId))));
+        bytes32 mainAdminRole = factoryFacet.mainAdminRole(ticketId);
+        assertEq(mainAdminRole, keccak256(abi.encode(keccak256("host.it.ticket.main.admin"), ticketId)));
     }
 
     function testFuzz_ticketAdminRole(uint64 ticketId) public view {
-        uint256 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
-        assertEq(ticketAdminRole, uint256(keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId))));
+        bytes32 ticketAdminRole = factoryFacet.ticketAdminRole(ticketId);
+        assertEq(ticketAdminRole, keccak256(abi.encode(keccak256("host.it.ticket.admin"), ticketId)));
     }
 
     function testFuzz_ticketExists(uint64 ticketId) public {

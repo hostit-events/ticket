@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
+import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 
 /// @title Marketplace interface
 /// @notice Interface for the Marketplace facet
@@ -50,7 +50,7 @@ interface IMarketplace {
     /// @param ticketId {ticketId} The ID of the ticket to check
     /// @param feeType The type of fee to check
     /// @return {1} True if the fee type is enabled, false otherwise
-    function isFeeEnabled(uint64 ticketId, FeeType feeType) external view returns (bool);
+    function feeEnabled(uint64 ticketId, FeeType feeType) external view returns (bool);
 
     /// @notice Gets the address of the fee token for the specified fee type
     /// @param feeType The type of fee to get the address for

@@ -5,11 +5,9 @@ import {IDiamondCut} from "@diamond/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "@diamond/interfaces/IDiamondLoupe.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-
+import {DeployHostItTickets} from "@ticket-script/DeployHostItTickets.s.sol";
+import {AddressesAndFees, ERC6551_REGISTRY} from "@ticket-script/helpers/AddressesAndFees.sol";
 import {DeployHostItTicketsHelper} from "@ticket-script/helpers/DeployHostItTicketsHelper.sol";
-import {ERC6551_REGISTRY, LibAddressesAndFees} from "@ticket-script/helpers/LibAddressesAndFees.sol";
-import {TicketData} from "@ticket-storage/FactoryStorage.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {HostItTickets} from "@ticket/HostItTickets.sol";
 import {CheckInFacet} from "@ticket/facets/CheckInFacet.sol";
 import {FactoryFacet} from "@ticket/facets/FactoryFacet.sol";
@@ -18,15 +16,17 @@ import {HostItInit} from "@ticket/inits/HostItInit.sol";
 import {ICheckIn} from "@ticket/interfaces/ICheckIn.sol";
 import {IFactory} from "@ticket/interfaces/IFactory.sol";
 import {IMarketplace} from "@ticket/interfaces/IMarketplace.sol";
+import {TicketData} from "@ticket/libs/FactoryLib.sol";
 import {Ticket} from "@ticket/libs/Ticket.sol";
 import {TicketProxy} from "@ticket/libs/TicketProxy.sol";
 import {ERC6551Registry} from "erc6551/src/ERC6551Registry.sol";
 import {Test} from "forge-std/Test.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@ticket-logs/MarketplaceLogs.sol";
+import "@ticket/libs/MarketplaceLib.sol";
 
 abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
-    address public hostIt;
+    address payable public hostIt;
+    DeployHostItTickets deployHostItTickets;
 
     IFactory public factoryFacet;
     ICheckIn public checkInFacet;
@@ -42,9 +42,8 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
     address[] public facetAddresses;
 
     /// @notice List of facet contract names used in deployment.
-    string[6] public facetNames = [
-        "DiamondCutFacet", "DiamondLoupeFacet", "OwnableRolesFacet", "FactoryFacet", "CheckInFacet", "MarketplaceFacet"
-    ];
+    string[6] public facetNames =
+        ["DiamondCutFacet", "DiamondLoupeFacet", "OwnableFacet", "FactoryFacet", "CheckInFacet", "MarketplaceFacet"];
 
     address owner = address(this);
     address admin = makeAddr("admin");
@@ -62,39 +61,8 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
     /// @notice Deploys the Diamond contract and initializes interface references and facet addresses.
     /// @dev This function is intended to be called in a test setup phase (e.g., `setUp()` in Foundry).
     function setUp() public virtual {
-        hostIt = address(
-            new HostItTickets(
-                _createInitFacetCuts(_getDiamondCutFacet(), _getDiamondLoupeFacet(), _getOwnableRolesFacet()),
-                _getDiamondInit(),
-                abi.encodeWithSignature("initDiamond(address)", address(this))
-            )
-        );
-
-        // Deploy initializer
-        address hostItInit = address(new HostItInit());
-
-        // Deploy Ticket Impl
-        address ticketImpl = address(new Ticket());
-
-        // Deploy Ticket Beacon
-        address ticketBeacon = address(new UpgradeableBeacon(ticketImpl, hostIt));
-
-        // Deploy Ticket Proxy
-        address ticketProxy = address(new TicketProxy(ticketBeacon));
-
-        // Get addresses and fees
-        (address[] memory addresses, uint8[] memory feeTypes) =
-            LibAddressesAndFees._getAddressesAndFeesByChainId(block.chainid);
-
-        // Initialize HostItTickets - called directly from the test (which is the owner)
-        IDiamondCut(hostIt)
-            .diamondCut(
-                _createHostItFacetCuts(
-                    address(new FactoryFacet()), address(new MarketplaceFacet()), address(new CheckInFacet())
-                ),
-                hostItInit,
-                abi.encodeWithSelector(HostItInit.initHostIt.selector, ticketProxy, feeTypes, addresses)
-            );
+        deployHostItTickets = new DeployHostItTickets();
+        hostIt = payable(deployHostItTickets.run());
 
         diamondCut = IDiamondCut(hostIt);
         diamondLoupe = IDiamondLoupe(hostIt);
@@ -110,10 +78,6 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
         vm.label(charlie, "CHARLIE");
         vm.label(withdrawer, "WITHDRAWER");
         vm.label(hostIt, "HOSTIT");
-        vm.label(ticketProxy, "TICKET_PROXY");
-        vm.label(ticketImpl, "TICKET_IMPL");
-        vm.label(ticketBeacon, "TICKET_BEACON");
-        vm.label(hostItInit, "HOSTIT_INIT");
         vm.label(owner, "TEST_ADDRESS");
     }
 

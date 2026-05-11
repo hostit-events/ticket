@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
+import {FullTicketData, TicketData} from "@ticket/libs/FactoryLib.sol";
+import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 
 /// @title IFactory
 /// @notice Interface for the Factory facet
@@ -72,10 +72,10 @@ interface IFactory {
     /// @notice Gets the main admin role for a ticket
     /// @param _ticketId {ticketId} The ID of the ticket to get the main admin role for
     /// @return The main admin role for the ticket
-    function mainAdminRole(uint64 _ticketId) external pure returns (uint256);
+    function mainAdminRole(uint64 _ticketId) external pure returns (bytes32);
 
     /// @notice Gets the ticket admin role for a ticket
     /// @param _ticketId {ticketId} The ID of the ticket to get the ticket admin role for
     /// @return The ticket admin role for the ticket
-    function ticketAdminRole(uint64 _ticketId) external pure returns (uint256);
+    function ticketAdminRole(uint64 _ticketId) external pure returns (bytes32);
 }

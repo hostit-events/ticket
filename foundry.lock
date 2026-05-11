@@ -2,11 +2,11 @@
   "lib/contracts": {
     "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
   },
-  "lib/diamond-lib": {
-    "rev": "a1ec87b38c8863611cd5fa2faae8cf1b5118aa54"
-  },
   "lib/forge-std": {
     "rev": "0844d7e1fc5e60d77b68e469bff60265f236c398"
+  },
+  "lib/lattice": {
+    "rev": "71c9d6a8a57002d1348c2f118fa385c38a9c74b3"
   },
   "lib/openzeppelin-contracts-upgradeable": {
     "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"

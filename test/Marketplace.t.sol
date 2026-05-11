@@ -3,14 +3,12 @@ pragma solidity 0.8.30;
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import {FullTicketData, TicketData} from "@ticket-storage/FactoryStorage.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
+import {FullTicketData, TicketData} from "@ticket/libs/FactoryLib.sol";
+import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@ticket-logs/MarketplaceLogs.sol";
-/// forge-lint: disable-next-line(unaliased-plain-import)
-import "@ticket-errors/MarketplaceErrors.sol";
+import "@ticket/libs/MarketplaceLib.sol";
 
 contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     // ======================================================================
@@ -117,7 +115,7 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         uint64 ticketId = factoryFacet.ticketCount();
         (,, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
         hoax(alice, totalFee);
-        vm.expectRevert(abi.encodeWithSelector(TicketPurchaseFailed.selector, FeeType.ETH, totalFee));
+        vm.expectRevert(abi.encodeWithSelector(InsufficientPayment.selector, FeeType.ETH, totalFee));
         marketplaceFacet.mintTicket{value: totalFee - 1}(ticketId, FeeType.ETH, alice);
     }
 
@@ -558,7 +556,7 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
         hoax(alice, 1 ether);
-        vm.expectRevert(FeeNotEnabled.selector);
+        vm.expectRevert(abi.encodeWithSelector(FeeNotEnabled.selector, ticketId, FeeType.WETH));
         marketplaceFacet.mintTicket{value: 1 ether}(ticketId, FeeType.WETH, alice);
     }
 
@@ -635,7 +633,7 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
     }
 
-    function test_setTicketFees_revertsFeeAlreadySet() public {
+    function test_setTicketFees_updatesExistingFee() public {
         _createFreeTicket();
         uint64 ticketId = factoryFacet.ticketCount();
         FeeType[] memory feeTypes = new FeeType[](1);
@@ -643,8 +641,9 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         uint256[] memory fees = new uint256[](1);
         fees[0] = ETH_FEE;
         marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
-        vm.expectRevert(FeeAlreadySet.selector);
+        fees[0] = ETH_FEE * 2;
         marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.ETH), ETH_FEE * 2);
     }
 
     function test_setTicketFees_revertsInvalidFeeConfig() public {
@@ -929,7 +928,7 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         uint256 sent = totalFee - underpay;
 
         hoax(alice, totalFee);
-        vm.expectRevert(abi.encodeWithSelector(TicketPurchaseFailed.selector, FeeType.ETH, totalFee));
+        vm.expectRevert(abi.encodeWithSelector(InsufficientPayment.selector, FeeType.ETH, totalFee));
         marketplaceFacet.mintTicket{value: sent}(ticketId, FeeType.ETH, alice);
     }
 

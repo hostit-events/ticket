@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {FullTicketData} from "@ticket-storage/FactoryStorage.sol";
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
+import {FullTicketData} from "@ticket/libs/FactoryLib.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
-import "@ticket-logs/CheckInLogs.sol";
-/// forge-lint: disable-next-line(unaliased-plain-import)
-import "@ticket-errors/CheckInErrors.sol";
+import "@ticket/libs/CheckInLib.sol";
 
 contract CheckInTest is DeployedHostItTickets {
     function test_checkIn() public {

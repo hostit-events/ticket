@@ -2,13 +2,10 @@
 pragma solidity ^0.8.4;
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
+import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 
-library LibAddressesAndFees {
-    function _getAddressesAndFeesByChainId(uint256 _chainId)
-        internal
-        returns (address[] memory addresses_, uint8[] memory feeTypes_)
-    {
+library AddressesAndFees {
+    function _byChainId(uint256 _chainId) internal returns (uint8[] memory feeTypes_, address[] memory addresses_) {
         if (_chainId == 1) {
             addresses_ = _getEthereumAddresses();
             feeTypes_ = _getEthereumFeeTypes();

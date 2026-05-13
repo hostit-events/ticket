@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
-import {FullTicketData} from "@ticket/libs/FactoryLib.sol";
+import {AddressZeroAdmin, FullTicketData, NoAdmins} from "@ticket/libs/FactoryLib.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket/libs/CheckInLib.sol";
 
@@ -28,7 +28,7 @@ contract CheckInTest is DeployedHostItTickets {
         address[] memory admins = new address[](2);
         admins[0] = bob;
         admins[1] = charlie;
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
         vm.warp(1 days + 1);
         vm.prank(bob);
         checkInFacet.checkIn(ticketId, alice, 1);
@@ -45,11 +45,11 @@ contract CheckInTest is DeployedHostItTickets {
         (uint64 ticketId,) = _mintTicketFree();
         address[] memory admins = new address[](1);
         admins[0] = bob;
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
         vm.warp(1 days + 1);
         vm.prank(bob);
         checkInFacet.checkIn(ticketId, alice, 1);
-        checkInFacet.removeTicketAdmins(ticketId, admins);
+        factoryFacet.removeTicketAdmins(ticketId, admins);
         vm.warp(block.timestamp + 1 days);
         vm.prank(bob);
         vm.expectRevert();
@@ -79,7 +79,7 @@ contract CheckInTest is DeployedHostItTickets {
         (uint64 ticketId,) = _mintTicketFree();
         address[] memory admins = new address[](0);
         vm.expectRevert(NoAdmins.selector);
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
     }
 
     function test_addTicketAdmins_revertsAddressZero() public {
@@ -87,14 +87,14 @@ contract CheckInTest is DeployedHostItTickets {
         address[] memory admins = new address[](1);
         admins[0] = address(0);
         vm.expectRevert(AddressZeroAdmin.selector);
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
     }
 
     function test_removeTicketAdmins_revertsNoAdmins() public {
         (uint64 ticketId,) = _mintTicketFree();
         address[] memory admins = new address[](0);
         vm.expectRevert(NoAdmins.selector);
-        checkInFacet.removeTicketAdmins(ticketId, admins);
+        factoryFacet.removeTicketAdmins(ticketId, admins);
     }
 
     function test_removeTicketAdmins_revertsAddressZero() public {
@@ -102,7 +102,7 @@ contract CheckInTest is DeployedHostItTickets {
         address[] memory admins = new address[](1);
         admins[0] = address(0);
         vm.expectRevert(AddressZeroAdmin.selector);
-        checkInFacet.removeTicketAdmins(ticketId, admins);
+        factoryFacet.removeTicketAdmins(ticketId, admins);
     }
 
     function test_addTicketAdmins_revertsNonMainAdmin() public {
@@ -111,17 +111,17 @@ contract CheckInTest is DeployedHostItTickets {
         admins[0] = charlie;
         vm.prank(alice);
         vm.expectRevert();
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
     }
 
     function test_removeTicketAdmins_revertsNonMainAdmin() public {
         (uint64 ticketId,) = _mintTicketFree();
         address[] memory admins = new address[](1);
         admins[0] = bob;
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
         vm.prank(alice);
         vm.expectRevert();
-        checkInFacet.removeTicketAdmins(ticketId, admins);
+        factoryFacet.removeTicketAdmins(ticketId, admins);
     }
 
     function test_checkIn_revertsNonAdmin() public {
@@ -211,7 +211,7 @@ contract CheckInTest is DeployedHostItTickets {
             admins[i] = makeAddr(string(abi.encodePacked("admin", i)));
         }
 
-        checkInFacet.addTicketAdmins(ticketId, admins);
+        factoryFacet.addTicketAdmins(ticketId, admins);
 
         // Each admin can check in
         vm.warp(1 days + 1);

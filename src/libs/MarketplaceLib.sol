@@ -31,8 +31,7 @@ error TicketSoldOut();
 error MaxTicketsHeld();
 error TokenAddressZero();
 error InvalidFeeConfig();
-error FeeAlreadySet();
-error ZeroFee();
+error ZeroFee(FeeType);
 error TicketIsFree();
 error FeeNotEnabled(uint64, FeeType);
 error TicketNotApproved(uint256);
@@ -139,6 +138,10 @@ library MarketplaceLib {
                     if (msg.value < totalFee) {
                         revert InsufficientPayment(_feeType, totalFee);
                     }
+                    // Refund excess ETH if user overpays
+                    if (msg.value > totalFee) {
+                        SafeTransferLib.forceSafeTransferETH(ContextLib.msgSender(), msg.value - totalFee);
+                    }
                 } else {
                     _payWithToken(ms, _feeType, totalFee, address(this));
                 }
@@ -148,6 +151,10 @@ library MarketplaceLib {
                     // {tok} < {tok}
                     if (msg.value < totalFee) {
                         revert InsufficientPayment(_feeType, totalFee);
+                    }
+                    // Refund excess ETH if user overpays
+                    if (msg.value > totalFee) {
+                        SafeTransferLib.forceSafeTransferETH(ContextLib.msgSender(), msg.value - totalFee);
                     }
                     SafeTransferLib.forceSafeTransferETH(ticketData.ticketAdmin, fee);
                 } else {
@@ -170,21 +177,24 @@ library MarketplaceLib {
 
     /// @param _ticketId {ticketId}
     /// @param _fees {tok} per-ticket price in each fee token
-    function setTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
+    function updateTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees)
         internal
         onlyMainTicketAdmin(_ticketId)
     {
         FactoryLib.checkTicketExists(_ticketId);
+        if (FactoryLib.factoryStorage().ticketIdToData[_ticketId].isFree) revert TicketIsFree();
+        setTicketFees(_ticketId, _feeTypes, _fees);
+    }
 
+    function setTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees) internal {
         uint256 feeTypesLength = _feeTypes.length;
-        if (feeTypesLength != _fees.length && feeTypesLength > 0) {
+        if (feeTypesLength == 0 || feeTypesLength != _fees.length) {
             revert InvalidFeeConfig();
         }
-        FactoryLib.factoryStorage().ticketIdToData[_ticketId].isFree = false;
 
         MarketplaceStorage storage ms = marketplaceStorage();
         for (uint256 i; i < feeTypesLength; ++i) {
-            if (_fees[i] == 0) revert ZeroFee();
+            if (_fees[i] == 0) revert ZeroFee(_feeTypes[i]);
 
             ms.ticketFee[_ticketId][_feeTypes[i]] = _fees[i]; // {tok}
         }
@@ -290,7 +300,7 @@ library MarketplaceLib {
     function _payWithToken(MarketplaceStorage storage _ms, FeeType _feeType, uint256 _totalFee, address _to) private {
         address caller = ContextLib.msgSender(); // {addr}
 
-        address tokenAddress = _getFeeTokenAddress(_ms, _feeType); // {addr}
+        address tokenAddress = getFeeTokenAddress(_ms, _feeType); // {addr}
         IERC20 token = IERC20(tokenAddress);
         // {tok} < {tok}
         if (token.balanceOf(caller) < _totalFee) {
@@ -322,9 +332,9 @@ library MarketplaceLib {
     //                              ADMIN FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _setFeeTokenAddresses(FeeType[] calldata _feeTypes, address[] calldata _tokenAddresses) internal {
+    function setFeeTokenAddresses(FeeType[] calldata _feeTypes, address[] calldata _tokenAddresses) internal {
         uint256 feeTypesLength = _feeTypes.length;
-        if (feeTypesLength != _tokenAddresses.length && feeTypesLength > 0) {
+        if (feeTypesLength == 0 || feeTypesLength != _tokenAddresses.length) {
             revert InvalidFeeConfig();
         }
         for (uint256 i; i < feeTypesLength; ++i) {
@@ -351,10 +361,10 @@ library MarketplaceLib {
     }
 
     function getFeeTokenAddress(FeeType _feeType) internal view returns (address) {
-        return _getFeeTokenAddress(marketplaceStorage(), _feeType);
+        return getFeeTokenAddress(marketplaceStorage(), _feeType);
     }
 
-    function _getFeeTokenAddress(MarketplaceStorage storage _ms, FeeType _feeType)
+    function getFeeTokenAddress(MarketplaceStorage storage _ms, FeeType _feeType)
         internal
         view
         returns (address tokenAddress_)

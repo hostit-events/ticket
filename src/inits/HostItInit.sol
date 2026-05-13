@@ -17,7 +17,7 @@ contract HostItInit {
     {
         AccessControlLib.__AccessControl_init(_admin);
         FactoryLib.factoryStorage().ticketProxy = _ticketProxy;
-        MarketplaceLib._setFeeTokenAddresses(_feeTypes, _tokens);
+        MarketplaceLib.setFeeTokenAddresses(_feeTypes, _tokens);
         emit HostItInitialized(_ticketProxy, _feeTypes, _tokens);
     }
 }

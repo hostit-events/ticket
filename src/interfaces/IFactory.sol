@@ -24,6 +24,16 @@ interface IFactory {
     /// @param _ticketId {ticketId} The ID of the ticket to update
     function updateTicket(TicketData calldata _ticketData, uint64 _ticketId) external;
 
+    /// @notice Adds ticket admins to a ticket
+    /// @param _ticketId {ticketId} The ID of the ticket to add admins to
+    /// @param _admins The addresses of the admins to add
+    function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) external;
+
+    /// @notice Removes ticket admins from a ticket
+    /// @param _ticketId {ticketId} The ID of the ticket to remove admins from
+    /// @param _admins The addresses of the admins to remove
+    function removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) external;
+
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//

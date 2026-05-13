@@ -2,7 +2,8 @@
 pragma solidity 0.8.30;
 
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
-import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
+/// forge-lint: disable-next-line(unaliased-plain-import)
+import "@ticket/libs/MarketplaceLib.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket/libs/FactoryLib.sol";
 
@@ -205,7 +206,7 @@ contract FactoryTest is DeployedHostItTickets {
     function test_createPaidTicket_revertsArrayMismatch() public {
         TicketData memory td = _getPaidTicketData();
         // Empty feeTypes but paid ticket
-        vm.expectRevert(ArrayMismatch.selector);
+        vm.expectRevert(InvalidFeeConfig.selector);
         factoryFacet.createTicket(td, _getZeroFeeType(), _getZeroFee());
     }
 
@@ -216,7 +217,7 @@ contract FactoryTest is DeployedHostItTickets {
         feeTypes[1] = FeeType.USDT;
         uint256[] memory fees = new uint256[](1);
         fees[0] = ETH_FEE;
-        vm.expectRevert(ArrayMismatch.selector);
+        vm.expectRevert(InvalidFeeConfig.selector);
         factoryFacet.createTicket(td, feeTypes, fees);
     }
 
@@ -227,18 +228,6 @@ contract FactoryTest is DeployedHostItTickets {
         uint256[] memory fees = new uint256[](1);
         fees[0] = 0;
         vm.expectRevert(abi.encodeWithSelector(ZeroFee.selector, FeeType.ETH));
-        factoryFacet.createTicket(td, feeTypes, fees);
-    }
-
-    function test_createPaidTicket_revertsDuplicateFeeType() public {
-        TicketData memory td = _getPaidTicketData();
-        FeeType[] memory feeTypes = new FeeType[](2);
-        feeTypes[0] = FeeType.ETH;
-        feeTypes[1] = FeeType.ETH;
-        uint256[] memory fees = new uint256[](2);
-        fees[0] = ETH_FEE;
-        fees[1] = ETH_FEE;
-        vm.expectRevert(abi.encodeWithSelector(FeeAlreadySet.selector, FeeType.ETH));
         factoryFacet.createTicket(td, feeTypes, fees);
     }
 

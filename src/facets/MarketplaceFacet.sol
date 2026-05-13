@@ -15,8 +15,8 @@ contract MarketplaceFacet is IMarketplace {
         return MarketplaceLib.mintTicket(_ticketId, _feeType, _buyer); // {ticket}
     }
 
-    function setTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees) external {
-        MarketplaceLib.setTicketFees(_ticketId, _feeTypes, _fees);
+    function updateTicketFees(uint64 _ticketId, FeeType[] calldata _feeTypes, uint256[] calldata _fees) external {
+        MarketplaceLib.updateTicketFees(_ticketId, _feeTypes, _fees);
     }
 
     function claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId, address _to) external {

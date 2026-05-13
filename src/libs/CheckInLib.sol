@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {OwnableLib} from "@diamond/libraries/OwnableLib.sol";
-import {AccessControlLib} from "@lattice/access/libraries/AccessControlLib.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {ExtraTicketData, FactoryLib} from "@ticket/libs/FactoryLib.sol";
@@ -13,10 +11,6 @@ import {ExtraTicketData, FactoryLib} from "@ticket/libs/FactoryLib.sol";
 
 event CheckedIn(uint64 indexed ticketId, address indexed ticketOwner, uint40 tokenId);
 
-event TicketAdminAdded(uint64 indexed ticketId, address indexed admin);
-
-event TicketAdminRemoved(uint64 indexed ticketId, address indexed admin);
-
 //*//////////////////////////////////////////////////////////////////////////
 //                                   ERRORS
 //////////////////////////////////////////////////////////////////////////*//
@@ -25,8 +19,6 @@ error TicketUsePeriodNotStarted();
 error TicketUsePeriodHasEnded();
 error NotTicketOwner(uint40);
 error AlreadyCheckedInForDay(uint8);
-error NoAdmins();
-error AddressZeroAdmin();
 error TicketPauseFailed();
 
 //*//////////////////////////////////////////////////////////////////////////
@@ -94,32 +86,6 @@ library CheckInLib {
         emit CheckedIn(_ticketId, _ticketOwner, _tokenId);
     }
 
-    function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
-        FactoryLib.checkTicketExists(_ticketId);
-
-        uint256 adminsLength = _admins.length;
-        if (adminsLength == 0) revert NoAdmins();
-        bytes32 ticketAdminRole = FactoryLib.generateTicketAdminRole(_ticketId);
-        for (uint256 i; i < adminsLength; ++i) {
-            if (_admins[i] == address(0)) revert AddressZeroAdmin();
-            AccessControlLib._grantRole(ticketAdminRole, _admins[i]);
-            emit TicketAdminAdded(_ticketId, _admins[i]);
-        }
-    }
-
-    function removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal onlyMainTicketAdmin(_ticketId) {
-        FactoryLib.checkTicketExists(_ticketId);
-
-        uint256 adminsLength = _admins.length;
-        if (adminsLength == 0) revert NoAdmins();
-        bytes32 ticketAdminRole = FactoryLib.generateTicketAdminRole(_ticketId);
-        for (uint256 i; i < adminsLength; ++i) {
-            if (_admins[i] == address(0)) revert AddressZeroAdmin();
-            AccessControlLib._revokeRole(ticketAdminRole, _admins[i]);
-            emit TicketAdminRemoved(_ticketId, _admins[i]);
-        }
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
@@ -144,11 +110,6 @@ library CheckInLib {
     //*//////////////////////////////////////////////////////////////////////////
     //                                 MODIFIERS
     //////////////////////////////////////////////////////////////////////////*//
-
-    modifier onlyMainTicketAdmin(uint64 _ticketId) {
-        FactoryLib.checkMainTicketAdminRole(_ticketId);
-        _;
-    }
 
     modifier onlyTicketAdmin(uint64 _ticketId) {
         FactoryLib.checkTicketAdminRole(_ticketId);

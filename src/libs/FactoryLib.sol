@@ -2,7 +2,6 @@
 pragma solidity 0.8.30;
 
 import {ContextLib} from "@diamond/libraries/ContextLib.sol";
-import {OwnableLib} from "@diamond/libraries/OwnableLib.sol";
 import {AccessControlLib} from "@lattice/access/libraries/AccessControlLib.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
@@ -13,15 +12,16 @@ event TicketCreated(uint64 indexed ticketId, address indexed ticketAdmin, ExtraT
 
 event TicketUpdated(uint64 indexed ticketId, address indexed ticketAdmin, ExtraTicketData ticketData);
 
+event TicketAdminAdded(uint64 indexed ticketId, address indexed admin);
+
+event TicketAdminRemoved(uint64 indexed ticketId, address indexed admin);
+
 error EmptyName();
 error EmptyURI();
 error StartTimeShouldBeAhead();
 error EndTimeShouldBeAtLeastADayAfterStartTime();
 error PurchaseStartTimeShouldBeAtLeastOneDayBeforeStartTime();
 error MaxTicketsIsZero();
-error ArrayMismatch();
-error FeeAlreadySet(FeeType);
-error ZeroFee(FeeType);
 error TicketDoesNotExist(uint64);
 error MaxTicketsShouldEqualSupply();
 error TicketImplementationNotSet();
@@ -29,6 +29,8 @@ error UpdateNameFailed();
 error UpdateSymbolFailed();
 error UpdateURIFailed();
 error TicketInitializationFailed();
+error NoAdmins();
+error AddressZeroAdmin();
 
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.factory.storage")) - 1)) & ~bytes32(uint256(0xff))
 bytes32 constant FACTORY_STORAGE_LOCATION = 0x610b7ed6689c503e651500bb8179583591f93afc835ec7dbed5872619168c100;
@@ -137,11 +139,11 @@ library FactoryLib {
                 revert StartTimeShouldBeAhead();
             }
             // {s} < {s} + {s}
-            if (_ticketData.endTime < _ticketData.startTime + 1 days) {
+            if (_ticketData.endTime < _ticketData.startTime + 24 hours) {
                 revert EndTimeShouldBeAtLeastADayAfterStartTime();
             }
             // {s} > {s} - {s}
-            if (_ticketData.purchaseStartTime > _ticketData.startTime - 1 days) {
+            if (_ticketData.purchaseStartTime > _ticketData.startTime - 24 hours) {
                 revert PurchaseStartTimeShouldBeAtLeastOneDayBeforeStartTime();
             }
             if (_ticketData.maxTickets == 0) revert MaxTicketsIsZero();
@@ -157,18 +159,7 @@ library FactoryLib {
         fs.adminTicketIds[ticketAdmin].add(ticketId_);
 
         if (!_ticketData.isFree) {
-            uint256 feeTypesLength = _feeTypes.length;
-            if (feeTypesLength == 0 || feeTypesLength != _fees.length) {
-                revert ArrayMismatch();
-            }
-            MarketplaceStorage storage mps = MarketplaceLib.marketplaceStorage();
-            for (uint256 i; i < feeTypesLength; ++i) {
-                FeeType feeType = _feeTypes[i];
-
-                if (mps.ticketFee[ticketId_][feeType] > 0) revert FeeAlreadySet(feeType);
-                if (_fees[i] == 0) revert ZeroFee(feeType);
-                mps.ticketFee[ticketId_][feeType] = _fees[i]; // {tok}
-            }
+            MarketplaceLib.setTicketFees(ticketId_, _feeTypes, _fees);
         }
 
         emit TicketCreated(ticketId_, ticketAdmin, extraTicketData);
@@ -181,7 +172,7 @@ library FactoryLib {
 
         ExtraTicketData memory extraTicketData = getExtraTicketData(_ticketId);
 
-        if (_ticketData.startTime > 0) {
+        if (_ticketData.startTime != 0) {
             // {s} < {s}
             if (_ticketData.startTime < uint40(block.timestamp)) {
                 revert StartTimeShouldBeAhead();
@@ -189,7 +180,7 @@ library FactoryLib {
             extraTicketData.startTime = _ticketData.startTime; // {s}
         }
 
-        if (_ticketData.endTime > 0) {
+        if (_ticketData.endTime != 0) {
             // {s} < {s} + {s}
             if (_ticketData.endTime < _ticketData.startTime + 1 days) {
                 revert EndTimeShouldBeAtLeastADayAfterStartTime();
@@ -197,7 +188,7 @@ library FactoryLib {
             extraTicketData.endTime = _ticketData.endTime; // {s}
         }
 
-        if (_ticketData.purchaseStartTime > 0) {
+        if (_ticketData.purchaseStartTime != 0) {
             // {s} > {s} - {s}
             if (_ticketData.purchaseStartTime > _ticketData.startTime - 1 days) {
                 revert PurchaseStartTimeShouldBeAtLeastOneDayBeforeStartTime();
@@ -243,6 +234,34 @@ library FactoryLib {
         }
 
         emit TicketUpdated(_ticketId, ContextLib.msgSender(), extraTicketData);
+    }
+
+    function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal {
+        checkTicketExists(_ticketId);
+        checkMainTicketAdminRole(_ticketId);
+
+        uint256 adminsLength = _admins.length;
+        if (adminsLength == 0) revert NoAdmins();
+        bytes32 ticketAdminRole = generateTicketAdminRole(_ticketId);
+        for (uint256 i; i < adminsLength; ++i) {
+            if (_admins[i] == address(0)) revert AddressZeroAdmin();
+            AccessControlLib._grantRole(ticketAdminRole, _admins[i]);
+            emit TicketAdminAdded(_ticketId, _admins[i]);
+        }
+    }
+
+    function removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal {
+        checkTicketExists(_ticketId);
+        checkMainTicketAdminRole(_ticketId);
+
+        uint256 adminsLength = _admins.length;
+        if (adminsLength == 0) revert NoAdmins();
+        bytes32 ticketAdminRole = generateTicketAdminRole(_ticketId);
+        for (uint256 i; i < adminsLength; ++i) {
+            if (_admins[i] == address(0)) revert AddressZeroAdmin();
+            AccessControlLib._revokeRole(ticketAdminRole, _admins[i]);
+            emit TicketAdminRemoved(_ticketId, _admins[i]);
+        }
     }
 
     //*//////////////////////////////////////////////////////////////////////////

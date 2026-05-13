@@ -24,6 +24,16 @@ contract FactoryFacet is IFactory {
         FactoryLib.updateTicket(_ticketData, _ticketId);
     }
 
+    /// @param _ticketId {ticketId}
+    function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) external {
+        FactoryLib.addTicketAdmins(_ticketId, _admins);
+    }
+
+    /// @param _ticketId {ticketId}
+    function removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) external {
+        FactoryLib.removeTicketAdmins(_ticketId, _admins);
+    }
+
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//

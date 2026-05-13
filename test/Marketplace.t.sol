@@ -6,7 +6,8 @@ import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Hol
 import {DeployedHostItTickets} from "@ticket-test/states/DeployedHostItTickets.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {FullTicketData, TicketData} from "@ticket/libs/FactoryLib.sol";
-import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
+/// forge-lint: disable-next-line(unaliased-plain-import)
+import "@ticket/libs/MarketplaceLib.sol";
 /// forge-lint: disable-next-line(unaliased-plain-import)
 import "@ticket/libs/MarketplaceLib.sol";
 
@@ -534,13 +535,18 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     //                          FEE CONFIGURATION
     // ======================================================================
 
-    function test_setTicketFees() public {
-        _createFreeTicket();
+    function test_updateTicketFees() public {
+        _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
-        marketplaceFacet.setTicketFees(ticketId, _getFeeTypes(), _getFees());
-        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.ETH), _getFees()[0]);
-        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDT), _getFees()[1]);
-        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDC), _getFees()[2]);
+        FeeType[] memory feeTypes = _getFeeTypes();
+        uint256[] memory fees = new uint256[](3);
+        fees[0] = ETH_FEE * 2;
+        fees[1] = USDT_FEE * 2;
+        fees[2] = USDC_FEE * 2;
+        marketplaceFacet.updateTicketFees(ticketId, feeTypes, fees);
+        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.ETH), fees[0]);
+        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDT), fees[1]);
+        assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.USDC), fees[2]);
     }
 
     function test_feeCalculation() public {
@@ -622,32 +628,30 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     //            SET TICKET FEES: REVERT CASES
     // ======================================================================
 
-    function test_setTicketFees_revertsZeroFee() public {
-        _createFreeTicket();
+    function test_updateTicketFees_revertsZeroFee() public {
+        _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
         FeeType[] memory feeTypes = new FeeType[](1);
         feeTypes[0] = FeeType.ETH;
         uint256[] memory fees = new uint256[](1);
         fees[0] = 0;
-        vm.expectRevert(ZeroFee.selector);
-        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        vm.expectRevert(abi.encodeWithSelector(ZeroFee.selector, FeeType.ETH));
+        marketplaceFacet.updateTicketFees(ticketId, feeTypes, fees);
     }
 
-    function test_setTicketFees_updatesExistingFee() public {
-        _createFreeTicket();
+    function test_updateTicketFees_updatesExistingFee() public {
+        _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
         FeeType[] memory feeTypes = new FeeType[](1);
         feeTypes[0] = FeeType.ETH;
         uint256[] memory fees = new uint256[](1);
-        fees[0] = ETH_FEE;
-        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
         fees[0] = ETH_FEE * 2;
-        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        marketplaceFacet.updateTicketFees(ticketId, feeTypes, fees);
         assertEq(marketplaceFacet.getTicketFee(ticketId, FeeType.ETH), ETH_FEE * 2);
     }
 
-    function test_setTicketFees_revertsInvalidFeeConfig() public {
-        _createFreeTicket();
+    function test_updateTicketFees_revertsInvalidFeeConfig() public {
+        _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
         FeeType[] memory feeTypes = new FeeType[](2);
         feeTypes[0] = FeeType.ETH;
@@ -655,15 +659,22 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
         uint256[] memory fees = new uint256[](1);
         fees[0] = ETH_FEE;
         vm.expectRevert(InvalidFeeConfig.selector);
-        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        marketplaceFacet.updateTicketFees(ticketId, feeTypes, fees);
     }
 
-    function test_setTicketFees_revertsNonAdmin() public {
-        _createFreeTicket();
+    function test_updateTicketFees_revertsNonAdmin() public {
+        _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
         vm.prank(alice);
         vm.expectRevert();
-        marketplaceFacet.setTicketFees(ticketId, _getFeeTypes(), _getFees());
+        marketplaceFacet.updateTicketFees(ticketId, _getFeeTypes(), _getFees());
+    }
+
+    function test_updateTicketFees_revertsTicketIsFree() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        vm.expectRevert(TicketIsFree.selector);
+        marketplaceFacet.updateTicketFees(ticketId, _getFeeTypes(), _getFees());
     }
 
     // ======================================================================
@@ -726,14 +737,14 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     function testFuzz_totalFeeIsSumOfParts(uint256 fee) public {
         fee = bound(fee, 1, 1e30);
 
-        _createFreeTicket();
+        _createPaidTicket();
         uint64 ticketId = factoryFacet.ticketCount();
 
         FeeType[] memory feeTypes = new FeeType[](1);
         feeTypes[0] = FeeType.ETH;
         uint256[] memory fees = new uint256[](1);
         fees[0] = fee;
-        marketplaceFacet.setTicketFees(ticketId, feeTypes, fees);
+        marketplaceFacet.updateTicketFees(ticketId, feeTypes, fees);
 
         (uint256 ticketFee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId, FeeType.ETH);
         assertEq(ticketFee, fee);

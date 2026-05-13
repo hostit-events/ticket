@@ -18,11 +18,11 @@ interface IMarketplace {
     /// @return {ticket} The token ID of the minted ticket
     function mintTicket(uint64 ticketId, FeeType feeType, address buyer) external payable returns (uint40);
 
-    /// @notice Sets the fees for the specified ticket
+    /// @notice Update the fees for the specified ticket
     /// @param ticketId {ticketId} The ID of the ticket to set fees for
     /// @param feeTypes The types of fees to set
     /// @param fees {tok} The fees to set
-    function setTicketFees(uint64 ticketId, FeeType[] calldata feeTypes, uint256[] calldata fees) external;
+    function updateTicketFees(uint64 ticketId, FeeType[] calldata feeTypes, uint256[] calldata fees) external;
 
     /// @notice Claims a refund for the specified ticket
     /// @param ticketId {ticketId} The ID of the ticket to claim a refund for

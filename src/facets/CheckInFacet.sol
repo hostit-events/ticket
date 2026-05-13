@@ -13,14 +13,6 @@ contract CheckInFacet is ICheckIn {
         CheckInLib.checkin(_ticketId, _ticketOwner, _tokenId);
     }
 
-    function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) external {
-        CheckInLib.addTicketAdmins(_ticketId, _admins);
-    }
-
-    function removeTicketAdmins(uint64 _ticketId, address[] calldata _admins) external {
-        CheckInLib.removeTicketAdmins(_ticketId, _admins);
-    }
-
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//

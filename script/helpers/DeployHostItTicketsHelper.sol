@@ -19,11 +19,11 @@ import {HostItInit} from "@ticket/inits/HostItInit.sol";
 import {Ticket} from "@ticket/libs/Ticket.sol";
 
 abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
-    address constant DIAMOND_CUT_FACET = 0xD1AC537fBE953b0868a6ec93F025c4bB05E6D1AC;
-    address constant DIAMOND_LOUPE_FACET = 0xD1A1C850E1ACd4ce10941e40eD67de60db56D1A1;
-    address constant OWNABLE_FACET = 0x020e74BCB4b03d5Fd1D163d7948D67Ccb7718020;
-    address constant DIAMOND_INIT = 0xD1Ab4C0546Aaa0Bd9b0Fd73fEBa54D4Ca3038D1A;
-    address payable constant HOST_IT_TICKETS = payable(0x4057170053DF6fA69C8579B71ce6288bd7cbA970);
+    // address constant DIAMOND_CUT_FACET = 0xD1AC537fBE953b0868a6ec93F025c4bB05E6D1AC;
+    // address constant DIAMOND_LOUPE_FACET = 0xD1A1C850E1ACd4ce10941e40eD67de60db56D1A1;
+    // address constant OWNABLE_FACET = 0x020e74BCB4b03d5Fd1D163d7948D67Ccb7718020;
+    // address constant DIAMOND_INIT = 0xD1Ab4C0546Aaa0Bd9b0Fd73fEBa54D4Ca3038D1A;
+    // address payable constant HOST_IT_TICKETS = payable(0x4057170053DF6fA69C8579B71ce6288bd7cbA970);
 
     bytes32 constant DIAMOND_CUT_SALT = 0xdc6f5bb59963dc8b243ed7c696690110204d487b4ee1d4a8afeccc313ae170ab;
     bytes32 constant DIAMOND_LOUPE_SALT = 0x37a28ef414ff305b8d4c199c3da391e49c9e6a2522b7ac6aaeb5d7de9bb52807;
@@ -33,19 +33,23 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
 
     function _getDiamondCutFacet() internal returns (address) {
         return
-            DIAMOND_CUT_FACET.code.length == 0
-                ? address(new DiamondCutFacet{salt: DIAMOND_CUT_SALT}())
-                : DIAMOND_CUT_FACET;
+        // DIAMOND_CUT_FACET.code.length == 0 ?
+        address(new DiamondCutFacet{salt: DIAMOND_CUT_SALT}());
+        // : DIAMOND_CUT_FACET;
     }
 
     function _getDiamondLoupeFacet() internal returns (address) {
-        return DIAMOND_LOUPE_FACET.code.length == 0
-            ? address(new DiamondLoupeFacet{salt: DIAMOND_LOUPE_SALT}())
-            : DIAMOND_LOUPE_FACET;
+        return
+        // DIAMOND_LOUPE_FACET.code.length == 0 ?
+        address(new DiamondLoupeFacet{salt: DIAMOND_LOUPE_SALT}());
+        // : DIAMOND_LOUPE_FACET;
     }
 
     function _getOwnableFacet() internal returns (address) {
-        return OWNABLE_FACET.code.length == 0 ? address(new OwnableFacet{salt: OWNABLE_SALT}()) : OWNABLE_FACET;
+        return
+        // OWNABLE_FACET.code.length == 0 ?
+        address(new OwnableFacet{salt: OWNABLE_SALT}());
+        // : OWNABLE_FACET;
     }
 
     function _getAccessControlFacet() internal returns (address) {
@@ -69,7 +73,10 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     }
 
     function _getDiamondInit() internal returns (address) {
-        return DIAMOND_INIT.code.length == 0 ? address(new DiamondInit{salt: DIAMOND_INIT_SALT}()) : DIAMOND_INIT;
+        return
+        // DIAMOND_INIT.code.length == 0 ?
+        address(new DiamondInit{salt: DIAMOND_INIT_SALT}());
+        //  : DIAMOND_INIT;
     }
 
     function _getHostItInit() internal returns (address) {
@@ -143,7 +150,10 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     }
 
     function _getHostItTickets() internal returns (address ticket_) {
-        ticket_ = HOST_IT_TICKETS.code.length == 0 ? address(new HostItTickets{salt: HOST_IT_SALT}()) : HOST_IT_TICKETS;
+        ticket_ =
+        // HOST_IT_TICKETS.code.length == 0 ?
+        address(new HostItTickets{salt: HOST_IT_SALT}(tx.origin));
+        // : HOST_IT_TICKETS;
         HostItTickets(payable(ticket_)).initialize(_createFacetCuts(), _getMultiInit(), _getMultiInitCalldata());
     }
 }

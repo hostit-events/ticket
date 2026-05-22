@@ -7,7 +7,6 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {Ticket} from "@ticket/libs/Ticket.sol";
@@ -72,21 +71,6 @@ contract TicketTest is Test {
         assertEq(ticketClone.balanceOf(alice), 1);
     }
 
-    function test_pause() public {
-        vm.expectEmit(true, true, true, true);
-        emit Pausable.Paused(owner);
-        ticketClone.pause();
-        assertTrue(ticketClone.paused());
-    }
-
-    function test_unpause() public {
-        ticketClone.pause();
-        vm.expectEmit(true, true, true, true);
-        emit Pausable.Unpaused(owner);
-        ticketClone.unpause();
-        assertFalse(ticketClone.paused());
-    }
-
     /// forge-lint: disable-next-item(erc20-unchecked-transfer)
     function test_transferFrom() public {
         uint256 tokenId = ticketClone.mint(alice);
@@ -113,33 +97,51 @@ contract TicketTest is Test {
         assertEq(ticketClone.tokenURI(tokenId), ticketClone.baseURI());
     }
 
-    function test_mintWhilePaused() public {
-        vm.expectEmit(true, true, true, true);
-        emit Pausable.Paused(owner);
-        ticketClone.pause();
-        vm.expectEmit(true, true, true, true);
-        emit IERC721.Transfer(address(0), alice, 1);
+    // ======================================================================
+    //                        USE-TICKET LIFECYCLE
+    // ======================================================================
+
+    function test_useTicket() public {
         uint256 tokenId = ticketClone.mint(alice);
-        assertEq(ticketClone.totalSupply(), tokenId);
-        assertEq(ticketClone.ownerOf(tokenId), alice);
-        assertEq(ticketClone.balanceOf(alice), 1);
+        assertFalse(ticketClone.isUsed(tokenId));
+        vm.expectEmit(true, true, true, true);
+        emit ITicket.TicketUsed(tokenId);
+        ticketClone.useTicket(tokenId);
+        assertTrue(ticketClone.isUsed(tokenId));
+    }
+
+    function test_useTicket_revertsNonexistentToken() public {
+        vm.expectRevert(abi.encodeWithSelector(IERC721Errors.ERC721NonexistentToken.selector, uint256(999)));
+        ticketClone.useTicket(999);
+    }
+
+    function test_useTicket_revertsNonOwner() public {
+        uint256 tokenId = ticketClone.mint(alice);
+        vm.prank(alice);
+        vm.expectRevert();
+        ticketClone.useTicket(tokenId);
     }
 
     /// forge-lint: disable-next-item(erc20-unchecked-transfer)
-    function test_revertTransferFromWhilePaused() public {
-        ticketClone.pause();
+    function test_transferFrom_revertsAfterUse() public {
         uint256 tokenId = ticketClone.mint(alice);
+        ticketClone.useTicket(tokenId);
         vm.prank(alice);
-        vm.expectRevert();
-        ticketClone.transferFrom(alice, owner, tokenId);
+        vm.expectRevert(ITicket.TicketAlreadyUsed.selector);
+        ticketClone.transferFrom(alice, bob, tokenId);
     }
 
-    function test_revertSafeTransferFromWhilePaused() public {
-        ticketClone.pause();
+    function test_safeTransferFrom_revertsAfterUse() public {
         uint256 tokenId = ticketClone.mint(alice);
+        ticketClone.useTicket(tokenId);
         vm.prank(alice);
-        vm.expectRevert();
+        vm.expectRevert(ITicket.TicketAlreadyUsed.selector);
         ticketClone.safeTransferFrom(alice, bob, tokenId);
+    }
+
+    function test_isUsed_falseBeforeUse() public {
+        uint256 tokenId = ticketClone.mint(alice);
+        assertFalse(ticketClone.isUsed(tokenId));
     }
 
     function test_otherClonesDontClash() public {
@@ -206,19 +208,6 @@ contract TicketTest is Test {
         vm.prank(alice);
         vm.expectRevert();
         ticketClone.mint(alice);
-    }
-
-    function test_pauseRevertsNonOwner() public {
-        vm.prank(alice);
-        vm.expectRevert();
-        ticketClone.pause();
-    }
-
-    function test_unpauseRevertsNonOwner() public {
-        ticketClone.pause();
-        vm.prank(alice);
-        vm.expectRevert();
-        ticketClone.unpause();
     }
 
     function test_updateNameRevertsNonOwner() public {
@@ -292,5 +281,14 @@ contract TicketTest is Test {
         assertEq(ticketClone.ownerOf(tokenId), to);
         assertEq(ticketClone.balanceOf(to), 1);
         assertEq(ticketClone.balanceOf(alice), 0);
+    }
+
+    function testFuzz_useTicket_blocksTransfer(address to) public {
+        vm.assume(to != address(0) && to.code.length == 0 && to != alice);
+        uint256 tokenId = ticketClone.mint(alice);
+        ticketClone.useTicket(tokenId);
+        vm.prank(alice);
+        vm.expectRevert(ITicket.TicketAlreadyUsed.selector);
+        ticketClone.safeTransferFrom(alice, to, tokenId);
     }
 }

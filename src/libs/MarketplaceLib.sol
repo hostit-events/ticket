@@ -46,10 +46,8 @@ error TicketNotOwned(uint256);
 error InsufficientPayment(FeeType, uint256);
 error PaymentFailed(FeeType, uint256);
 error TicketAccountingMismatch();
-error TicketUnpauseFailed();
 error CreateERC6551AccountFailed();
 error InvalidHostItFeeBps();
-error TicketTransferFailed();
 
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.marketplace.storage")) - 1)) & ~bytes32(uint256(0xff))
 bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f364669f622316549d801837d9eeba9778d00;
@@ -226,10 +224,7 @@ library MarketplaceLib {
         uint256 ticketFee = getTicketFee(_ticketId, _feeType); // {tok}
         marketplaceStorage().ticketBalance[_ticketId][_feeType] -= ticketFee; // {tok} -= {tok}
 
-        try ticket.safeTransferFrom(caller, ticketData.ticketAdmin, _tokenId) {}
-        catch {
-            revert TicketTransferFailed();
-        }
+        ticket.refundTicket(ticketData.ticketAdmin, _tokenId);
 
         if (_feeType == FeeType.ETH) {
             SafeTransferLib.safeTransferETH(_to, ticketFee);
@@ -266,14 +261,6 @@ library MarketplaceLib {
             SafeTransferLib.safeTransferETH(_to, balance);
         } else {
             SafeTransferLib.safeTransfer(getFeeTokenAddress(_feeType), _to, balance);
-        }
-
-        ITicket ticket = ITicket(ticketData.ticketAddress);
-        if (ticket.paused()) {
-            try ticket.unpause() {}
-            catch {
-                revert TicketUnpauseFailed();
-            }
         }
 
         emit TicketBalanceWithdrawn(_ticketId, _feeType, balance, _to);

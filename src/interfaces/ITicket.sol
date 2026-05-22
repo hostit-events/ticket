@@ -17,6 +17,16 @@ interface ITicket is IERC721Metadata, IERC721Enumerable {
     /// @param newSymbol The new symbol of the NFT collection
     event SymbolUpdated(string indexed newSymbol);
 
+    /// @notice Emitted when a ticket is used
+    /// @param tokenId The ID of the token that was used
+    event TicketUsed(uint256 indexed tokenId);
+
+    /// @dev The name of the NFT collection cannot be empty
+    error NameCannotBeEmpty();
+
+    /// @dev The ticket has already been used
+    error TicketAlreadyUsed();
+
     /// @notice Initializes the contract
     /// @param owner The owner of the contract
     /// @param name The name of the NFT collection
@@ -36,21 +46,26 @@ interface ITicket is IERC721Metadata, IERC721Enumerable {
     /// forge-lint: disable-next-line(mixed-case-function)
     function updateURI(string calldata _uri) external;
 
+    /// @notice Uses a ticket, marking it as used and preventing future use
+    /// @param _tokenId The ID of the token to use
+    function useTicket(uint256 _tokenId) external;
+
+    /// @notice Refunds a ticket
+    /// @param _to The address to send refunded ticket
+    /// @param _tokenId The ID of the ticket to refund
+    function refundTicket(address _to, uint256 _tokenId) external;
+
     /// @notice Mints a new token to a given address
     /// @param _to The address to receive the newly minted token
     /// @return tokenId_ The ID of the newly minted token
     function mint(address _to) external returns (uint256 tokenId_);
 
-    /// @notice Pauses token transfers
-    function pause() external;
-
-    /// @notice Unpauses token transfers
-    function unpause() external;
-
     /// @notice Returns the base URI of the NFT collection
     /// forge-lint: disable-next-line(mixed-case-function)
     function baseURI() external view returns (string memory);
 
-    /// @notice Checks if token transfers are paused
-    function paused() external view returns (bool);
+    /// @notice Checks if a ticket has been used
+    /// @param _tokenId The ID of the token to check
+    /// @return True if the ticket has been used, false otherwise
+    function isUsed(uint256 _tokenId) external view returns (bool);
 }

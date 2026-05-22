@@ -2,7 +2,6 @@
 pragma solidity 0.8.30;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import {
     ERC721EnumerableUpgradeable
@@ -10,7 +9,6 @@ import {
 import {
     ERC721RoyaltyUpgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721RoyaltyUpgradeable.sol";
-import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Metadata} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
@@ -37,41 +35,36 @@ import {ITicket} from "@ticket/interfaces/ITicket.sol";
 /// @title Ticket
 /// @notice ERC721 Ticket Implementation
 /// @author HostIt Protocol
-contract Ticket is
-    ERC721EnumerableUpgradeable,
-    ERC721RoyaltyUpgradeable,
-    PausableUpgradeable,
-    OwnableUpgradeable,
-    UUPSUpgradeable,
-    ITicket
-{
+contract Ticket is ERC721EnumerableUpgradeable, ERC721RoyaltyUpgradeable, OwnableUpgradeable, ITicket {
     //*//////////////////////////////////////////////////////////////////////////
     //                                  STORAGE
     //////////////////////////////////////////////////////////////////////////*//
 
-    // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC721URI")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant ERC721_URI_LOCATION = 0x9faa092706460340520342296a39ef71008484de7dbcf27f804dae6b9b4ddd00;
+    // keccak256(abi.encode(uint256(keccak256("host.it.ticket.storage")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant TICKET_STORAGE_LOCATION =
+        0x9faa092706460340520342296a39ef71008484de7dbcf27f804dae6b9b4ddd00;
 
     // keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.ERC721")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant ERC721_LOCATION = 0x80bb2b638cc20bc4d0a60d66940f3ab4a00c1d7b313497ca82fb0b4ab0079300;
+    bytes32 private constant ERC721_STORAGE_LOCATION =
+        0x80bb2b638cc20bc4d0a60d66940f3ab4a00c1d7b313497ca82fb0b4ab0079300;
 
-    /// @custom:storage-location erc7201:openzeppelin.storage.ERC721URI
-    /// forge-lint: disable-next-line(pascal-case-struct)
-    struct ERC721URIStorage {
+    /// @custom:storage-location erc7201:host.it.ticket.storage
+    struct TicketStorage {
         string _uri;
+        mapping(uint256 tokenId => bool) _used;
     }
 
     /// @dev Internal function to retrieve the storage location of the ERC721URIStorage struct
-    function _getErc721UriStorage() private pure returns (ERC721URIStorage storage $) {
+    function _getTicketStorage() internal pure returns (TicketStorage storage $) {
         assembly {
-            $.slot := ERC721_URI_LOCATION
+            $.slot := TICKET_STORAGE_LOCATION
         }
     }
 
     /// @dev Internal function to retrieve the storage location of the ERC721Storage struct
-    function _getErc721Storage() private pure returns (ERC721Storage storage $) {
+    function _getErc721Storage() internal pure returns (ERC721Storage storage $) {
         assembly {
-            $.slot := ERC721_LOCATION
+            $.slot := ERC721_STORAGE_LOCATION
         }
     }
 
@@ -91,10 +84,12 @@ contract Ticket is
     /// @param _uri The URI of the NFT collection
     function initialize(address _owner, string calldata _name, string calldata _symbol, string calldata _uri)
         public
+        virtual
         initializer
     {
-        string memory symbol = bytes(_symbol).length != 0 ? _symbol : "TICKET";
-        __ERC721_init(_name, symbol);
+        if (bytes(_name).length == 0) revert NameCannotBeEmpty();
+        string memory __symbol = bytes(_symbol).length != 0 ? _symbol : "TICKET";
+        __ERC721_init(_name, __symbol);
         __ERC721Enumerable_init();
         __ERC721Royalty_init();
         __Ownable_init(_owner);
@@ -102,7 +97,7 @@ contract Ticket is
         // Set default royalty to 5%
         _setDefaultRoyalty(_owner, 500);
 
-        _getErc721UriStorage()._uri = _uri;
+        _getTicketStorage()._uri = _uri;
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -127,7 +122,7 @@ contract Ticket is
     /// @param __baseUri The URI to assign
     /// forge-lint: disable-next-line(mixed-case-function)
     function updateURI(string calldata __baseUri) external onlyOwner {
-        _getErc721UriStorage()._uri = __baseUri;
+        _getTicketStorage()._uri = __baseUri;
         emit BaseURIUpdated(__baseUri);
     }
 
@@ -140,16 +135,19 @@ contract Ticket is
         _safeMint(_to, tokenId_);
     }
 
-    /// @notice Pauses token transfers
-    /// @dev This function is used to pause token transfers apart from minting
-    function pause() external onlyOwner {
-        _pause();
+    /// @notice Marks a ticket as used
+    /// @param _tokenId The ID of the ticket to use
+    function useTicket(uint256 _tokenId) external onlyOwner {
+        _requireOwned(_tokenId);
+        _getTicketStorage()._used[_tokenId] = true;
+        emit TicketUsed(_tokenId);
     }
 
-    /// @notice Unpauses token transfers
-    /// @dev This function is used to unpause token transfers apart from minting
-    function unpause() external onlyOwner {
-        _unpause();
+    /// @notice Refunds a ticket
+    /// @param _to The address to send refunded ticket
+    /// @param _tokenId The ID of the ticket to refund
+    function refundTicket(address _to, uint256 _tokenId) external onlyOwner {
+        _update(_to, _tokenId, address(0));
     }
 
     //*//////////////////////////////////////////////////////////////////////////
@@ -157,40 +155,34 @@ contract Ticket is
     //////////////////////////////////////////////////////////////////////////*//
 
     /// @notice Transfers the token from one address to another
-    /// @param from The address to transfer the token from
-    /// @param to The address to transfer the token to
-    /// @param tokenId The ID of the token to transfer
+    /// @param _from The address to transfer the token from
+    /// @param _to The address to transfer the token to
+    /// @param _tokenId The ID of the token to transfer
     /// forge-lint: disable-next-item(erc20-unchecked-transfer)
-    function transferFrom(address from, address to, uint256 tokenId)
+    function transferFrom(address _from, address _to, uint256 _tokenId)
         public
         override(IERC721, ERC721Upgradeable)
-        whenNotPaused
+        onlyUnused(_tokenId)
     {
-        super.transferFrom(from, to, tokenId);
+        super.transferFrom(_from, _to, _tokenId);
     }
 
     /// @notice Transfers the token from one address to another
-    /// @param from The address to transfer the token from
-    /// @param to The address to transfer the token to
-    /// @param tokenId The ID of the token to transfer
-    /// @param data Data to send with the transfer
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
+    /// @param _from The address to transfer the token from
+    /// @param _to The address to transfer the token to
+    /// @param _tokenId The ID of the token to transfer
+    /// @param _data Data to send with the transfer
+    function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes memory _data)
         public
         override(IERC721, ERC721Upgradeable)
-        whenNotPaused
+        onlyUnused(_tokenId)
     {
-        super.safeTransferFrom(from, to, tokenId, data);
+        super.safeTransferFrom(_from, _to, _tokenId, _data);
     }
 
     //*//////////////////////////////////////////////////////////////////////////
     //                               VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
-
-    /// @notice Returns whether the contract is paused
-    /// @return Whether the contract is paused
-    function paused() public view override(ITicket, PausableUpgradeable) returns (bool) {
-        return PausableUpgradeable.paused();
-    }
 
     /// @notice Returns the metadata URI for the TicketNFT
     /// @dev This function returns the base URI set for the NFT collection, which is used
@@ -215,6 +207,13 @@ contract Ticket is
         return _baseURI();
     }
 
+    /// @notice Checks if a token has been used
+    /// @param _tokenId The ID of the token to check
+    /// @return True if the token has been used, false otherwise
+    function isUsed(uint256 _tokenId) public view returns (bool) {
+        return _getTicketStorage()._used[_tokenId];
+    }
+
     /// @notice Returns whether a given interface is supported by the contract
     /// @param _interfaceId The interface ID to check
     /// @return Whether the interface is supported
@@ -236,7 +235,7 @@ contract Ticket is
     /// @return The base URI for the NFT collection
     /// forge-lint: disable-next-line(mixed-case-function)
     function _baseURI() internal view override returns (string memory) {
-        return _getErc721UriStorage()._uri;
+        return _getTicketStorage()._uri;
     }
 
     /// @dev Internal override for token transfer logic
@@ -253,15 +252,21 @@ contract Ticket is
     }
 
     /// @dev Internal override for increasing balance
-    /// @param account The address to increase the balance for
-    /// @param amount The amount to increase the balance by
-    function _increaseBalance(address account, uint128 amount)
+    /// @param _account The address to increase the balance for
+    /// @param _amount The amount to increase the balance by
+    function _increaseBalance(address _account, uint128 _amount)
         internal
         override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
     {
-        ERC721EnumerableUpgradeable._increaseBalance(account, amount);
+        ERC721EnumerableUpgradeable._increaseBalance(_account, _amount);
     }
 
-    /// @dev Internal override for upgrade logic
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    //*//////////////////////////////////////////////////////////////////////////
+    //                                  MODIFIER
+    //////////////////////////////////////////////////////////////////////////*//
+
+    modifier onlyUnused(uint256 _tokenId) {
+        if (isUsed(_tokenId)) revert TicketAlreadyUsed();
+        _;
+    }
 }

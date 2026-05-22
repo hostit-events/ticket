@@ -93,11 +93,11 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
     function _mintTicketETH() internal returns (uint64 ticketId_, uint40 tokenId_, uint256 fee_, uint256 hostItFee_) {
         _createPaidTicket();
         ticketId_ = factoryFacet.ticketCount();
-        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.ETH);
+        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.NATIVE);
         hoax(alice, totalFee);
         vm.expectEmit(true, true, true, true, hostIt);
-        emit TicketMinted(ticketId_, FeeType.ETH, totalFee, 1);
-        tokenId_ = marketplaceFacet.mintTicket{value: totalFee}(ticketId_, FeeType.ETH, alice);
+        emit TicketMinted(ticketId_, FeeType.NATIVE, totalFee, 1);
+        tokenId_ = marketplaceFacet.mintTicket{value: totalFee}(ticketId_, FeeType.NATIVE, alice);
         fee_ = fee;
         hostItFee_ = hostItFee;
     }
@@ -149,11 +149,11 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
     {
         _createRefundablePaidTicket();
         ticketId_ = factoryFacet.ticketCount();
-        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.ETH);
+        (uint256 fee, uint256 hostItFee, uint256 totalFee) = marketplaceFacet.getAllFees(ticketId_, FeeType.NATIVE);
         hoax(alice, totalFee);
         vm.expectEmit(true, true, true, true, hostIt);
-        emit TicketMinted(ticketId_, FeeType.ETH, totalFee, 1);
-        tokenId_ = marketplaceFacet.mintTicket{value: totalFee}(ticketId_, FeeType.ETH, alice);
+        emit TicketMinted(ticketId_, FeeType.NATIVE, totalFee, 1);
+        tokenId_ = marketplaceFacet.mintTicket{value: totalFee}(ticketId_, FeeType.NATIVE, alice);
         fee_ = fee;
         hostItFee_ = hostItFee;
     }
@@ -221,10 +221,10 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
     function _getFreeTicketData() internal view returns (TicketData memory ticketData_) {
         ticketData_ = TicketData({
             startTime: uint40(block.timestamp + 1 days),
-            endTime: uint40(block.timestamp + 2 days),
+            endTime: uint40(block.timestamp + 4 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
-            maxTicketsPerUser: 0,
+            maxTicketsPerUser: 1,
             isFree: true,
             isRefundable: false,
             name: "Free Ticket",
@@ -236,7 +236,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
     function _getFreeUpdatedTicketData() internal view returns (TicketData memory ticketData_) {
         ticketData_ = TicketData({
             startTime: uint40(block.timestamp + 1 days),
-            endTime: uint40(block.timestamp + 2 days),
+            endTime: uint40(block.timestamp + 4 days),
             purchaseStartTime: _currentTime,
             maxTickets: 100,
             maxTicketsPerUser: 1,
@@ -254,7 +254,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
-            maxTicketsPerUser: 0,
+            maxTicketsPerUser: 1,
             isFree: false,
             isRefundable: false,
             name: "Paid Ticket",
@@ -269,7 +269,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
-            maxTicketsPerUser: 0,
+            maxTicketsPerUser: 1,
             isFree: false,
             isRefundable: true,
             name: "Refundable Paid Ticket",
@@ -284,7 +284,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
             endTime: uint40(block.timestamp + 2 days),
             purchaseStartTime: _currentTime,
             maxTickets: type(uint40).max,
-            maxTicketsPerUser: 0,
+            maxTicketsPerUser: 1,
             isFree: false,
             isRefundable: false,
             name: "Updated Paid Ticket",
@@ -303,7 +303,7 @@ abstract contract DeployedHostItTickets is Test, DeployHostItTicketsHelper {
 
     function _getFeeTypes() internal pure returns (FeeType[] memory feeTypes_) {
         feeTypes_ = new FeeType[](3);
-        feeTypes_[0] = FeeType.ETH;
+        feeTypes_[0] = FeeType.NATIVE;
         feeTypes_[1] = FeeType.USDT;
         feeTypes_[2] = FeeType.USDC;
     }

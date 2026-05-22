@@ -213,7 +213,7 @@ contract FactoryTest is DeployedHostItTickets {
     function test_createPaidTicket_revertsArrayLengthMismatch() public {
         TicketData memory td = _getPaidTicketData();
         FeeType[] memory feeTypes = new FeeType[](2);
-        feeTypes[0] = FeeType.ETH;
+        feeTypes[0] = FeeType.NATIVE;
         feeTypes[1] = FeeType.USDT;
         uint256[] memory fees = new uint256[](1);
         fees[0] = ETH_FEE;
@@ -224,10 +224,10 @@ contract FactoryTest is DeployedHostItTickets {
     function test_createPaidTicket_revertsZeroFee() public {
         TicketData memory td = _getPaidTicketData();
         FeeType[] memory feeTypes = new FeeType[](1);
-        feeTypes[0] = FeeType.ETH;
+        feeTypes[0] = FeeType.NATIVE;
         uint256[] memory fees = new uint256[](1);
         fees[0] = 0;
-        vm.expectRevert(abi.encodeWithSelector(ZeroFee.selector, FeeType.ETH));
+        vm.expectRevert(abi.encodeWithSelector(ZeroFee.selector, FeeType.NATIVE));
         factoryFacet.createTicket(td, feeTypes, fees);
     }
 

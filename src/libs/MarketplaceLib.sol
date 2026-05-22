@@ -15,8 +15,6 @@ event TicketFeeSet(uint64 indexed ticketId, FeeType[] feeType, uint256[] fee); /
 
 event TicketRefunded(uint64 indexed ticketId, FeeType indexed feeType, uint256 fee, address indexed to); // fee:{tok}
 
-event HostItFeeBpsSet(uint16 indexed hostItFeeBps); // hostItFeeBps:BPS{1}
-
 event TicketFeeAddressSet(FeeType[] feeType, address[] token); // token:{addr}
 
 event TicketMinted(uint64 indexed ticketId, FeeType indexed feeType, uint256 fee, uint40 tokenId); // fee:{tok}, tokenId:{ticket}
@@ -34,7 +32,6 @@ error InvalidFeeConfig();
 error ZeroFee(FeeType);
 error TicketIsFree();
 error FeeNotEnabled(uint64, FeeType);
-error TicketNotApproved(uint256);
 error InsufficientBalance(address, FeeType, uint256);
 error InsufficientAllowance(address, FeeType, uint256);
 error RefundNotEnabled();
@@ -47,7 +44,6 @@ error InsufficientPayment(FeeType, uint256);
 error PaymentFailed(FeeType, uint256);
 error TicketAccountingMismatch();
 error CreateERC6551AccountFailed();
-error InvalidHostItFeeBps();
 
 // keccak256(abi.encode(uint256(keccak256("host.it.ticket.marketplace.storage")) - 1)) & ~bytes32(uint256(0xff))
 bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f364669f622316549d801837d9eeba9778d00;
@@ -56,8 +52,8 @@ bytes32 constant MARKETPLACE_STORAGE_LOCATION = 0x3f09c55b469305b27ecae2a46b3f36
 /// @notice Enum for fee types
 enum FeeType {
     NONE,
-    ETH,
-    WETH,
+    NATIVE,
+    WNATIVE,
     USDT,
     USDC,
     USDT0,
@@ -83,7 +79,6 @@ library MarketplaceLib {
     //////////////////////////////////////////////////////////////////////////*//
 
     uint256 internal constant REFUND_PERIOD = 3 days; // {s}
-
     uint256 private constant HOSTIT_FEE_BPS = 300; // BPS{1} 3% fee in basis points
     uint256 private constant FEE_BASIS_POINTS = 10_000; // BPS{1} 10,000 basis points
 
@@ -107,52 +102,52 @@ library MarketplaceLib {
 
         {
             uint48 time = SafeCastLib.toUint48(block.timestamp); // {s}
-            // {s} < {s}
-            if (time < ticketData.purchaseStartTime) {
-                revert PurchaseTimeNotReached();
-            }
-            if (time > ticketData.endTime) revert PurchaseTimeNotReached(); // {s} > {s}
             if (ticketData.soldTickets == ticketData.maxTickets) {
                 // {ticket} == {ticket}
                 revert TicketSoldOut();
             }
+            // {s} < {s}
+            if (time < ticketData.purchaseStartTime) revert PurchaseTimeNotReached();
+            if (time > ticketData.endTime) revert PurchaseTimeNotReached(); // {s} > {s}
         }
 
         ITicket ticket = ITicket(ticketData.ticketAddress);
-        // {ticket} > {ticket}
-        if (ticket.balanceOf(_buyer) > ticketData.maxTicketsPerUser) {
+        // {ticket} >= {ticket}
+        if (ticket.balanceOf(_buyer) >= ticketData.maxTicketsPerUser) {
             revert MaxTicketsHeld();
         }
 
+        address msgSender = ContextLib.msgSender();
         MarketplaceStorage storage ms = marketplaceStorage();
         // {tok}, {tok}, {tok}
         (uint256 fee, uint256 hostItFee, uint256 totalFee) = getFees(ms, _ticketId, _feeType);
         if (!ticketData.isFree) {
-            if (!_feeEnabled(ms, _ticketId, _feeType)) revert FeeNotEnabled(_ticketId, _feeType);
+            if (!feeEnabled(ms, _ticketId, _feeType)) revert FeeNotEnabled(_ticketId, _feeType);
 
+            ms.hostItBalance[_feeType] += hostItFee; // {tok} += {tok}
             if (ticketData.isRefundable) {
-                if (_feeType == FeeType.ETH) {
+                if (_feeType == FeeType.NATIVE) {
                     // {tok} < {tok}
                     if (msg.value < totalFee) {
                         revert InsufficientPayment(_feeType, totalFee);
                     }
-                    // Refund excess ETH if user overpays
+                    // Refund excess NATIVE if user overpays
                     if (msg.value > totalFee) {
-                        SafeTransferLib.forceSafeTransferETH(ContextLib.msgSender(), msg.value - totalFee);
+                        SafeTransferLib.forceSafeTransferETH(msgSender, msg.value - totalFee);
                     }
                 } else {
                     _payWithToken(ms, _feeType, totalFee, address(this));
                 }
                 ms.ticketBalance[_ticketId][_feeType] += fee; // {tok} += {tok}
             } else {
-                if (_feeType == FeeType.ETH) {
+                if (_feeType == FeeType.NATIVE) {
                     // {tok} < {tok}
                     if (msg.value < totalFee) {
                         revert InsufficientPayment(_feeType, totalFee);
                     }
-                    // Refund excess ETH if user overpays
+                    // Refund excess NATIVE if user overpays
                     if (msg.value > totalFee) {
-                        SafeTransferLib.forceSafeTransferETH(ContextLib.msgSender(), msg.value - totalFee);
+                        SafeTransferLib.forceSafeTransferETH(msgSender, msg.value - totalFee);
                     }
                     SafeTransferLib.forceSafeTransferETH(ticketData.ticketAdmin, fee);
                 } else {
@@ -160,7 +155,6 @@ library MarketplaceLib {
                     _payWithToken(ms, _feeType, hostItFee, address(this));
                 }
             }
-            ms.hostItBalance[_feeType] += hostItFee; // {tok} += {tok}
         }
 
         tokenId_ = SafeCastLib.toUint40(ticket.mint(_buyer)); // {ticket}
@@ -202,6 +196,12 @@ library MarketplaceLib {
 
     /// @param _ticketId {ticketId}
     /// @param _tokenId {ticket}
+    function claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId) internal {
+        claimRefund(_ticketId, _feeType, _tokenId, msg.sender);
+    }
+
+    /// @param _ticketId {ticketId}
+    /// @param _tokenId {ticket}
     /// @param _to {addr}
     function claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId, address _to) internal {
         FactoryLib.checkTicketExists(_ticketId);
@@ -226,7 +226,7 @@ library MarketplaceLib {
 
         ticket.refundTicket(ticketData.ticketAdmin, _tokenId);
 
-        if (_feeType == FeeType.ETH) {
+        if (_feeType == FeeType.NATIVE) {
             SafeTransferLib.safeTransferETH(_to, ticketFee);
         } else {
             SafeTransferLib.safeTransfer(getFeeTokenAddress(_feeType), _to, ticketFee);
@@ -248,7 +248,7 @@ library MarketplaceLib {
 
         if (ticketData.isRefundable) {
             // {s} < {s} + {s}
-            if (block.timestamp < ticketData.endTime + REFUND_PERIOD) {
+            if (SafeCastLib.toUint48(block.timestamp) < ticketData.endTime + REFUND_PERIOD) {
                 revert WithdrawPeriodNotReached();
             }
         }
@@ -257,8 +257,8 @@ library MarketplaceLib {
         if (balance == 0) revert InsufficientWithdrawBalance();
         delete marketplaceStorage().ticketBalance[_ticketId][_feeType];
 
-        if (_feeType == FeeType.ETH) {
-            SafeTransferLib.safeTransferETH(_to, balance);
+        if (_feeType == FeeType.NATIVE) {
+            SafeTransferLib.forceSafeTransferETH(_to, balance);
         } else {
             SafeTransferLib.safeTransfer(getFeeTokenAddress(_feeType), _to, balance);
         }
@@ -274,7 +274,7 @@ library MarketplaceLib {
         if (balance == 0) revert InsufficientWithdrawBalance();
         delete marketplaceStorage().hostItBalance[_feeType];
 
-        if (_feeType == FeeType.ETH) {
+        if (_feeType == FeeType.NATIVE) {
             SafeTransferLib.forceSafeTransferETH(_to, balance);
         } else {
             SafeTransferLib.safeTransfer(getFeeTokenAddress(_feeType), _to, balance);
@@ -289,15 +289,15 @@ library MarketplaceLib {
 
         address tokenAddress = getFeeTokenAddress(_ms, _feeType); // {addr}
         IERC20 token = IERC20(tokenAddress);
-        // {tok} < {tok}
-        if (token.balanceOf(caller) < _totalFee) {
-            revert InsufficientBalance(tokenAddress, _feeType, _totalFee);
-        }
-        // {tok} < {tok}
-        if (token.allowance(caller, address(this)) < _totalFee) {
-            revert InsufficientAllowance(tokenAddress, _feeType, _totalFee);
-        }
         if (!SafeTransferLib.trySafeTransferFrom(tokenAddress, caller, _to, _totalFee)) {
+            // {tok} < {tok}
+            if (token.balanceOf(caller) < _totalFee) {
+                revert InsufficientBalance(tokenAddress, _feeType, _totalFee);
+            }
+            // {tok} < {tok}
+            if (token.allowance(caller, address(this)) < _totalFee) {
+                revert InsufficientAllowance(tokenAddress, _feeType, _totalFee);
+            }
             revert PaymentFailed(_feeType, _totalFee);
         }
     }
@@ -336,10 +336,10 @@ library MarketplaceLib {
     //////////////////////////////////////////////////////////////////////////*//
 
     function feeEnabled(uint64 _ticketId, FeeType _feeType) internal view returns (bool) {
-        return _feeEnabled(marketplaceStorage(), _ticketId, _feeType);
+        return feeEnabled(marketplaceStorage(), _ticketId, _feeType);
     }
 
-    function _feeEnabled(MarketplaceStorage storage _ms, uint64 _ticketId, FeeType _feeType)
+    function feeEnabled(MarketplaceStorage storage _ms, uint64 _ticketId, FeeType _feeType)
         internal
         view
         returns (bool)

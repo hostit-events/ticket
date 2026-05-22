@@ -34,21 +34,21 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     function _getDiamondCutFacet() internal returns (address) {
         return
         // DIAMOND_CUT_FACET.code.length == 0 ?
-        address(new DiamondCutFacet{salt: DIAMOND_CUT_SALT}());
+        address(new DiamondCutFacet());
         // : DIAMOND_CUT_FACET;
     }
 
     function _getDiamondLoupeFacet() internal returns (address) {
         return
         // DIAMOND_LOUPE_FACET.code.length == 0 ?
-        address(new DiamondLoupeFacet{salt: DIAMOND_LOUPE_SALT}());
+        address(new DiamondLoupeFacet());
         // : DIAMOND_LOUPE_FACET;
     }
 
     function _getOwnableFacet() internal returns (address) {
         return
         // OWNABLE_FACET.code.length == 0 ?
-        address(new OwnableFacet{salt: OWNABLE_SALT}());
+        address(new OwnableFacet());
         // : OWNABLE_FACET;
     }
 
@@ -75,7 +75,7 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     function _getDiamondInit() internal returns (address) {
         return
         // DIAMOND_INIT.code.length == 0 ?
-        address(new DiamondInit{salt: DIAMOND_INIT_SALT}());
+        address(new DiamondInit());
         //  : DIAMOND_INIT;
     }
 
@@ -141,7 +141,7 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
         initAddresses[1] = _getHostItInit();
 
         initCalldatas[0] = abi.encodeWithSignature("init(address)", _msgSender());
-        (uint8[] memory feeTypes, address[] memory addresses) = AddressesAndFees._byChainId(block.chainid);
+        (uint8[] memory feeTypes, address[] memory addresses) = AddressesAndFees.byChainId(block.chainid);
         initCalldatas[1] = abi.encodeWithSignature(
             "initHostIt(address,address,uint8[],address[])", _msgSender(), _getTicketImpl(), feeTypes, addresses
         );
@@ -152,7 +152,7 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     function _getHostItTickets() internal returns (address ticket_) {
         ticket_ =
         // HOST_IT_TICKETS.code.length == 0 ?
-        address(new HostItTickets{salt: HOST_IT_SALT}(tx.origin));
+        address(new HostItTickets(tx.origin));
         // : HOST_IT_TICKETS;
         HostItTickets(payable(ticket_)).initialize(_createFacetCuts(), _getMultiInit(), _getMultiInitCalldata());
     }

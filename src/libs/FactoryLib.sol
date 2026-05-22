@@ -7,6 +7,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
 import {FeeType, MarketplaceLib, MarketplaceStorage} from "@ticket/libs/MarketplaceLib.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
+import {SafeCastLib} from "solady/utils/SafeCastLib.sol";
 
 event TicketCreated(uint64 indexed ticketId, address indexed ticketAdmin, ExtraTicketData ticketData);
 
@@ -135,7 +136,7 @@ library FactoryLib {
             if (bytes(_ticketData.uri).length == 0) revert EmptyURI();
 
             // {s} < {s}
-            if (_ticketData.startTime < block.timestamp) {
+            if (_ticketData.startTime < SafeCastLib.toUint48(block.timestamp)) {
                 revert StartTimeShouldBeAhead();
             }
             // {s} < {s} + {s}
@@ -174,7 +175,7 @@ library FactoryLib {
 
         if (_ticketData.startTime != 0) {
             // {s} < {s}
-            if (_ticketData.startTime < uint40(block.timestamp)) {
+            if (_ticketData.startTime < SafeCastLib.toUint48(block.timestamp)) {
                 revert StartTimeShouldBeAhead();
             }
             extraTicketData.startTime = _ticketData.startTime; // {s}
@@ -182,7 +183,7 @@ library FactoryLib {
 
         if (_ticketData.endTime != 0) {
             // {s} < {s} + {s}
-            if (_ticketData.endTime < _ticketData.startTime + 1 days) {
+            if (_ticketData.endTime < extraTicketData.startTime + 1 days) {
                 revert EndTimeShouldBeAtLeastADayAfterStartTime();
             }
             extraTicketData.endTime = _ticketData.endTime; // {s}
@@ -190,7 +191,7 @@ library FactoryLib {
 
         if (_ticketData.purchaseStartTime != 0) {
             // {s} > {s} - {s}
-            if (_ticketData.purchaseStartTime > _ticketData.startTime - 1 days) {
+            if (_ticketData.purchaseStartTime > extraTicketData.startTime - 1 days) {
                 revert PurchaseStartTimeShouldBeAtLeastOneDayBeforeStartTime();
             }
             extraTicketData.purchaseStartTime = _ticketData.purchaseStartTime; // {s}
@@ -399,7 +400,7 @@ library FactoryLib {
     }
 
     function generateTicketHash(uint64 _ticketId) internal pure returns (bytes32 ticketHash_) {
-        assembly {
+        assembly ("memory-safe") {
             let ptr := mload(0x40)
             mstore(ptr, HOST_IT_TICKET)
             mstore(add(ptr, 0x20), _ticketId)
@@ -408,7 +409,7 @@ library FactoryLib {
     }
 
     function generateMainTicketAdminRole(uint64 _ticketId) internal pure returns (bytes32 mainTicketAdminRole_) {
-        assembly {
+        assembly ("memory-safe") {
             let ptr := mload(0x40)
             mstore(ptr, HOST_IT_MAIN_TICKET_ADMIN)
             mstore(add(ptr, 0x20), _ticketId)
@@ -417,7 +418,7 @@ library FactoryLib {
     }
 
     function generateTicketAdminRole(uint64 _ticketId) internal pure returns (bytes32 ticketAdminRole_) {
-        assembly {
+        assembly ("memory-safe") {
             let ptr := mload(0x40)
             mstore(ptr, HOST_IT_TICKET_ADMIN)
             mstore(add(ptr, 0x20), _ticketId)

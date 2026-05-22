@@ -2,6 +2,10 @@
 cache/
 out/
 
+# Audit and x-ray
+audit/
+x-ray/
+
 # Ignores all broadcast logs
 /broadcast
 
@@ -13,6 +17,9 @@ docs/
 
 # IDE files
 .vscode
+
+# Obsidian files
+.obsidian
 
 # Wake files
 .wake

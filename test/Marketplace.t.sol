@@ -677,20 +677,6 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     //            WITHDRAW TO CONTRACT REVERTS
     // ======================================================================
 
-    function test_withdrawTicketBalance_revertsContractNotAllowed() public {
-        (uint64 ticketId,,,) = _mintTicketETHRefundable();
-        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
-        vm.warp(ftd.endTime + marketplaceFacet.getRefundPeriod());
-        vm.expectRevert(ContractNotAllowed.selector);
-        marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.NATIVE, hostIt);
-    }
-
-    function test_withdrawHostItBalance_revertsContractNotAllowed() public {
-        _mintTicketETH();
-        vm.expectRevert(ContractNotAllowed.selector);
-        marketplaceFacet.withdrawHostItBalance(FeeType.NATIVE, hostIt);
-    }
-
     function test_withdrawHostItBalance_revertsNonOwner() public {
         _mintTicketETH();
         vm.prank(alice);

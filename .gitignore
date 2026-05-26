@@ -5,6 +5,8 @@ out/
 # Audit and x-ray
 audit/
 x-ray/
+AUDIT_PREP.md
+VULNS.md
 
 # Ignores all broadcast logs
 /broadcast

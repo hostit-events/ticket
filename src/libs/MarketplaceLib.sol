@@ -242,8 +242,6 @@ library MarketplaceLib {
         onlyMainTicketAdmin(_ticketId)
     {
         FactoryLib.checkTicketExists(_ticketId);
-        _checkIfContract(_to);
-
         ExtraTicketData memory ticketData = FactoryLib.getExtraTicketData(_ticketId);
 
         if (ticketData.isRefundable) {
@@ -268,8 +266,6 @@ library MarketplaceLib {
 
     /// @param _to {addr}
     function withdrawHostItBalance(FeeType _feeType, address _to) internal onlyOwner {
-        _checkIfContract(_to);
-
         uint256 balance = getHostItBalance(_feeType); // {tok}
         if (balance == 0) revert InsufficientWithdrawBalance();
         delete marketplaceStorage().hostItBalance[_feeType];
@@ -420,10 +416,6 @@ library MarketplaceLib {
     /// @return {tok}
     function getHostItBalance(MarketplaceStorage storage _ms, FeeType _feeType) internal view returns (uint256) {
         return _ms.hostItBalance[_feeType];
-    }
-
-    function _checkIfContract(address _address) private view {
-        if (_address.code.length > 0) revert ContractNotAllowed();
     }
 
     /// @param _fee {tok}

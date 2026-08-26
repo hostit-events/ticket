@@ -12,6 +12,17 @@ import "@ticket/libs/MarketplaceLib.sol";
 import "@ticket/libs/MarketplaceLib.sol";
 
 contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
+    uint256 internal constant BACKEND_PK = 0xB1AC;
+    uint256 internal constant ATTACKER_PK = 0xBADBAD;
+    address internal backend;
+
+    function setUp() public override {
+        super.setUp();
+        backend = vm.addr(BACKEND_PK);
+        vm.label(backend, "BACKEND");
+        marketplaceFacet.setTrustedBackend(backend);
+    }
+
     // ======================================================================
     //                        FREE TICKET MINTING
     // ======================================================================
@@ -1022,4 +1033,548 @@ contract MarketplaceTest is DeployedHostItTickets, ERC721Holder {
     }
 
     receive() external payable {}
+
+    // ======================================================================
+    //                    FIAT PAYMENT — HELPERS
+    // ======================================================================
+
+    function _voucher(uint64 ticketId, address buyer, uint256 amount, bytes32 paymentId, uint48 expiresAt)
+        internal
+        pure
+        returns (FiatVoucher memory)
+    {
+        return
+            FiatVoucher({ticketId: ticketId, buyer: buyer, amount: amount, paymentId: paymentId, expiresAt: expiresAt});
+    }
+
+    function _signVoucher(FiatVoucher memory v, uint256 pk) internal view returns (bytes memory) {
+        bytes32 domain = marketplaceFacet.getFiatDomainSeparator();
+        bytes32 structHash = marketplaceFacet.hashFiatVoucher(v);
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domain, structHash));
+        (uint8 vv, bytes32 r, bytes32 s) = vm.sign(pk, digest);
+        return abi.encodePacked(r, s, vv);
+    }
+
+    function _sign(FiatVoucher memory v) internal view returns (bytes memory) {
+        return _signVoucher(v, BACKEND_PK);
+    }
+
+    function _createFiatTicket() internal returns (uint64) {
+        // Reuse the standard paid ticket data; crypto fees still configured but unused by fiat path.
+        _createPaidTicket();
+        return factoryFacet.ticketCount();
+    }
+
+    function _createRefundableFiatTicket() internal returns (uint64) {
+        TicketData memory td = _getRefundablePaidTicketData();
+        factoryFacet.createTicket(td, _getFeeTypes(), _getFees());
+        return factoryFacet.ticketCount();
+    }
+
+    // ======================================================================
+    //                    FIAT: DIRECT PATH — SINGLE
+    // ======================================================================
+
+    function test_fiat_direct_success() public {
+        uint64 ticketId = _createFiatTicket();
+        bytes32 pid = keccak256("p-1");
+        uint256 amount = 1500;
+
+        vm.prank(backend);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketMinted(ticketId, FeeType.FIAT, amount, 1);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit FiatTicketMinted(ticketId, alice, 1, amount, pid);
+        uint40 tokenId = marketplaceFacet.mintFiatTicket(ticketId, alice, amount, pid);
+
+        assertEq(tokenId, 1);
+        assertTrue(marketplaceFacet.isFiatPaidToken(ticketId, tokenId));
+        assertTrue(marketplaceFacet.isFiatPaymentIdUsed(pid));
+        assertEq(marketplaceFacet.getTicketFiatRevenue(ticketId), amount);
+
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        assertEq(ITicket(ftd.ticketAddress).ownerOf(tokenId), alice);
+        assertEq(ftd.soldTickets, 1);
+    }
+
+    function test_fiat_direct_revertsNonBackend() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(alice);
+        vm.expectRevert(UnauthorizedBackend.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p"));
+    }
+
+    function test_fiat_direct_replayRevertsSamePath() public {
+        uint64 ticketId = _createFiatTicket();
+        bytes32 pid = keccak256("dup");
+        vm.prank(backend);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, pid);
+
+        vm.prank(backend);
+        vm.expectRevert(abi.encodeWithSelector(PaymentIdAlreadyUsed.selector, pid));
+        marketplaceFacet.mintFiatTicket(ticketId, bob, 100, pid);
+    }
+
+    function test_fiat_direct_revertsZeroPaymentId() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(backend);
+        vm.expectRevert(InvalidPaymentId.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, bytes32(0));
+    }
+
+    function test_fiat_direct_revertsZeroAmount() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(backend);
+        vm.expectRevert(ZeroFiatAmount.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 0, keccak256("p"));
+    }
+
+    function test_fiat_direct_revertsFreeTicket() public {
+        _createFreeTicket();
+        uint64 ticketId = factoryFacet.ticketCount();
+        vm.prank(backend);
+        vm.expectRevert(TicketIsFree.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p"));
+    }
+
+    // ======================================================================
+    //                    FIAT: DIRECT PATH — PRE-MINT INVARIANTS
+    // ======================================================================
+
+    function test_fiat_direct_revertsSoldOut() public {
+        TicketData memory td = _getPaidTicketData();
+        td.maxTickets = 1;
+        factoryFacet.createTicket(td, _getFeeTypes(), _getFees());
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        vm.prank(backend);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p1"));
+
+        vm.prank(backend);
+        vm.expectRevert(TicketSoldOut.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, bob, 100, keccak256("p2"));
+    }
+
+    function test_fiat_direct_revertsPurchaseTimeNotReached() public {
+        TicketData memory td = _getPaidTicketData();
+        td.purchaseStartTime = uint48(block.timestamp + 1 days);
+        td.startTime = uint48(block.timestamp + 2 days);
+        td.endTime = uint48(block.timestamp + 3 days);
+        factoryFacet.createTicket(td, _getFeeTypes(), _getFees());
+        uint64 ticketId = factoryFacet.ticketCount();
+
+        vm.prank(backend);
+        vm.expectRevert(PurchaseTimeNotReached.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p"));
+    }
+
+    function test_fiat_direct_revertsMaxTicketsHeld() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(backend);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p1"));
+
+        vm.prank(backend);
+        vm.expectRevert(MaxTicketsHeld.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p2"));
+    }
+
+    // ======================================================================
+    //                    FIAT: VOUCHER PATH — SINGLE
+    // ======================================================================
+
+    function test_fiat_voucher_success() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher memory v = _voucher(ticketId, alice, 250, keccak256("v-1"), uint48(block.timestamp + 1 hours));
+        bytes memory sig = _sign(v);
+
+        vm.prank(charlie); // anyone can submit
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TicketMinted(ticketId, FeeType.FIAT, 250, 1);
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit FiatTicketMinted(ticketId, alice, 1, 250, v.paymentId);
+        uint40 tokenId = marketplaceFacet.redeemFiatVoucher(v, sig);
+
+        assertEq(tokenId, 1);
+        assertTrue(marketplaceFacet.isFiatPaidToken(ticketId, tokenId));
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        assertEq(ITicket(ftd.ticketAddress).ownerOf(tokenId), alice);
+    }
+
+    function test_fiat_voucher_revertsExpired() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher memory v = _voucher(ticketId, alice, 100, keccak256("v"), uint48(block.timestamp + 1));
+        bytes memory sig = _sign(v);
+
+        vm.warp(v.expiresAt + 1);
+        vm.expectRevert(VoucherExpired.selector);
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+    }
+
+    function test_fiat_voucher_revertsBadSigner() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher memory v = _voucher(ticketId, alice, 100, keccak256("v"), uint48(block.timestamp + 1 hours));
+        bytes memory sig = _signVoucher(v, ATTACKER_PK);
+
+        vm.expectRevert(InvalidVoucherSignature.selector);
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+    }
+
+    function test_fiat_voucher_revertsTamperedVoucher() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher memory v = _voucher(ticketId, alice, 100, keccak256("v"), uint48(block.timestamp + 1 hours));
+        bytes memory sig = _sign(v);
+
+        // Tamper: change buyer after signing
+        v.buyer = bob;
+        vm.expectRevert(InvalidVoucherSignature.selector);
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+    }
+
+    function test_fiat_voucher_replayReverts() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher memory v = _voucher(ticketId, alice, 100, keccak256("v"), uint48(block.timestamp + 1 hours));
+        bytes memory sig = _sign(v);
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+
+        vm.expectRevert(abi.encodeWithSelector(PaymentIdAlreadyUsed.selector, v.paymentId));
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+    }
+
+    function test_fiat_crossPathReplayReverts() public {
+        uint64 ticketId = _createFiatTicket();
+        bytes32 pid = keccak256("cross");
+
+        FiatVoucher memory v = _voucher(ticketId, alice, 100, pid, uint48(block.timestamp + 1 hours));
+        bytes memory sig = _sign(v);
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+
+        vm.prank(backend);
+        vm.expectRevert(abi.encodeWithSelector(PaymentIdAlreadyUsed.selector, pid));
+        marketplaceFacet.mintFiatTicket(ticketId, bob, 100, pid);
+    }
+
+    // ======================================================================
+    //                    FIAT: BATCH — DIRECT
+    // ======================================================================
+
+    function test_fiat_batchDirect_success() public {
+        uint64 ticketId = _createFiatTicket();
+
+        uint64[] memory tids = new uint64[](2);
+        tids[0] = ticketId;
+        tids[1] = ticketId;
+        address[] memory buyers = new address[](2);
+        buyers[0] = alice;
+        buyers[1] = bob;
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 100;
+        amounts[1] = 200;
+        bytes32[] memory pids = new bytes32[](2);
+        pids[0] = keccak256("b-1");
+        pids[1] = keccak256("b-2");
+
+        vm.prank(backend);
+        uint40[] memory tokenIds = marketplaceFacet.batchMintFiatTickets(tids, buyers, amounts, pids);
+
+        assertEq(tokenIds.length, 2);
+        assertEq(tokenIds[0], 1);
+        assertEq(tokenIds[1], 2);
+        assertEq(marketplaceFacet.getTicketFiatRevenue(ticketId), 300);
+        assertTrue(marketplaceFacet.isFiatPaidToken(ticketId, 1));
+        assertTrue(marketplaceFacet.isFiatPaidToken(ticketId, 2));
+    }
+
+    function test_fiat_batchDirect_atomicRollback() public {
+        uint64 ticketId = _createFiatTicket();
+        bytes32 dup = keccak256("dup");
+
+        // Pre-consume the dup payment id via single mint.
+        vm.prank(backend);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, dup);
+
+        uint64[] memory tids = new uint64[](2);
+        tids[0] = ticketId;
+        tids[1] = ticketId;
+        address[] memory buyers = new address[](2);
+        buyers[0] = bob;
+        buyers[1] = charlie;
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = 100;
+        amounts[1] = 200;
+        bytes32[] memory pids = new bytes32[](2);
+        bytes32 freshPid = keccak256("fresh");
+        pids[0] = freshPid;
+        pids[1] = dup; // collision on item 2
+
+        vm.prank(backend);
+        vm.expectRevert(abi.encodeWithSelector(PaymentIdAlreadyUsed.selector, dup));
+        marketplaceFacet.batchMintFiatTickets(tids, buyers, amounts, pids);
+
+        // Item 1 must NOT have been persisted (atomic rollback).
+        assertFalse(marketplaceFacet.isFiatPaymentIdUsed(freshPid));
+    }
+
+    function test_fiat_batchDirect_revertsLengthMismatch() public {
+        uint64[] memory tids = new uint64[](1);
+        address[] memory buyers = new address[](2);
+        uint256[] memory amounts = new uint256[](1);
+        bytes32[] memory pids = new bytes32[](1);
+
+        vm.prank(backend);
+        vm.expectRevert(BatchLengthMismatch.selector);
+        marketplaceFacet.batchMintFiatTickets(tids, buyers, amounts, pids);
+    }
+
+    function test_fiat_batchDirect_revertsEmpty() public {
+        uint64[] memory tids = new uint64[](0);
+        address[] memory buyers = new address[](0);
+        uint256[] memory amounts = new uint256[](0);
+        bytes32[] memory pids = new bytes32[](0);
+
+        vm.prank(backend);
+        vm.expectRevert(BatchLengthMismatch.selector);
+        marketplaceFacet.batchMintFiatTickets(tids, buyers, amounts, pids);
+    }
+
+    function test_fiat_batchDirect_revertsNonBackend() public {
+        uint64 ticketId = _createFiatTicket();
+        uint64[] memory tids = new uint64[](1);
+        tids[0] = ticketId;
+        address[] memory buyers = new address[](1);
+        buyers[0] = alice;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 100;
+        bytes32[] memory pids = new bytes32[](1);
+        pids[0] = keccak256("p");
+
+        vm.prank(alice);
+        vm.expectRevert(UnauthorizedBackend.selector);
+        marketplaceFacet.batchMintFiatTickets(tids, buyers, amounts, pids);
+    }
+
+    // ======================================================================
+    //                    FIAT: BATCH — VOUCHER
+    // ======================================================================
+
+    function test_fiat_batchVoucher_success() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher[] memory vs = new FiatVoucher[](2);
+        vs[0] = _voucher(ticketId, alice, 100, keccak256("bv-1"), uint48(block.timestamp + 1 hours));
+        vs[1] = _voucher(ticketId, bob, 200, keccak256("bv-2"), uint48(block.timestamp + 1 hours));
+        bytes[] memory sigs = new bytes[](2);
+        sigs[0] = _sign(vs[0]);
+        sigs[1] = _sign(vs[1]);
+
+        uint40[] memory tokenIds = marketplaceFacet.batchRedeemFiatVouchers(vs, sigs);
+        assertEq(tokenIds[0], 1);
+        assertEq(tokenIds[1], 2);
+        assertEq(marketplaceFacet.getTicketFiatRevenue(ticketId), 300);
+    }
+
+    function test_fiat_batchVoucher_oneBadSigRollsBack() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher[] memory vs = new FiatVoucher[](2);
+        vs[0] = _voucher(ticketId, alice, 100, keccak256("bvr-1"), uint48(block.timestamp + 1 hours));
+        vs[1] = _voucher(ticketId, bob, 200, keccak256("bvr-2"), uint48(block.timestamp + 1 hours));
+        bytes[] memory sigs = new bytes[](2);
+        sigs[0] = _sign(vs[0]);
+        sigs[1] = _signVoucher(vs[1], ATTACKER_PK); // bad sig on item 2
+
+        vm.expectRevert(InvalidVoucherSignature.selector);
+        marketplaceFacet.batchRedeemFiatVouchers(vs, sigs);
+
+        assertFalse(marketplaceFacet.isFiatPaymentIdUsed(vs[0].paymentId));
+    }
+
+    function test_fiat_batchVoucher_revertsLengthMismatch() public {
+        FiatVoucher[] memory vs = new FiatVoucher[](1);
+        bytes[] memory sigs = new bytes[](2);
+        vm.expectRevert(BatchLengthMismatch.selector);
+        marketplaceFacet.batchRedeemFiatVouchers(vs, sigs);
+    }
+
+    function test_fiat_batchVoucher_revertsEmpty() public {
+        FiatVoucher[] memory vs = new FiatVoucher[](0);
+        bytes[] memory sigs = new bytes[](0);
+        vm.expectRevert(BatchLengthMismatch.selector);
+        marketplaceFacet.batchRedeemFiatVouchers(vs, sigs);
+    }
+
+    // ======================================================================
+    //                    FIAT: KILL SWITCH (trustedBackend == 0)
+    // ======================================================================
+
+    function test_fiat_killSwitch_disablesDirect() public {
+        marketplaceFacet.setTrustedBackend(address(0));
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(backend);
+        vm.expectRevert(UnauthorizedBackend.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p"));
+    }
+
+    function test_fiat_killSwitch_disablesVoucher() public {
+        uint64 ticketId = _createFiatTicket();
+        FiatVoucher memory v = _voucher(ticketId, alice, 100, keccak256("p"), uint48(block.timestamp + 1 hours));
+        bytes memory sig = _sign(v);
+
+        marketplaceFacet.setTrustedBackend(address(0));
+
+        vm.expectRevert(InvalidVoucherSignature.selector);
+        marketplaceFacet.redeemFiatVoucher(v, sig);
+    }
+
+    // ======================================================================
+    //                    FIAT: LEDGER — NO HOSTIT FEE
+    // ======================================================================
+
+    function test_fiat_noHostItFeeAccumulated() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(backend);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 10_000, keccak256("p"));
+
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.FIAT), 0);
+        assertEq(marketplaceFacet.getTicketBalance(ticketId, FeeType.FIAT), 0);
+        // Crypto ledger untouched
+        assertEq(marketplaceFacet.getHostItBalance(FeeType.NATIVE), 0);
+    }
+
+    // ======================================================================
+    //                    GUARDS ON EXISTING CRYPTO PATHS
+    // ======================================================================
+
+    function test_guards_mintTicket_revertsForFIAT() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.expectRevert(FiatFeeTypeNotMintable.selector);
+        marketplaceFacet.mintTicket(ticketId, FeeType.FIAT, alice);
+    }
+
+    function test_guards_updateTicketFees_revertsForFIAT() public {
+        uint64 ticketId = _createFiatTicket();
+        FeeType[] memory fts = new FeeType[](1);
+        fts[0] = FeeType.FIAT;
+        uint256[] memory fs = new uint256[](1);
+        fs[0] = 1000;
+        vm.expectRevert(FiatFeeNotSettable.selector);
+        marketplaceFacet.updateTicketFees(ticketId, fts, fs);
+    }
+
+    function test_guards_updateTicketFees_revertsForFIATInMixedList() public {
+        uint64 ticketId = _createFiatTicket();
+        FeeType[] memory fts = new FeeType[](2);
+        fts[0] = FeeType.NATIVE;
+        fts[1] = FeeType.FIAT;
+        uint256[] memory fs = new uint256[](2);
+        fs[0] = 1e18;
+        fs[1] = 1000;
+        vm.expectRevert(FiatFeeNotSettable.selector);
+        marketplaceFacet.updateTicketFees(ticketId, fts, fs);
+    }
+
+    function test_guards_createTicket_revertsForFIATFee() public {
+        // createTicket → setTicketFees → FiatFeeNotSettable guard fires.
+        TicketData memory td = _getPaidTicketData();
+        FeeType[] memory fts = new FeeType[](1);
+        fts[0] = FeeType.FIAT;
+        uint256[] memory fs = new uint256[](1);
+        fs[0] = 1000;
+        vm.expectRevert(FiatFeeNotSettable.selector);
+        factoryFacet.createTicket(td, fts, fs);
+    }
+
+    function test_guards_claimRefund_revertsForFiatPaidToken() public {
+        uint64 ticketId = _createRefundableFiatTicket();
+        vm.prank(backend);
+        uint40 tokenId = marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p"));
+
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        vm.warp(ftd.endTime);
+        vm.prank(alice);
+        vm.expectRevert(FiatTicketNotRefundable.selector);
+        marketplaceFacet.claimRefund(ticketId, FeeType.FIAT, tokenId, alice);
+    }
+
+    function test_guards_claimRefund_revertsForFiatTokenEvenWhenFeeTypeNATIVE() public {
+        // A fiat-paid token should be unrefundable regardless of which FeeType the caller passes.
+        uint64 ticketId = _createRefundableFiatTicket();
+        vm.prank(backend);
+        uint40 tokenId = marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("p"));
+
+        FullTicketData memory ftd = factoryFacet.ticketData(ticketId);
+        vm.warp(ftd.endTime);
+        vm.prank(alice);
+        vm.expectRevert(FiatTicketNotRefundable.selector);
+        marketplaceFacet.claimRefund(ticketId, FeeType.NATIVE, tokenId, alice);
+    }
+
+    function test_guards_withdrawTicketBalance_revertsForFIAT() public {
+        uint64 ticketId = _createFiatTicket();
+        vm.expectRevert(FiatBalanceNotWithdrawable.selector);
+        marketplaceFacet.withdrawTicketBalance(ticketId, FeeType.FIAT, withdrawer);
+    }
+
+    function test_guards_withdrawHostItBalance_revertsForFIAT() public {
+        vm.expectRevert(FiatBalanceNotWithdrawable.selector);
+        marketplaceFacet.withdrawHostItBalance(FeeType.FIAT, withdrawer);
+    }
+
+    // ======================================================================
+    //                    OWNER ROTATION
+    // ======================================================================
+
+    function test_setTrustedBackend_revertsNonOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        marketplaceFacet.setTrustedBackend(alice);
+    }
+
+    function test_setTrustedBackend_rotates() public {
+        address newBackend = makeAddr("newBackend");
+        vm.expectEmit(true, true, true, true, hostIt);
+        emit TrustedBackendUpdated(backend, newBackend);
+        marketplaceFacet.setTrustedBackend(newBackend);
+        assertEq(marketplaceFacet.getTrustedBackend(), newBackend);
+
+        // Old backend can no longer call.
+        uint64 ticketId = _createFiatTicket();
+        vm.prank(backend);
+        vm.expectRevert(UnauthorizedBackend.selector);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("rot"));
+
+        // New backend can.
+        vm.prank(newBackend);
+        marketplaceFacet.mintFiatTicket(ticketId, alice, 100, keccak256("rot"));
+    }
+
+    // ======================================================================
+    //                    EIP-712 SANITY
+    // ======================================================================
+
+    function test_eip712_domainSeparator() public view {
+        bytes32 expected = keccak256(
+            abi.encode(
+                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                keccak256(bytes("HostItTickets")),
+                keccak256(bytes("1")),
+                block.chainid,
+                hostIt
+            )
+        );
+        assertEq(marketplaceFacet.getFiatDomainSeparator(), expected);
+    }
+
+    function test_eip712_voucherTypehash() public view {
+        bytes32 expected =
+            keccak256("FiatVoucher(uint64 ticketId,address buyer,uint256 amount,bytes32 paymentId,uint48 expiresAt)");
+        assertEq(marketplaceFacet.getFiatVoucherTypehash(), expected);
+    }
+
+    function test_eip712_structHashMatchesAbiEncode() public view {
+        FiatVoucher memory v = _voucher(7, alice, 1234, keccak256("typehash-check"), uint48(block.timestamp + 1 hours));
+        bytes32 expected = keccak256(
+            abi.encode(
+                marketplaceFacet.getFiatVoucherTypehash(), v.ticketId, v.buyer, v.amount, v.paymentId, v.expiresAt
+            )
+        );
+        assertEq(marketplaceFacet.hashFiatVoucher(v), expected);
+    }
 }

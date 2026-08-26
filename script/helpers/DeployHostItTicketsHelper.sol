@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {GetSelectors} from "@diamond-test/helpers/GetSelectors.sol";
 import {DiamondCutFacet} from "@diamond/facets/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "@diamond/facets/DiamondLoupeFacet.sol";
 import {OwnableFacet} from "@diamond/facets/OwnableFacet.sol";
 import {DiamondInit} from "@diamond/initializers/DiamondInit.sol";
 import {MultiInit} from "@diamond/initializers/MultiInit.sol";
-import {FacetCut, FacetCutAction} from "@diamond/libraries/DiamondLib.sol";
+import {FacetCut} from "@diamond/libraries/DiamondLib.sol";
+import {BaseDeploy} from "@lattice-script/base/BaseDeploy.s.sol";
 import {AccessControl} from "@lattice/access/AccessControl.sol";
 import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 import {AddressesAndFees} from "@ticket-script/helpers/AddressesAndFees.sol";
@@ -18,7 +18,7 @@ import {MarketplaceFacet} from "@ticket/facets/MarketplaceFacet.sol";
 import {HostItInit} from "@ticket/inits/HostItInit.sol";
 import {Ticket} from "@ticket/libs/Ticket.sol";
 
-abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
+abstract contract DeployHostItTicketsHelper is BaseDeploy, Context {
     // address constant DIAMOND_CUT_FACET = 0xD1AC537fBE953b0868a6ec93F025c4bB05E6D1AC;
     // address constant DIAMOND_LOUPE_FACET = 0xD1A1C850E1ACd4ce10941e40eD67de60db56D1A1;
     // address constant OWNABLE_FACET = 0x020e74BCB4b03d5Fd1D163d7948D67Ccb7718020;
@@ -90,47 +90,13 @@ abstract contract DeployHostItTicketsHelper is GetSelectors, Context {
     function _createFacetCuts() internal returns (FacetCut[] memory cuts_) {
         cuts_ = new FacetCut[](7);
 
-        cuts_[0] = FacetCut({
-            facetAddress: _getDiamondCutFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("DiamondCutFacet")
-        });
-
-        cuts_[1] = FacetCut({
-            facetAddress: _getDiamondLoupeFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("DiamondLoupeFacet")
-        });
-
-        cuts_[2] = FacetCut({
-            facetAddress: _getOwnableFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("OwnableFacet")
-        });
-
-        cuts_[3] = FacetCut({
-            facetAddress: _getAccessControlFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("AccessControl")
-        });
-
-        cuts_[4] = FacetCut({
-            facetAddress: _getFactoryFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("FactoryFacet")
-        });
-
-        cuts_[5] = FacetCut({
-            facetAddress: _getMarketplaceFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("MarketplaceFacet")
-        });
-
-        cuts_[6] = FacetCut({
-            facetAddress: _getCheckInFacet(),
-            action: FacetCutAction.Add,
-            functionSelectors: _getSelectors("CheckInFacet")
-        });
+        cuts_[0] = _cut(_getDiamondCutFacet());
+        cuts_[1] = _cut(_getDiamondLoupeFacet());
+        cuts_[2] = _cut(_getOwnableFacet());
+        cuts_[3] = _cut(_getAccessControlFacet());
+        cuts_[4] = _cut(_getFactoryFacet());
+        cuts_[5] = _cut(_getMarketplaceFacet());
+        cuts_[6] = _cut(_getCheckInFacet());
     }
 
     function _getMultiInitCalldata() internal returns (bytes memory) {

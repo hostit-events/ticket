@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
+import {IFacet} from "@diamond/interfaces/IFacet.sol";
 import {IMarketplace} from "@ticket/interfaces/IMarketplace.sol";
 import {FeeType, FiatVoucher} from "@ticket/libs/MarketplaceLib.sol";
 import {MarketplaceLib} from "@ticket/libs/MarketplaceLib.sol";
 
-contract MarketplaceFacet is IMarketplace {
+contract MarketplaceFacet is IMarketplace, IFacet {
     //*//////////////////////////////////////////////////////////////////////////
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
@@ -160,5 +161,41 @@ contract MarketplaceFacet is IMarketplace {
     /// @inheritdoc IMarketplace
     function getFiatVoucherTypehash() external pure returns (bytes32) {
         return MarketplaceLib.FIAT_VOUCHER_TYPEHASH;
+    }
+
+    function exportSelectors() external pure override returns (bytes memory selectors_) {
+        selectors_ = bytes.concat(
+            abi.encodePacked(
+                this.batchMintFiatTickets.selector,
+                this.batchRedeemFiatVouchers.selector,
+                this.claimRefund.selector,
+                this.feeEnabled.selector,
+                this.getAllFees.selector,
+                this.getFeeTokenAddress.selector,
+                this.getFiatDomainSeparator.selector,
+                this.getFiatVoucherTypehash.selector,
+                this.getHostItBalance.selector
+            ),
+            abi.encodePacked(
+                this.getHostItFee.selector,
+                this.getRefundPeriod.selector,
+                this.getTicketBalance.selector,
+                this.getTicketFee.selector,
+                this.getTicketFiatRevenue.selector,
+                this.getTrustedBackend.selector,
+                this.hashFiatVoucher.selector,
+                this.isFiatPaidToken.selector
+            ),
+            abi.encodePacked(
+                this.isFiatPaymentIdUsed.selector,
+                this.mintFiatTicket.selector,
+                this.mintTicket.selector,
+                this.redeemFiatVoucher.selector,
+                this.setTrustedBackend.selector,
+                this.updateTicketFees.selector,
+                this.withdrawHostItBalance.selector,
+                this.withdrawTicketBalance.selector
+            )
+        );
     }
 }

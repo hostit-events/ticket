@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {Diamond, FacetCut} from "@diamond/Diamond.sol";
+import {FacetCut} from "@diamond/libraries/DiamondLib.sol";
+import {Lattice} from "@lattice/Lattice.sol";
 import {AccessControlLib} from "@lattice/access/libraries/AccessControlLib.sol";
 
 /*
@@ -42,7 +43,7 @@ bytes32 constant INITIALIZER_ROLE = 0x8bee2586c5e3fefa3b170e4d771ec5051c21576e1f
 /// @title HostIt Tickets
 /// @notice Implements ERC-2535 Diamond proxy pattern, allowing dynamic addition, replacement, and removal of facets
 /// @author HostIt Protocol
-contract HostItTickets is Diamond {
+contract HostItTickets is Lattice {
     constructor(address _init) {
         AccessControlLib._grantRole(INITIALIZER_ROLE, _init);
     }
@@ -54,12 +55,5 @@ contract HostItTickets is Diamond {
     {
         AccessControlLib.checkRole(INITIALIZER_ROLE);
         super.initialize(_facetCuts, _init, _calldata);
-    }
-
-    receive() external payable override {
-        assembly ("memory-safe") {
-            mstore(0x00, 0xb15db189) // `DirectETHTransferNotAllowed()`.
-            revert(0x1c, 0x04)
-        }
     }
 }

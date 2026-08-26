@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
+import {IFacet} from "@diamond/interfaces/IFacet.sol";
 import {IFactory} from "@ticket/interfaces/IFactory.sol";
 import {FactoryLib, FullTicketData, TicketData} from "@ticket/libs/FactoryLib.sol";
 import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 
-contract FactoryFacet is IFactory {
+contract FactoryFacet is IFactory, IFacet {
     //*//////////////////////////////////////////////////////////////////////////
     //                             EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////////////////*//
@@ -88,5 +89,24 @@ contract FactoryFacet is IFactory {
     /// @param _ticketId {ticketId}
     function ticketAdminRole(uint64 _ticketId) public pure returns (bytes32) {
         return FactoryLib.generateTicketAdminRole(_ticketId);
+    }
+
+    function exportSelectors() external pure override returns (bytes memory selectors_) {
+        selectors_ = abi.encodePacked(
+            this.addTicketAdmins.selector,
+            this.adminTicketData.selector,
+            this.adminTickets.selector,
+            this.allTicketData.selector,
+            this.createTicket.selector,
+            this.hostItTicketHash.selector,
+            this.mainAdminRole.selector,
+            this.removeTicketAdmins.selector,
+            this.ticketAdminRole.selector,
+            this.ticketCount.selector,
+            this.ticketData.selector,
+            this.ticketExists.selector,
+            this.ticketHash.selector,
+            this.updateTicket.selector
+        );
     }
 }

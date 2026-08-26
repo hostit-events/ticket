@@ -6,7 +6,7 @@
     "rev": "620536fa5277db4e3fd46772d5cbc1ea0696fb43"
   },
   "lib/lattice": {
-    "rev": "67286554aa8f9e7d5dfd6c298fcddf76de0e6bf5"
+    "rev": "2a5df1e95b368b39bf7d043e892ef7a95c3e6588"
   },
   "lib/openzeppelin-contracts-upgradeable": {
     "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"

@@ -2,49 +2,49 @@
 pragma solidity ^0.8.4;
 
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import {FeeType} from "@ticket-storage/MarketplaceStorage.sol";
+import {FeeType} from "@ticket/libs/MarketplaceLib.sol";
 
-library LibAddressesAndFees {
-    function _getAddressesAndFeesByChainId(uint256 _chainId)
-        internal
-        returns (address[] memory addresses_, uint8[] memory feeTypes_)
-    {
+library AddressesAndFees {
+    function byChainId(uint256 _chainId) internal returns (uint8[] memory feeTypes_, address[] memory addresses_) {
         if (_chainId == 1) {
-            addresses_ = _getEthereumAddresses();
-            feeTypes_ = _getEthereumFeeTypes();
+            feeTypes_ = getEthereumFeeTypes();
+            addresses_ = getEthereumAddresses();
+        } else if (_chainId == 5042002) {
+            feeTypes_ = getArcTestnetFeeTypes();
+            addresses_ = getArcTestnetAddresses();
         } else if (_chainId == 8453) {
-            addresses_ = _getBaseAddresses();
-            feeTypes_ = _getBaseFeeTypes();
+            feeTypes_ = getBaseFeeTypes();
+            addresses_ = getBaseAddresses();
         } else if (_chainId == 43114) {
-            addresses_ = _getAvalancheAddresses();
-            feeTypes_ = _getAvalancheFeeTypes();
+            feeTypes_ = getAvalancheFeeTypes();
+            addresses_ = getAvalancheAddresses();
         } else if (_chainId == 42161) {
-            addresses_ = _getArbitrumOneAddresses();
-            feeTypes_ = _getArbitrumOneFeeTypes();
+            feeTypes_ = getArbitrumOneFeeTypes();
+            addresses_ = getArbitrumOneAddresses();
         } else if (_chainId == 1135) {
-            addresses_ = _getLiskAddresses();
-            feeTypes_ = _getLiskFeeTypes();
+            feeTypes_ = getLiskFeeTypes();
+            addresses_ = getLiskAddresses();
         } else if (_chainId == 11155111) {
-            addresses_ = _getEthereumSepoliaAddresses();
-            feeTypes_ = _getEthereumSepoliaFeeTypes();
+            feeTypes_ = getEthereumSepoliaFeeTypes();
+            addresses_ = getEthereumSepoliaAddresses();
         } else if (_chainId == 84532) {
-            addresses_ = _getBaseSepoliaAddresses();
-            feeTypes_ = _getBaseSepoliaFeeTypes();
+            feeTypes_ = getBaseSepoliaFeeTypes();
+            addresses_ = getBaseSepoliaAddresses();
         } else if (_chainId == 43113) {
-            addresses_ = _getAvalancheFujiAddresses();
-            feeTypes_ = _getAvalancheFujiFeeTypes();
+            feeTypes_ = getAvalancheFujiFeeTypes();
+            addresses_ = getAvalancheFujiAddresses();
         } else if (_chainId == 421614) {
-            addresses_ = _getArbitrumSepoliaAddresses();
-            feeTypes_ = _getArbitrumSepoliaFeeTypes();
+            feeTypes_ = getArbitrumSepoliaFeeTypes();
+            addresses_ = getArbitrumSepoliaAddresses();
         } else if (_chainId == 4202) {
-            addresses_ = _getLiskSepoliaAddresses();
-            feeTypes_ = _getLiskSepoliaFeeTypes();
+            feeTypes_ = getLiskSepoliaFeeTypes();
+            addresses_ = getLiskSepoliaAddresses();
         } else if (_chainId == 5003) {
-            addresses_ = _getMantleSepoliaAddresses();
-            feeTypes_ = _getMantleSepoliaFeeTypes();
+            feeTypes_ = getMantleSepoliaFeeTypes();
+            addresses_ = getMantleSepoliaAddresses();
         } else if (_chainId == 31337) {
-            addresses_ = _getMockAddresses();
-            feeTypes_ = _getMockFeeTypes();
+            feeTypes_ = getMockFeeTypes();
+            addresses_ = getMockAddresses();
         } else {
             revert("Chain not supported");
         }
@@ -54,16 +54,16 @@ library LibAddressesAndFees {
     //                             MAINNET ADDRESSES
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _getEthereumFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getEthereumFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](5);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.USDT);
         feeType_[2] = uint8(FeeType.GHO);
         feeType_[3] = uint8(FeeType.LINK);
-        feeType_[4] = uint8(FeeType.WETH);
+        feeType_[4] = uint8(FeeType.WNATIVE);
     }
 
-    function _getEthereumAddresses() internal pure returns (address[] memory addresses_) {
+    function getEthereumAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](5);
         addresses_[0] = ETH_USDC;
         addresses_[1] = ETH_USDT;
@@ -72,17 +72,31 @@ library LibAddressesAndFees {
         addresses_[4] = ETH_WETH;
     }
 
-    function _getBaseFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getArcTestnetFeeTypes() internal pure returns (uint8[] memory feeType_) {
+        feeType_ = new uint8[](3);
+        feeType_[0] = uint8(FeeType.USDC);
+        feeType_[1] = uint8(FeeType.EURC);
+        feeType_[2] = uint8(FeeType.LINK);
+    }
+
+    function getArcTestnetAddresses() internal pure returns (address[] memory addresses_) {
+        addresses_ = new address[](3);
+        addresses_[0] = ARC_TESTNET_USDC;
+        addresses_[1] = ARC_TESTNET_EURC;
+        addresses_[2] = ARC_TESTNET_LINK;
+    }
+
+    function getBaseFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](6);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.USDT);
         feeType_[2] = uint8(FeeType.GHO);
         feeType_[3] = uint8(FeeType.LINK);
-        feeType_[4] = uint8(FeeType.WETH);
+        feeType_[4] = uint8(FeeType.WNATIVE);
         feeType_[5] = uint8(FeeType.EURC);
     }
 
-    function _getBaseAddresses() internal pure returns (address[] memory addresses_) {
+    function getBaseAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](6);
         addresses_[0] = BASE_USDC;
         addresses_[1] = BASE_USDT;
@@ -92,15 +106,15 @@ library LibAddressesAndFees {
         addresses_[5] = BASE_EURC;
     }
 
-    function _getAvalancheFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getAvalancheFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](4);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.GHO);
         feeType_[2] = uint8(FeeType.LINK);
-        feeType_[3] = uint8(FeeType.WETH);
+        feeType_[3] = uint8(FeeType.WNATIVE);
     }
 
-    function _getAvalancheAddresses() internal pure returns (address[] memory addresses_) {
+    function getAvalancheAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](4);
         addresses_[0] = AVALANCHE_USDC;
         addresses_[1] = AVALANCHE_GHO;
@@ -108,15 +122,15 @@ library LibAddressesAndFees {
         addresses_[3] = AVALANCHE_WAVAX;
     }
 
-    function _getArbitrumOneFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getArbitrumOneFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](4);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.GHO);
         feeType_[2] = uint8(FeeType.LINK);
-        feeType_[3] = uint8(FeeType.WETH);
+        feeType_[3] = uint8(FeeType.WNATIVE);
     }
 
-    function _getArbitrumOneAddresses() internal pure returns (address[] memory addresses_) {
+    function getArbitrumOneAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](4);
         addresses_[0] = ARBITRUM_ONE_USDC;
         addresses_[1] = ARBITRUM_ONE_GHO;
@@ -124,7 +138,7 @@ library LibAddressesAndFees {
         addresses_[3] = ARBITRUM_ONE_WETH;
     }
 
-    function _getLiskFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getLiskFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](6);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.USDT);
@@ -134,7 +148,7 @@ library LibAddressesAndFees {
         feeType_[5] = uint8(FeeType.USDT0);
     }
 
-    function _getLiskAddresses() internal pure returns (address[] memory addresses_) {
+    function getLiskAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](6);
         addresses_[0] = LISK_USDC;
         addresses_[1] = LISK_USDT;
@@ -148,30 +162,30 @@ library LibAddressesAndFees {
     //                             TESTNET ADDRESSES
     //////////////////////////////////////////////////////////////////////////*//
 
-    function _getEthereumSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getEthereumSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](3);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.LINK);
-        feeType_[2] = uint8(FeeType.WETH);
+        feeType_[2] = uint8(FeeType.WNATIVE);
     }
 
-    function _getEthereumSepoliaAddresses() internal pure returns (address[] memory addresses_) {
+    function getEthereumSepoliaAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](3);
         addresses_[0] = ETH_SEPOLIA_USDC;
         addresses_[1] = ETH_SEPOLIA_LINK;
         addresses_[2] = ETH_SEPOLIA_WETH;
     }
 
-    function _getBaseSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getBaseSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](5);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.USDT);
         feeType_[2] = uint8(FeeType.LINK);
-        feeType_[3] = uint8(FeeType.WETH);
+        feeType_[3] = uint8(FeeType.WNATIVE);
         feeType_[4] = uint8(FeeType.EURC);
     }
 
-    function _getBaseSepoliaAddresses() internal pure returns (address[] memory addresses_) {
+    function getBaseSepoliaAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](5);
         addresses_[0] = BASE_SEPOLIA_USDC;
         addresses_[1] = BASE_SEPOLIA_USDT;
@@ -180,43 +194,43 @@ library LibAddressesAndFees {
         addresses_[4] = BASE_SEPOLIA_EURC;
     }
 
-    function _getAvalancheFujiFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getAvalancheFujiFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](3);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.LINK);
-        feeType_[2] = uint8(FeeType.WETH);
+        feeType_[2] = uint8(FeeType.WNATIVE);
     }
 
-    function _getAvalancheFujiAddresses() internal pure returns (address[] memory addresses_) {
+    function getAvalancheFujiAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](3);
         addresses_[0] = AVALANCHE_FUJI_USDC;
         addresses_[1] = AVALANCHE_FUJI_LINK;
         addresses_[2] = AVALANCHE_FUJI_WAVAX;
     }
 
-    function _getArbitrumSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getArbitrumSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](3);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.LINK);
-        feeType_[2] = uint8(FeeType.WETH);
+        feeType_[2] = uint8(FeeType.WNATIVE);
     }
 
-    function _getArbitrumSepoliaAddresses() internal pure returns (address[] memory addresses_) {
+    function getArbitrumSepoliaAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](3);
         addresses_[0] = ARBITRUM_SEPOLIA_USDC;
         addresses_[1] = ARBITRUM_SEPOLIA_LINK;
         addresses_[2] = ARBITRUM_SEPOLIA_WETH;
     }
 
-    function _getLiskSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getLiskSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](4);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.LINK);
-        feeType_[2] = uint8(FeeType.WETH);
+        feeType_[2] = uint8(FeeType.WNATIVE);
         feeType_[3] = uint8(FeeType.LSK);
     }
 
-    function _getLiskSepoliaAddresses() internal pure returns (address[] memory addresses_) {
+    function getLiskSepoliaAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](4);
         addresses_[0] = LISK_SEPOLIA_USDC;
         addresses_[1] = LISK_SEPOLIA_LINK;
@@ -224,15 +238,15 @@ library LibAddressesAndFees {
         addresses_[3] = LISK_SEPOLIA_LSK;
     }
 
-    function _getMantleSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getMantleSepoliaFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](4);
         feeType_[0] = uint8(FeeType.USDC);
         feeType_[1] = uint8(FeeType.USDT);
         feeType_[2] = uint8(FeeType.LINK);
-        feeType_[3] = uint8(FeeType.WETH);
+        feeType_[3] = uint8(FeeType.WNATIVE);
     }
 
-    function _getMantleSepoliaAddresses() internal pure returns (address[] memory addresses_) {
+    function getMantleSepoliaAddresses() internal pure returns (address[] memory addresses_) {
         addresses_ = new address[](4);
         addresses_[0] = MANTLE_SEPOLIA_USDC;
         addresses_[1] = MANTLE_SEPOLIA_USDT;
@@ -240,9 +254,9 @@ library LibAddressesAndFees {
         addresses_[3] = MANTLE_SEPOLIA_WMNT;
     }
 
-    function _getMockFeeTypes() internal pure returns (uint8[] memory feeType_) {
+    function getMockFeeTypes() internal pure returns (uint8[] memory feeType_) {
         feeType_ = new uint8[](8);
-        feeType_[0] = uint8(FeeType.WETH);
+        feeType_[0] = uint8(FeeType.WNATIVE);
         feeType_[1] = uint8(FeeType.USDT);
         feeType_[2] = uint8(FeeType.USDC);
         feeType_[3] = uint8(FeeType.EURC);
@@ -252,7 +266,7 @@ library LibAddressesAndFees {
         feeType_[7] = uint8(FeeType.LSK);
     }
 
-    function _getMockAddresses() internal returns (address[] memory addresses_) {
+    function getMockAddresses() internal returns (address[] memory addresses_) {
         addresses_ = new address[](8);
         addresses_[0] = address(new ERC20Mock());
         addresses_[1] = address(new ERC20Mock());
@@ -282,6 +296,14 @@ address constant ETH_WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 address constant ETH_SEPOLIA_USDC = 0xf661043d9Bc1ef2169Ef90ad3b2285Cf8Bfc0AE2;
 address constant ETH_SEPOLIA_LINK = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
 address constant ETH_SEPOLIA_WETH = 0x097D90c9d3E0B50Ca60e1ae45F6A81010f9FB534;
+
+//*//////////////////////////////////////////////////////////////////////////
+//                           ARC TESTNET ADDRESSES
+//////////////////////////////////////////////////////////////////////////*//
+
+address constant ARC_TESTNET_USDC = 0x3600000000000000000000000000000000000000;
+address constant ARC_TESTNET_EURC = 0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a;
+address constant ARC_TESTNET_LINK = 0x3F1f176e347235858DD6Db905DDBA09Eaf25478a;
 
 //*//////////////////////////////////////////////////////////////////////////
 //                               BASE ADDRESSES

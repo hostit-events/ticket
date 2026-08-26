@@ -1,17 +1,17 @@
 {
   "lib/contracts": {
-    "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
-  },
-  "lib/diamond-lib": {
-    "rev": "f1dfda3a56ce134326a1914fdb2039abb2625c02"
+    "rev": "3250a5f49d2d69cd887ddd2c66bef6fa1d9e4791"
   },
   "lib/forge-std": {
-    "rev": "551a2d30d7fecba7092ab45a587b5268149a48fb"
+    "rev": "620536fa5277db4e3fd46772d5cbc1ea0696fb43"
+  },
+  "lib/lattice": {
+    "rev": "67286554aa8f9e7d5dfd6c298fcddf76de0e6bf5"
   },
   "lib/openzeppelin-contracts-upgradeable": {
-    "rev": "e725abddf1e01cf05ace496e950fc8e243cc7cab"
+    "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"
   },
   "lib/solady": {
-    "rev": "208e4f31cfae26e4983eb95c3488a14fdc497ad7"
+    "rev": "cedd7936a11807acd819c9f6acf48fdcefee3f73"
   }
 }

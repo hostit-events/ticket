@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import {Diamond, FacetCut} from "@diamond/Diamond.sol";
+import {AccessControlLib} from "@lattice/access/libraries/AccessControlLib.sol";
 
 /*
 ⣾⣿⣿⣿⣿⣿⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡆
@@ -33,16 +34,32 @@ import {Diamond, FacetCut} from "@diamond/Diamond.sol";
 ⠻⠿⠿⠿⠿⠿⠿⠿⠿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠃
 */
 
+error DirectETHTransferNotAllowed();
+
+// keccak256("host.it.tickets.initializer")
+bytes32 constant INITIALIZER_ROLE = 0x8bee2586c5e3fefa3b170e4d771ec5051c21576e1f631a6fb7cebb1c8696086a;
+
 /// @title HostIt Tickets
 /// @notice Implements ERC-2535 Diamond proxy pattern, allowing dynamic addition, replacement, and removal of facets
 /// @author HostIt Protocol
 contract HostItTickets is Diamond {
-    /// @notice Initializes the Diamond proxy with the provided facets and initialization parameters
-    /// @param _facetCuts Array of FacetCut structs defining facet addresses, corresponding function selectors, and actions (Add, Replace, Remove)
-    /// @param _init Address of the initialization contract
-    /// @param _calldata Initialization calldata to be passed to the init contract
-    constructor(FacetCut[] memory _facetCuts, address _init, bytes memory _calldata)
+    constructor(address _init) {
+        AccessControlLib._grantRole(INITIALIZER_ROLE, _init);
+    }
+
+    function initialize(FacetCut[] calldata _facetCuts, address _init, bytes calldata _calldata)
+        public
         payable
-        Diamond(_facetCuts, _init, _calldata)
-    {}
+        override
+    {
+        AccessControlLib.checkRole(INITIALIZER_ROLE);
+        super.initialize(_facetCuts, _init, _calldata);
+    }
+
+    receive() external payable override {
+        assembly ("memory-safe") {
+            mstore(0x00, 0xb15db189) // `DirectETHTransferNotAllowed()`.
+            revert(0x1c, 0x04)
+        }
+    }
 }

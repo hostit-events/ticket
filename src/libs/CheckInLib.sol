@@ -96,9 +96,13 @@ library CheckInLib {
         }
     }
 
-    function _recordCheckIn(CheckInStorage storage _cs, uint64 _ticketId, uint8 _day, address _ticketOwner, uint40 _tokenId)
-        private
-    {
+    function _recordCheckIn(
+        CheckInStorage storage _cs,
+        uint64 _ticketId,
+        uint8 _day,
+        address _ticketOwner,
+        uint40 _tokenId
+    ) private {
         _cs.checkedIn[_ticketId].add(_ticketOwner);
         if (!_cs.checkedInByDay[_ticketId][_day].add(_ticketOwner)) revert AlreadyCheckedInForDay(_day);
         emit CheckedIn(_ticketId, _ticketOwner, _day, _tokenId);

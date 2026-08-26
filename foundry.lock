@@ -3,7 +3,7 @@
     "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
   },
   "lib/forge-std": {
-    "rev": "0844d7e1fc5e60d77b68e469bff60265f236c398"
+    "rev": "620536fa5277db4e3fd46772d5cbc1ea0696fb43"
   },
   "lib/lattice": {
     "rev": "67286554aa8f9e7d5dfd6c298fcddf76de0e6bf5"
@@ -12,6 +12,6 @@
     "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"
   },
   "lib/solady": {
-    "rev": "90db92ce173856605d24a554969f2c67cadbc7e9"
+    "rev": "cedd7936a11807acd819c9f6acf48fdcefee3f73"
   }
 }

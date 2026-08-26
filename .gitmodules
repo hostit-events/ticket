@@ -9,7 +9,7 @@
 	url = https://github.com/Vectorized/solady
 [submodule "lib/contracts"]
 	path = lib/contracts
-	url = https://github.com/tokenbound/contracts
+	url = https://github.com/dadadave80/contracts
 [submodule "lib/lattice"]
 	path = lib/lattice
 	url = https://github.com/dadadave80/lattice

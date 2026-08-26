@@ -1,6 +1,6 @@
 {
   "lib/contracts": {
-    "rev": "bce75f985558fad3d06ee1b86f224f0cfb783631"
+    "rev": "3250a5f49d2d69cd887ddd2c66bef6fa1d9e4791"
   },
   "lib/forge-std": {
     "rev": "620536fa5277db4e3fd46772d5cbc1ea0696fb43"

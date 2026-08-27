@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {ContextLib} from "@diamond/libraries/ContextLib.sol";
 import {OwnableLib} from "@diamond/libraries/OwnableLib.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ACCOUNT_V3_IMPLEMENTATION, ERC6551_REGISTRY} from "@ticket-script/helpers/AddressesAndFees.sol";
@@ -142,7 +141,7 @@ library MarketplaceLib {
 
         ExtraTicketData memory ticketData = _preMintChecks(_ticketId, _buyer);
 
-        address msgSender = ContextLib.msgSender();
+        address msgSender = msg.sender;
         MarketplaceStorage storage ms = marketplaceStorage();
         // {tok}, {tok}, {tok}
         (uint256 fee, uint256 hostItFee, uint256 totalFee) = getFees(ms, _ticketId, _feeType);
@@ -216,7 +215,7 @@ library MarketplaceLib {
     /// @param _ticketId {ticketId}
     /// @param _tokenId {ticket}
     function claimRefund(uint64 _ticketId, FeeType _feeType, uint256 _tokenId) internal {
-        claimRefund(_ticketId, _feeType, _tokenId, ContextLib.msgSender());
+        claimRefund(_ticketId, _feeType, _tokenId, msg.sender);
     }
 
     /// @param _ticketId {ticketId}
@@ -241,7 +240,7 @@ library MarketplaceLib {
             revert RefundPeriodExpired();
         }
 
-        address caller = ContextLib.msgSender(); // {addr}
+        address caller = msg.sender; // {addr}
         ITicket ticket = ITicket(ticketData.ticketAddress);
         if (caller != ticket.ownerOf(_tokenId)) revert TicketNotOwned(_tokenId); // {addr} != {addr}
 
@@ -309,7 +308,7 @@ library MarketplaceLib {
     /// @param _totalFee {tok}
     /// @param _to {addr}
     function _payWithToken(MarketplaceStorage storage _ms, FeeType _feeType, uint256 _totalFee, address _to) private {
-        address caller = ContextLib.msgSender(); // {addr}
+        address caller = msg.sender; // {addr}
 
         address tokenAddress = getFeeTokenAddress(_ms, _feeType); // {addr}
         IERC20 token = IERC20(tokenAddress);

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.30;
 
-import {ContextLib} from "@diamond/libraries/ContextLib.sol";
 import {AccessControlLib} from "@lattice/access/libraries/AccessControlLib.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {ITicket} from "@ticket/interfaces/ITicket.sol";
@@ -152,7 +151,7 @@ library FactoryLib {
 
         FactoryStorage storage fs = factoryStorage();
         ticketId_ = ++fs.ticketId; // {ticketId}
-        address ticketAdmin = ContextLib.msgSender(); // {addr}
+        address ticketAdmin = msg.sender; // {addr}
         _grantTicketAdminRoles(ticketAdmin, ticketId_);
 
         ExtraTicketData memory extraTicketData = _createExtraTicketData(fs, _ticketData, ticketId_, ticketAdmin);
@@ -234,7 +233,7 @@ library FactoryLib {
             }
         }
 
-        emit TicketUpdated(_ticketId, ContextLib.msgSender(), extraTicketData);
+        emit TicketUpdated(_ticketId, msg.sender, extraTicketData);
     }
 
     function addTicketAdmins(uint64 _ticketId, address[] calldata _admins) internal {
